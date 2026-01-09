@@ -100,50 +100,14 @@ while applying blueprint's coordinated logic and safety constraints.
 ```
 Climate Entity (Generic Thermostat)
     ↓ Controls based on real target temp
-Virtual Switch (input_boolean)
+Virtual Switch (input_boolean) - REQUIRED
     ↓ Monitored by blueprint
 Blueprint Decision
     ↓ Combines virtual switch + temp + coordination
-Physical Valve
+Physical Valve - REQUIRED
 ```
 
-#### Without Virtual Switch (Direct Control)
-
-When NO virtual switch is configured:
-
-#### Heating Mode (Default)
-
-```
-For each zone:
-  │
-  ├─ Is current_temp < (target_temp - open_threshold)?
-  │   ├─ YES → Zone needs heating
-  │   │         └─ Mark valve to OPEN
-  │   └─ NO  → Check if satisfied
-  │
-  └─ Is current_temp >= (target_temp + close_threshold)?
-      ├─ YES → Zone is satisfied
-      │         └─ Mark valve to CLOSE (if others need heat)
-      └─ NO  → Zone is in acceptable range
-                └─ Keep current state
-```
-
-#### Cooling Mode (if enabled)
-
-```
-For each zone:
-  │
-  ├─ Is current_temp > (target_temp + open_threshold)?
-  │   ├─ YES → Zone needs cooling
-  │   │         └─ Mark valve to OPEN
-  │   └─ NO  → Check if satisfied
-  │
-  └─ Is current_temp <= (target_temp - close_threshold)?
-      ├─ YES → Zone is satisfied
-      │         └─ Mark valve to CLOSE (if others need cooling)
-      └─ NO  → Zone is in acceptable range
-                └─ Keep current state
-```
+**Important**: Both virtual switch and physical valve are REQUIRED for each zone. The virtual switch pattern is mandatory to prevent conflicts between Generic Thermostat's internal logic and the blueprint's coordinated control.
 
 ### 4. MAIN Thermostat Calculation
 
