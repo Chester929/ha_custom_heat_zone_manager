@@ -139,7 +139,7 @@ For each zone you configure, you **MUST** specify **BOTH** the physical valve AN
 - The blueprint monitors the virtual switch and controls the physical valve
 - This ensures clean separation and proper coordination across zones
 
-Repeat for additional zones (up to 15 zones available, organized in 3 groups of 5).
+Repeat for additional zones (up to 15 zones available, organized in 3 collapsible UI groups for easier navigation).
 
 ### Step 4: Configure Temperature Settings
 
