@@ -5,6 +5,22 @@ All notable changes to the Floor Heating Valve Manager blueprint will be documen
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Valve Transition Delay** parameter (default: 5 seconds)
+  - Configurable delay between opening new valves and closing old valves
+  - Prevents brief periods where all valves are in transition
+  - Ensures at least one valve is fully open during valve switching
+  - Recommended for motorized valves that take time to fully open/close
+
+### Changed
+- Valve control logic now uses two-phase approach:
+  - Phase 1: Open all valves that need to be opened
+  - Delay: Wait for configured transition time
+  - Phase 2: Close all valves that need to be closed
+- Updated documentation to explain valve transition behavior
+
 ## [1.0.0] - 2026-01-09
 
 ### Added

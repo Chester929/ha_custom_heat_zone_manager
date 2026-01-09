@@ -146,8 +146,11 @@ This blueprint manages the entire system automatically!
 |-----------|-------------|---------|
 | **Enable Cooling Mode Support** | Invert logic for cooling | false |
 | **Fallback Temperature** | Temperature used if sensor fails | 20.0°C |
+| **Valve Transition Delay** | Time to wait after opening new valve before closing old valve | 5 seconds |
 
 **Note:** The blueprint automatically recalculates every 60 seconds. Response to zone changes is immediate when triggered by state changes.
+
+**Valve Transition Delay:** When switching valves (e.g., closing Valve 1 and opening Valve 2), the blueprint first opens the new valve, waits for the specified delay to allow it to fully open, then closes the old valve. This ensures at least one valve is always fully open during transitions, preventing water pump issues.
 
 ## 🧠 Logic Explanation
 

@@ -292,6 +292,21 @@ blueprint:
           unit_of_measurement: "°C"
           mode: slider
 
+    valve_transition_delay:
+      name: Valve Transition Delay
+      description: >
+        Time to wait (in seconds) after opening a new valve before closing the old valve.
+        This ensures at least one valve is fully open during transitions. Set to 0 to disable.
+        Recommended: 5-10 seconds for motorized valves, 0 for instant switching.
+      default: 5
+      selector:
+        number:
+          min: 0
+          max: 60
+          step: 1
+          unit_of_measurement: "seconds"
+          mode: slider
+
 # Automation triggers
 trigger:
   # Periodic trigger - runs every 60 seconds for recalculation
@@ -315,6 +330,7 @@ action:
       min_temp: !input min_main_temp
       max_temp: !input max_main_temp
       fallback_temperature: !input fallback_temp
+      valve_delay: !input valve_transition_delay
       
       # Zone configurations
       zones:
@@ -470,56 +486,71 @@ action:
     data:
       temperature: "{{ final_main_target }}"
 
-  # Open valves for zones that need heating/cooling
+  # PHASE 1: Open valves that need to be opened
+  # This ensures new valves are opening before we close old ones
   - repeat:
       for_each: "{{ zone_data }}"
       sequence:
         - variables:
             zone: "{{ repeat.item }}"
             should_open: "{{ zone.climate in valves_to_open }}"
-            valve_entity: "{{ zone.valve if zone.valve else zone.climate }}"
         
-        # Control the valve based on whether it should be open or closed
+        - condition: template
+          value_template: "{{ should_open }}"
+        
+        # Open valve (turn on climate or valve entity)
         - choose:
+            # If manual valve override is set, turn it on
             - conditions:
                 - condition: template
-                  value_template: "{{ should_open }}"
+                  value_template: "{{ zone.valve != '' and zone.valve != [] }}"
               sequence:
-                # Open valve (turn on climate or valve entity)
-                - choose:
-                    # If manual valve override is set, turn it on
-                    - conditions:
-                        - condition: template
-                          value_template: "{{ zone.valve != '' and zone.valve != [] }}"
-                      sequence:
-                        - service: homeassistant.turn_on
-                          target:
-                            entity_id: "{{ zone.valve }}"
-                  default:
-                    # Otherwise, ensure climate entity is in heating/cooling mode
-                    - service: climate.set_hvac_mode
-                      target:
-                        entity_id: "{{ zone.climate }}"
-                      data:
-                        hvac_mode: "{{ 'cool' if is_cooling_mode else 'heat' }}"
-          default:
-            # Close valve (turn off climate or valve entity)
-            - choose:
-                # If manual valve override is set, turn it off
-                - conditions:
-                    - condition: template
-                      value_template: "{{ zone.valve != '' and zone.valve != [] }}"
-                  sequence:
-                    - service: homeassistant.turn_off
-                      target:
-                        entity_id: "{{ zone.valve }}"
-              default:
-                # Otherwise, turn off climate entity (close valve)
-                - service: climate.set_hvac_mode
+                - service: homeassistant.turn_on
                   target:
-                    entity_id: "{{ zone.climate }}"
-                  data:
-                    hvac_mode: "off"
+                    entity_id: "{{ zone.valve }}"
+          default:
+            # Otherwise, ensure climate entity is in heating/cooling mode
+            - service: climate.set_hvac_mode
+              target:
+                entity_id: "{{ zone.climate }}"
+              data:
+                hvac_mode: "{{ 'cool' if is_cooling_mode else 'heat' }}"
+
+  # Wait for valve transition delay (allows valves to fully open)
+  - condition: template
+    value_template: "{{ valve_delay > 0 }}"
+  - delay:
+      seconds: "{{ valve_delay }}"
+
+  # PHASE 2: Close valves that need to be closed
+  # Now that new valves are open, we can safely close old ones
+  - repeat:
+      for_each: "{{ zone_data }}"
+      sequence:
+        - variables:
+            zone: "{{ repeat.item }}"
+            should_close: "{{ zone.climate in valves_to_close }}"
+        
+        - condition: template
+          value_template: "{{ should_close }}"
+        
+        # Close valve (turn off climate or valve entity)
+        - choose:
+            # If manual valve override is set, turn it off
+            - conditions:
+                - condition: template
+                  value_template: "{{ zone.valve != '' and zone.valve != [] }}"
+              sequence:
+                - service: homeassistant.turn_off
+                  target:
+                    entity_id: "{{ zone.valve }}"
+          default:
+            # Otherwise, turn off climate entity (close valve)
+            - service: climate.set_hvac_mode
+              target:
+                entity_id: "{{ zone.climate }}"
+              data:
+                hvac_mode: "off"
 
 mode: single
 max_exceeded: silent

@@ -143,19 +143,31 @@ Before applying valve states:
 Actions performed:
   ├─ Set MAIN thermostat target temperature
   │
-  ├─ For each zone:
-  │   ├─ Should valve be open?
-  │   │   ├─ YES:
-  │   │   │   ├─ Manual valve override?
-  │   │   │   │   ├─ YES → Turn ON valve entity
-  │   │   │   │   └─ NO  → Set climate to heat/cool mode
-  │   │   └─ NO:
-  │   │       ├─ Manual valve override?
-  │   │       │   ├─ YES → Turn OFF valve entity
-  │   │       │   └─ NO  → Set climate to off mode
+  ├─ PHASE 1: Open new valves
+  │   └─ For each zone that needs to open:
+  │       ├─ Manual valve override?
+  │       │   ├─ YES → Turn ON valve entity
+  │       │   └─ NO  → Set climate to heat/cool mode
+  │
+  ├─ Wait for valve transition delay (if > 0)
+  │   └─ Allows valves to fully open before closing others
+  │
+  ├─ PHASE 2: Close old valves
+  │   └─ For each zone that needs to close:
+  │       ├─ Manual valve override?
+  │       │   ├─ YES → Turn OFF valve entity
+  │       │   └─ NO  → Set climate to off mode
   │
   └─ Log action to Home Assistant logbook
 ```
+
+**Valve Transition Logic:**
+The two-phase approach ensures at least one valve is always fully open:
+1. **Phase 1**: Open all valves that need to be opened
+2. **Delay**: Wait for configured time (default: 5 seconds) to allow motorized valves to fully open
+3. **Phase 2**: Close all valves that need to be closed
+
+This prevents the scenario where all valves are simultaneously in transition (partially open/closed), which could briefly interrupt water flow and cause pump issues.
 
 ## Example Scenarios
 
