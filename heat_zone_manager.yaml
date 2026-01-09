@@ -1272,13 +1272,19 @@ action:
         Valves to open: {{ valves_to_open | length }}.
         Target MAIN temp: {{ final_main_target }}°C.
 
-  # Set MAIN thermostat target temperature
+  # Set MAIN thermostat mode first (required for reliable temperature setting)
+  - service: climate.set_hvac_mode
+    target:
+      entity_id: !input main_thermostat
+    data:
+      hvac_mode: "{{ 'cool' if is_cooling_mode else 'heat' }}"
+  
+  # Then set MAIN thermostat target temperature
   - service: climate.set_temperature
     target:
       entity_id: !input main_thermostat
     data:
       temperature: "{{ final_main_target }}"
-      hvac_mode: "{{ 'cool' if is_cooling_mode else 'heat' }}"
 
   # PHASE 1: Open valves that need to be opened
   # This ensures new valves are opening before we close old ones

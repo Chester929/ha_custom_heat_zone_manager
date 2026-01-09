@@ -9,11 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **MAIN Climate Entity Target Temperature Not Being Set**
-  - Added `hvac_mode` parameter to `climate.set_temperature` service call for MAIN thermostat
-  - Some climate entities require `hvac_mode` to be specified when setting temperature
-  - Without this parameter, the temperature change could be silently ignored if the thermostat was off or in wrong mode
-  - Now ensures the MAIN thermostat is set to the correct mode ('heat' or 'cool') when updating target temperature
-  - Fixes issue where automation calculations ran but MAIN thermostat temperature remained unchanged
+  - Split MAIN thermostat control into two separate service calls for better compatibility
+  - First call: `climate.set_hvac_mode` to set the correct mode (heat/cool)
+  - Second call: `climate.set_temperature` to set the target temperature
+  - Many climate integrations ignore `hvac_mode` when included with `climate.set_temperature`, causing temperature changes to be ignored
+  - This fix ensures the temperature is reliably updated across different climate integrations
+  - Fixes issue where automation calculations ran correctly but MAIN thermostat temperature remained unchanged
 - **Time Pattern Trigger Validation Error**
   - Fixed invalid `seconds: "/60"` in time_pattern trigger that caused automation save errors
   - Changed to `minutes: "/1"` to comply with Home Assistant validation (seconds must be 0-59)
