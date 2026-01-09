@@ -1,0 +1,337 @@
+# Lovelace Card Configuration for Floor Heating Zone Manager
+# 
+# This provides a collapsible UI for monitoring and controlling your heating zones
+# 
+# Requirements:
+#   - card-mod (for styling)
+#   - fold-entity-row (for collapsible sections)
+#   - Install via HACS: https://github.com/thomasloven/lovelace-fold-entity-row
+#
+# Installation:
+#   1. Install fold-entity-row via HACS
+#   2. Add this card configuration to your Lovelace dashboard
+#   3. Update entity IDs to match your setup
+
+type: vertical-stack
+cards:
+  # Main Header Card
+  - type: markdown
+    content: |
+      # 🔥 Floor Heating Zone Manager
+      Coordinated multi-zone heating control with virtual switch pattern
+
+  # MAIN Thermostat Status
+  - type: entities
+    title: "Main HVAC Control"
+    show_header_toggle: false
+    entities:
+      - entity: climate.main_hvac
+        name: MAIN Thermostat
+      - type: attribute
+        entity: climate.main_hvac
+        attribute: temperature
+        name: Target Temperature
+      - type: attribute
+        entity: climate.main_hvac
+        attribute: current_temperature
+        name: Current Temperature
+
+  # ============================================================================
+  # ZONES GROUP 1 (Zones 1-5) - COLLAPSIBLE
+  # ============================================================================
+  - type: entities
+    title: "🏠 Zones Group 1 (Zones 1-5)"
+    show_header_toggle: false
+    entities:
+      # Zone 1
+      - type: custom:fold-entity-row
+        head:
+          type: section
+          label: "Zone 1 - Bedroom"
+        entities:
+          - entity: climate.bedroom_thermostat
+            name: Climate Entity
+          - entity: sensor.bedroom_temperature
+            name: Temperature Sensor
+          - entity: switch.bedroom_physical_valve
+            name: Physical Valve
+            icon: mdi:valve
+          - entity: input_boolean.bedroom_virtual_valve
+            name: Virtual Switch (Generic Thermostat)
+            icon: mdi:valve-open
+          - type: divider
+
+      # Zone 2
+      - type: custom:fold-entity-row
+        head:
+          type: section
+          label: "Zone 2 - Bathroom"
+        entities:
+          - entity: climate.bathroom_thermostat
+            name: Climate Entity
+          - entity: sensor.bathroom_temperature
+            name: Temperature Sensor
+          - entity: switch.bathroom_physical_valve
+            name: Physical Valve
+            icon: mdi:valve
+          - entity: input_boolean.bathroom_virtual_valve
+            name: Virtual Switch (Generic Thermostat)
+            icon: mdi:valve-open
+          - type: divider
+
+      # Zone 3
+      - type: custom:fold-entity-row
+        head:
+          type: section
+          label: "Zone 3 - Living Room"
+        entities:
+          - entity: climate.living_thermostat
+            name: Climate Entity
+          - entity: sensor.living_temperature
+            name: Temperature Sensor
+          - entity: switch.living_physical_valve
+            name: Physical Valve
+            icon: mdi:valve
+          - entity: input_boolean.living_virtual_valve
+            name: Virtual Switch (Generic Thermostat)
+            icon: mdi:valve-open
+          - type: divider
+
+      # Zone 4
+      - type: custom:fold-entity-row
+        head:
+          type: section
+          label: "Zone 4 - Kitchen"
+        entities:
+          - entity: climate.kitchen_thermostat
+            name: Climate Entity
+          - entity: sensor.kitchen_temperature
+            name: Temperature Sensor
+          - entity: switch.kitchen_physical_valve
+            name: Physical Valve
+            icon: mdi:valve
+          - entity: input_boolean.kitchen_virtual_valve
+            name: Virtual Switch (Generic Thermostat)
+            icon: mdi:valve-open
+          - type: divider
+
+      # Zone 5
+      - type: custom:fold-entity-row
+        head:
+          type: section
+          label: "Zone 5 - Office"
+        entities:
+          - entity: climate.office_thermostat
+            name: Climate Entity
+          - entity: sensor.office_temperature
+            name: Temperature Sensor
+          - entity: switch.office_physical_valve
+            name: Physical Valve
+            icon: mdi:valve
+          - entity: input_boolean.office_virtual_valve
+            name: Virtual Switch (Generic Thermostat)
+            icon: mdi:valve-open
+
+  # ============================================================================
+  # ZONES GROUP 2 (Zones 6-10) - COLLAPSIBLE
+  # ============================================================================
+  - type: entities
+    title: "🏠 Zones Group 2 (Zones 6-10)"
+    show_header_toggle: false
+    entities:
+      # Zone 6
+      - type: custom:fold-entity-row
+        head:
+          type: section
+          label: "Zone 6 - Bedroom 2"
+        entities:
+          - entity: climate.bedroom2_thermostat
+            name: Climate Entity
+          - entity: sensor.bedroom2_temperature
+            name: Temperature Sensor
+          - entity: switch.bedroom2_physical_valve
+            name: Physical Valve
+            icon: mdi:valve
+          - entity: input_boolean.bedroom2_virtual_valve
+            name: Virtual Switch (Generic Thermostat)
+            icon: mdi:valve-open
+          - type: divider
+
+      # Zone 7
+      - type: custom:fold-entity-row
+        head:
+          type: section
+          label: "Zone 7 - Guest Room"
+        entities:
+          - entity: climate.guest_thermostat
+            name: Climate Entity
+          - entity: sensor.guest_temperature
+            name: Temperature Sensor
+          - entity: switch.guest_physical_valve
+            name: Physical Valve
+            icon: mdi:valve
+          - entity: input_boolean.guest_virtual_valve
+            name: Virtual Switch (Generic Thermostat)
+            icon: mdi:valve-open
+          - type: divider
+
+      # Zone 8
+      - type: custom:fold-entity-row
+        head:
+          type: section
+          label: "Zone 8 - Hallway"
+        entities:
+          - entity: climate.hallway_thermostat
+            name: Climate Entity
+          - entity: sensor.hallway_temperature
+            name: Temperature Sensor
+          - entity: switch.hallway_physical_valve
+            name: Physical Valve
+            icon: mdi:valve
+          - entity: input_boolean.hallway_virtual_valve
+            name: Virtual Switch (Generic Thermostat)
+            icon: mdi:valve-open
+          - type: divider
+
+      # Zone 9
+      - type: custom:fold-entity-row
+        head:
+          type: section
+          label: "Zone 9 - Dining Room"
+        entities:
+          - entity: climate.dining_thermostat
+            name: Climate Entity
+          - entity: sensor.dining_temperature
+            name: Temperature Sensor
+          - entity: switch.dining_physical_valve
+            name: Physical Valve
+            icon: mdi:valve
+          - entity: input_boolean.dining_virtual_valve
+            name: Virtual Switch (Generic Thermostat)
+            icon: mdi:valve-open
+          - type: divider
+
+      # Zone 10
+      - type: custom:fold-entity-row
+        head:
+          type: section
+          label: "Zone 10 - Utility Room"
+        entities:
+          - entity: climate.utility_thermostat
+            name: Climate Entity
+          - entity: sensor.utility_temperature
+            name: Temperature Sensor
+          - entity: switch.utility_physical_valve
+            name: Physical Valve
+            icon: mdi:valve
+          - entity: input_boolean.utility_virtual_valve
+            name: Virtual Switch (Generic Thermostat)
+            icon: mdi:valve-open
+
+  # ============================================================================
+  # ZONES GROUP 3 (Zones 11-15) - COLLAPSIBLE
+  # ============================================================================
+  - type: entities
+    title: "🏠 Zones Group 3 (Zones 11-15)"
+    show_header_toggle: false
+    entities:
+      # Zone 11
+      - type: custom:fold-entity-row
+        head:
+          type: section
+          label: "Zone 11 - Basement"
+        entities:
+          - entity: climate.basement_thermostat
+            name: Climate Entity
+          - entity: sensor.basement_temperature
+            name: Temperature Sensor
+          - entity: switch.basement_physical_valve
+            name: Physical Valve
+            icon: mdi:valve
+          - entity: input_boolean.basement_virtual_valve
+            name: Virtual Switch (Generic Thermostat)
+            icon: mdi:valve-open
+          - type: divider
+
+      # Zone 12
+      - type: custom:fold-entity-row
+        head:
+          type: section
+          label: "Zone 12 - Garage"
+        entities:
+          - entity: climate.garage_thermostat
+            name: Climate Entity
+          - entity: sensor.garage_temperature
+            name: Temperature Sensor
+          - entity: switch.garage_physical_valve
+            name: Physical Valve
+            icon: mdi:valve
+          - entity: input_boolean.garage_virtual_valve
+            name: Virtual Switch (Generic Thermostat)
+            icon: mdi:valve-open
+          - type: divider
+
+      # Zone 13
+      - type: custom:fold-entity-row
+        head:
+          type: section
+          label: "Zone 13 - Attic"
+        entities:
+          - entity: climate.attic_thermostat
+            name: Climate Entity
+          - entity: sensor.attic_temperature
+            name: Temperature Sensor
+          - entity: switch.attic_physical_valve
+            name: Physical Valve
+            icon: mdi:valve
+          - entity: input_boolean.attic_virtual_valve
+            name: Virtual Switch (Generic Thermostat)
+            icon: mdi:valve-open
+          - type: divider
+
+      # Zone 14
+      - type: custom:fold-entity-row
+        head:
+          type: section
+          label: "Zone 14 - Sunroom"
+        entities:
+          - entity: climate.sunroom_thermostat
+            name: Climate Entity
+          - entity: sensor.sunroom_temperature
+            name: Temperature Sensor
+          - entity: switch.sunroom_physical_valve
+            name: Physical Valve
+            icon: mdi:valve
+          - entity: input_boolean.sunroom_virtual_valve
+            name: Virtual Switch (Generic Thermostat)
+            icon: mdi:valve-open
+          - type: divider
+
+      # Zone 15
+      - type: custom:fold-entity-row
+        head:
+          type: section
+          label: "Zone 15 - Workshop"
+        entities:
+          - entity: climate.workshop_thermostat
+            name: Climate Entity
+          - entity: sensor.workshop_temperature
+            name: Temperature Sensor
+          - entity: switch.workshop_physical_valve
+            name: Physical Valve
+            icon: mdi:valve
+          - entity: input_boolean.workshop_virtual_valve
+            name: Virtual Switch (Generic Thermostat)
+            icon: mdi:valve-open
+
+  # Automation Status
+  - type: entities
+    title: "Automation Status"
+    show_header_toggle: false
+    entities:
+      - entity: automation.floor_heating_valve_manager
+        name: Floor Heating Manager
+      - type: button
+        name: View Logbook
+        icon: mdi:book-open-variant
+        action_url: /logbook

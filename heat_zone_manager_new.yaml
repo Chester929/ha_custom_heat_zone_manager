@@ -1,0 +1,502 @@
+####################################################################################################
+##### Floor Heating Valve Manager Blueprint by Chester929                                     #####
+##### Repository: https://github.com/Chester929/ha_custom_heat_zone_manager                   #####
+##### Blueprint for managing floor heating valves with MAIN thermostat                        #####
+####################################################################################################
+---
+blueprint:
+  name: Floor Heating Valve Manager
+  description: >
+    # Floor Heating Valve Manager - Complete Zone Control
+
+
+    **Version**: v1.0.0
+
+
+    This blueprint manages floor heating valves alongside a MAIN thermostat that controls HVAC water heating.
+    It dynamically adjusts valve states and the MAIN thermostat target temperature based on individual zone demands.
+
+
+    **Key Features:**
+
+    - Manages multiple heating zones (rooms) with individual thermostats/valves
+
+    - Ensures at least one valve is ALWAYS open (critical for water pump operation)
+
+    - Dynamically calculates MAIN thermostat target temperature based on zone demands
+
+    - Supports manual override for temperature sensors and valve entities
+
+    - Configurable temperature thresholds and calculation methods
+
+    - Supports both heating and cooling modes (inverse logic)
+
+
+    **Use Case:**
+
+    Your HVAC unit heats water based on outdoor and indoor temperature sensors. Individual rooms have
+    thermostats that control valves. This blueprint coordinates valve states and MAIN thermostat temperature
+    to efficiently heat zones while preventing all valves from closing simultaneously.
+
+
+    **Documentation:**
+
+    For detailed setup and usage instructions, visit the [GitHub repository](https://github.com/Chester929/ha_custom_heat_zone_manager).
+
+  source_url: https://github.com/Chester929/ha_custom_heat_zone_manager/blob/main/heat_zone_manager.yaml
+  domain: automation
+  homeassistant:
+    min_version: 2024.1.0
+
+  input:
+    # MAIN Thermostat Configuration
+    main_thermostat:
+      name: MAIN Thermostat (REQUIRED)
+      description: >
+        The primary climate entity that controls your HVAC water heating system.
+        This thermostat will have its target temperature automatically adjusted based on zone demands.
+      selector:
+        entity:
+          domain: climate
+          multiple: false
+
+    main_temp_sensor:
+      name: MAIN Temperature Sensor (Optional Override)
+      description: >
+        Optional temperature sensor for the MAIN thermostat location (e.g., corridor).
+        If provided, the blueprint will use this to calculate smarter MAIN target temperatures
+        that compensate for the difference between corridor and zone temperatures.
+        This improves heating effectiveness when the MAIN sensor location differs from zones.
+      default: []
+      selector:
+        entity:
+          domain: sensor
+          device_class: temperature
+          multiple: false
+
+    # ============================================================================
+    # ZONES GROUP 1 (Zones 1-5) - COLLAPSIBLE
+    # ============================================================================
+
+    zones_group_1:
+      name: "🏠 ZONES GROUP 1 (Zones 1-5)"
+      icon: mdi:home-thermometer
+      description: Configure heating zones 1 through 5. Each zone requires climate entity, physical valve, and virtual switch.
+      collapsed: true
+      input:
+
+    # ============================================================================
+    # Blueprint inputs organized into collapsible groups for better UX
+    # Click on each section header to expand/collapse
+    # ============================================================================
+
+    # TODO: Complete restructuring with all collapsible groups
+    # This file shows the pattern - needs manual completion
+
+action:
+  - variables:
+      # Input configurations
+      main_climate: !input main_thermostat
+      main_sensor: !input main_temp_sensor
+      enable_cooling: !input enable_cooling_mode
+      temp_diff_open: !input temp_difference_open
+      temp_diff_close: !input temp_difference_close
+      all_satisfied_mode: !input all_satisfied_temp_mode
+      min_temp: !input min_main_temp
+      max_temp: !input max_main_temp
+      fallback_temperature: !input fallback_temp
+      valve_delay: !input valve_transition_delay
+      fallback_zone_list: !input fallback_zones
+      overheat_threshold: !input overheated_threshold
+      
+      # Zone configurations
+      zones:
+        - climate: !input zone1_climate
+          temp_sensor: !input zone1_temp_sensor
+          valve: !input zone1_valve
+          virtual_switch: !input zone1_virtual_switch
+        - climate: !input zone2_climate
+          temp_sensor: !input zone2_temp_sensor
+          valve: !input zone2_valve
+          virtual_switch: !input zone2_virtual_switch
+        - climate: !input zone3_climate
+          temp_sensor: !input zone3_temp_sensor
+          valve: !input zone3_valve
+          virtual_switch: !input zone3_virtual_switch
+        - climate: !input zone4_climate
+          temp_sensor: !input zone4_temp_sensor
+          valve: !input zone4_valve
+          virtual_switch: !input zone4_virtual_switch
+        - climate: !input zone5_climate
+          temp_sensor: !input zone5_temp_sensor
+          valve: !input zone5_valve
+          virtual_switch: !input zone5_virtual_switch
+        - climate: !input zone6_climate
+          temp_sensor: !input zone6_temp_sensor
+          valve: !input zone6_valve
+          virtual_switch: !input zone6_virtual_switch
+        - climate: !input zone7_climate
+          temp_sensor: !input zone7_temp_sensor
+          valve: !input zone7_valve
+          virtual_switch: !input zone7_virtual_switch
+        - climate: !input zone8_climate
+          temp_sensor: !input zone8_temp_sensor
+          valve: !input zone8_valve
+          virtual_switch: !input zone8_virtual_switch
+        - climate: !input zone9_climate
+          temp_sensor: !input zone9_temp_sensor
+          valve: !input zone9_valve
+          virtual_switch: !input zone9_virtual_switch
+        - climate: !input zone10_climate
+          temp_sensor: !input zone10_temp_sensor
+          valve: !input zone10_valve
+          virtual_switch: !input zone10_virtual_switch
+        - climate: !input zone11_climate
+          temp_sensor: !input zone11_temp_sensor
+          valve: !input zone11_valve
+          virtual_switch: !input zone11_virtual_switch
+        - climate: !input zone12_climate
+          temp_sensor: !input zone12_temp_sensor
+          valve: !input zone12_valve
+          virtual_switch: !input zone12_virtual_switch
+        - climate: !input zone13_climate
+          temp_sensor: !input zone13_temp_sensor
+          valve: !input zone13_valve
+          virtual_switch: !input zone13_virtual_switch
+        - climate: !input zone14_climate
+          temp_sensor: !input zone14_temp_sensor
+          valve: !input zone14_valve
+          virtual_switch: !input zone14_virtual_switch
+        - climate: !input zone15_climate
+          temp_sensor: !input zone15_temp_sensor
+          valve: !input zone15_valve
+          virtual_switch: !input zone15_virtual_switch
+      
+      # Filter out empty zones
+      active_zones: >
+        {{ zones | selectattr('climate', 'ne', []) | selectattr('climate', 'ne', '') | list }}
+      
+      # Validate zone configuration: valve and virtual_switch must both be specified or both be empty
+      zone_config_validation: >
+        {% set ns = namespace(errors=[]) %}
+        {% for zone in active_zones %}
+          {% set has_valve = zone.valve != '' and zone.valve != [] and zone.valve != none %}
+          {% set has_virtual = zone.virtual_switch != '' and zone.virtual_switch != [] and zone.virtual_switch != none %}
+          {% if has_valve != has_virtual %}
+            {% set ns.errors = ns.errors + ['Zone ' + zone.climate + ': Physical valve and virtual switch must both be specified or both be empty'] %}
+          {% endif %}
+        {% endfor %}
+        {{ ns.errors }}
+      
+      # Get MAIN thermostat mode (heating or cooling)
+      main_hvac_mode: >
+        {{ states(main_climate) }}
+      
+      is_cooling_mode: >
+        {{ enable_cooling and main_hvac_mode in ['cool', 'cool_only'] }}
+      
+      # Get MAIN sensor temperature (if override is provided)
+      main_current_temp: >
+        {% if main_sensor not in [none, '', []] %}
+          {{ states(main_sensor) | float(fallback_temperature) }}
+        {% else %}
+          {{ state_attr(main_climate, 'current_temperature') | float(fallback_temperature) }}
+        {% endif %}
+      
+      # Calculate zone data: current temp, target temp, needs heating/cooling
+      zone_data: >
+        {% set ns = namespace(zones=[]) %}
+        {% for zone in active_zones %}
+          {% if zone.climate %}
+            {% set climate_entity = zone.climate %}
+            {# Get current temperature - use override sensor if provided, otherwise use climate entity's attribute #}
+            {% if zone.temp_sensor and zone.temp_sensor != [] and zone.temp_sensor != '' %}
+              {% set current_temp = states(zone.temp_sensor) | float(fallback_temperature) %}
+            {% else %}
+              {% set current_temp = state_attr(climate_entity, 'current_temperature') | float(fallback_temperature) %}
+            {% endif %}
+            {% set target_temp = state_attr(climate_entity, 'temperature') | float(fallback_temperature) %}
+            {% set zone_mode = states(climate_entity) %}
+            
+            {# Check if virtual switch is configured and get its state #}
+            {% if zone.virtual_switch and zone.virtual_switch != [] and zone.virtual_switch != '' %}
+              {% set virtual_switch_on = is_state(zone.virtual_switch, 'on') %}
+            {% else %}
+              {% set virtual_switch_on = none %}
+            {% endif %}
+            
+            {# Determine if zone needs heating/cooling based on temperature AND virtual switch #}
+            {% if is_cooling_mode %}
+              {# Cooling mode: open valve if temp is above target + threshold #}
+              {% set temp_needs_action = current_temp > (target_temp + temp_diff_open) %}
+              {% set satisfied = current_temp <= (target_temp - temp_diff_close) %}
+              {# Over-cooled in cooling mode = zone is excessively cold (below target - overheat_threshold) #}
+              {% set is_overheated = current_temp < (target_temp - overheat_threshold) %}
+            {% else %}
+              {# Heating mode: open valve if temp is below target - threshold #}
+              {% set temp_needs_action = current_temp < (target_temp - temp_diff_open) %}
+              {% set satisfied = current_temp >= (target_temp + temp_diff_close) %}
+              {# Overheated in heating = zone is too hot (above target + overheat_threshold) #}
+              {% set is_overheated = current_temp > (target_temp + overheat_threshold) %}
+            {% endif %}
+            
+            {# Final decision: needs_action considers both temperature AND virtual switch state #}
+            {# If virtual switch is configured, respect what the climate entity wants (virtual switch state) #}
+            {# AND what the blueprint logic determines (temperature-based need) #}
+            {% if virtual_switch_on is not none %}
+              {# Virtual switch configured: zone needs action if BOTH virtual switch is on AND temp indicates need #}
+              {% set needs_action = virtual_switch_on and temp_needs_action %}
+            {% else %}
+              {# No virtual switch: use only temperature-based logic #}
+              {% set needs_action = temp_needs_action %}
+            {% endif %}
+            
+            {% set ns.zones = ns.zones + [{
+              'climate': climate_entity,
+              'valve': zone.valve,
+              'virtual_switch': zone.virtual_switch,
+              'temp_sensor': zone.temp_sensor,
+              'current_temp': current_temp,
+              'target_temp': target_temp,
+              'needs_action': needs_action,
+              'virtual_switch_on': virtual_switch_on,
+              'temp_needs_action': temp_needs_action,
+              'satisfied': satisfied,
+              'overheated': is_overheated,
+              'mode': zone_mode,
+              'temp_deficit': target_temp - current_temp
+            }] %}
+          {% endif %}
+        {% endfor %}
+        {{ ns.zones }}
+      
+      # Calculate which zones need heating/cooling (valves should be open)
+      zones_needing_action: >
+        {{ zone_data | selectattr('needs_action', 'eq', true) | list }}
+      
+      # Check if all zones are satisfied
+      all_zones_satisfied: >
+        {{ zone_data | selectattr('satisfied', 'eq', false) | list | length == 0 }}
+      
+      # Check if all zones are overheated
+      all_zones_overheated: >
+        {{ zone_data | selectattr('overheated', 'eq', false) | list | length == 0 and zone_data | length > 0 }}
+      
+      # Get fallback zones (default to first zone if not specified)
+      fallback_zones: >
+        {% if fallback_zone_list and fallback_zone_list | length > 0 %}
+          {{ fallback_zone_list }}
+        {% elif zone_data | length > 0 %}
+          {{ [zone_data[0].climate] }}
+        {% else %}
+          []
+        {% endif %}
+      
+      # Calculate target temperature for MAIN thermostat
+      calculated_main_target: >
+        {% if all_zones_overheated %}
+          {# All zones are overheated - lower MAIN target to minimum #}
+          {# Only fallback zone(s) will be open to prevent pump issues #}
+          {{ min_temp }}
+        {% elif zones_needing_action | length > 0 %}
+          {# At least one zone needs heating/cooling - use improved algorithm #}
+          {% if is_cooling_mode %}
+            {# Cooling mode: use lowest target (coldest setting needed) #}
+            {% set base_target = zones_needing_action | map(attribute='target_temp') | min | float %}
+            {# For cooling, if MAIN sensor is cooler than zones, we may need to compensate downward #}
+            {% set max_deficit = zones_needing_action | map(attribute='temp_deficit') | max | float %}
+            {% if main_current_temp < base_target %}
+              {# MAIN is cooler than target zones, compensate by lowering target further #}
+              {# In cooling mode, deficit is negative (target < current), so we use abs #}
+              {{ (base_target - (max_deficit | abs * 0.5)) | round(1) }}
+            {% else %}
+              {{ base_target }}
+            {% endif %}
+          {% else %}
+            {# Heating mode: use improved weighted algorithm #}
+            {% set base_target = zones_needing_action | map(attribute='target_temp') | max | float %}
+            {# Calculate maximum temperature deficit among zones needing heating #}
+            {% set max_deficit = zones_needing_action | map(attribute='temp_deficit') | max | float %}
+            {# Get minimum current temp among zones needing heating #}
+            {% set min_zone_temp = zones_needing_action | map(attribute='current_temp') | min | float %}
+            
+            {# If MAIN sensor (corridor) is warmer than zones needing heat, add compensation #}
+            {% if main_current_temp > base_target %}
+              {# Corridor is warmer than target - need to heat water more to reach zones #}
+              {# Add 50% of the max deficit as compensation #}
+              {{ (base_target + (max_deficit * 0.5)) | round(1) }}
+            {% elif main_current_temp > min_zone_temp + 1.0 %}
+              {# Corridor is significantly warmer than coldest zone - add partial compensation #}
+              {% set temp_gap = main_current_temp - min_zone_temp %}
+              {{ (base_target + (temp_gap * 0.3)) | round(1) }}
+            {% else %}
+              {# No significant temperature difference, use base target #}
+              {{ base_target }}
+            {% endif %}
+          {% endif %}
+        {% elif all_zones_satisfied and zone_data | length > 0 %}
+          {# All zones satisfied - calculate based on mode slider #}
+          {% set all_targets = zone_data | map(attribute='target_temp') | list %}
+          {% if all_targets | length > 0 %}
+            {% set min_target = all_targets | min | float %}
+            {% set max_target = all_targets | max | float %}
+            {% set avg_target = (all_targets | sum / all_targets | length) | float %}
+            
+            {% if all_satisfied_mode <= 5 %}
+              {{ min_target }}
+            {% elif all_satisfied_mode >= 95 %}
+              {{ max_target }}
+            {% else %}
+              {# Interpolate between min and max based on slider position #}
+              {% set mode_percent = all_satisfied_mode / 100.0 %}
+              {{ (min_target + (max_target - min_target) * mode_percent) | round(1) }}
+            {% endif %}
+          {% else %}
+            {{ min_temp }}
+          {% endif %}
+        {% elif zone_data | length > 0 %}
+          {# Default: use average of all zone targets #}
+          {{ (zone_data | map(attribute='target_temp') | sum / zone_data | length) | float | round(1) }}
+        {% else %}
+          {# No zones configured, use minimum temperature #}
+          {{ min_temp }}
+        {% endif %}
+      
+      # Clamp to min/max limits
+      final_main_target: >
+        {{ [min_temp, [calculated_main_target, max_temp] | min] | max | round(1) }}
+      
+      # Determine which valves should be open
+      # CRITICAL: At least one valve must always be open to prevent pump issues
+      valves_to_open: >
+        {% if all_zones_overheated %}
+          {# All zones overheated - close all EXCEPT fallback zone(s) to prevent overheating #}
+          {{ fallback_zones }}
+        {% elif all_zones_satisfied %}
+          {# All zones satisfied but not overheated #}
+          {% if fallback_zone_list and fallback_zone_list | length > 0 %}
+            {# If fallback zones configured, open only those to prevent overheating #}
+            {{ fallback_zones }}
+          {% else %}
+            {# No fallback configured, use legacy behavior: open all valves #}
+            {{ zone_data | map(attribute='climate') | list }}
+          {% endif %}
+        {% elif zones_needing_action | length > 0 %}
+          {# Open valves for zones that need heating/cooling #}
+          {{ zones_needing_action | map(attribute='climate') | list }}
+        {% else %}
+          {# Fallback: open fallback zone(s) or at least the first zone's valve #}
+          {{ fallback_zones }}
+        {% endif %}
+      
+      valves_to_close: >
+        {% set open_list = valves_to_open %}
+        {{ zone_data | map(attribute='climate') | reject('in', open_list) | list }}
+
+  # Validate configuration - log errors if validation fails
+  - condition: template
+    value_template: "{{ zone_config_validation | length > 0 }}"
+  - service: logbook.log
+    data:
+      name: Floor Heating Valve Manager - Configuration Error
+      message: >
+        CONFIGURATION ERROR: {{ zone_config_validation | join('. ') }}.
+        Each zone must have BOTH physical valve and virtual switch configured,
+        or BOTH must be empty. Fix your blueprint configuration.
+
+  # Log the calculation for debugging
+  - service: logbook.log
+    data:
+      name: Floor Heating Valve Manager
+      message: >
+        Recalculating valve states and MAIN temperature.
+        Mode: {{ 'Cooling' if is_cooling_mode else 'Heating' }}.
+        MAIN sensor temp: {{ main_current_temp }}°C.
+        Zones needing action: {{ zones_needing_action | length }}.
+        All satisfied: {{ all_zones_satisfied }}.
+        All overheated: {{ all_zones_overheated }}.
+        Valves to open: {{ valves_to_open | length }}.
+        Target MAIN temp: {{ final_main_target }}°C.
+
+  # Set MAIN thermostat target temperature
+  - service: climate.set_temperature
+    target:
+      entity_id: !input main_thermostat
+    data:
+      temperature: "{{ final_main_target }}"
+
+  # PHASE 1: Open valves that need to be opened
+  # This ensures new valves are opening before we close old ones
+  - repeat:
+      for_each: "{{ zone_data }}"
+      sequence:
+        - variables:
+            zone: "{{ repeat.item }}"
+            should_open: "{{ zone.climate in valves_to_open }}"
+        
+        - condition: template
+          value_template: "{{ should_open }}"
+        
+        # Open valve (turn on climate or valve entity)
+        - choose:
+            # If manual valve override is set, turn it on directly
+            - conditions:
+                - condition: template
+                  value_template: "{{ zone.valve != '' and zone.valve != [] }}"
+              sequence:
+                - service: homeassistant.turn_on
+                  target:
+                    entity_id: "{{ zone.valve }}"
+          default:
+            # WARNING: When no valve override is specified, the climate entity
+            # will control the valve based on its own internal logic.
+            # This may conflict with the blueprint's decisions!
+            # RECOMMENDATION: Always use valve overrides to prevent conflicts.
+            # 
+            # Fallback behavior: Set climate to heating/cooling mode
+            # The climate entity will then control the valve based on its own
+            # temperature comparison, which may differ from the blueprint's logic
+            - service: climate.set_hvac_mode
+              target:
+                entity_id: "{{ zone.climate }}"
+              data:
+                hvac_mode: "{{ 'cool' if is_cooling_mode else 'heat' }}"
+
+  # Wait for valve transition delay (allows valves to fully open)
+  - condition: template
+    value_template: "{{ valve_delay > 0 }}"
+  - delay:
+      seconds: "{{ valve_delay }}"
+
+  # PHASE 2: Close valves that need to be closed
+  # Now that new valves are open, we can safely close old ones
+  - repeat:
+      for_each: "{{ zone_data }}"
+      sequence:
+        - variables:
+            zone: "{{ repeat.item }}"
+            should_close: "{{ zone.climate in valves_to_close }}"
+        
+        - condition: template
+          value_template: "{{ should_close }}"
+        
+        # Close valve (turn off climate or valve entity)
+        - choose:
+            # If manual valve override is set, turn it off
+            - conditions:
+                - condition: template
+                  value_template: "{{ zone.valve != '' and zone.valve != [] }}"
+              sequence:
+                - service: homeassistant.turn_off
+                  target:
+                    entity_id: "{{ zone.valve }}"
+          default:
+            # Otherwise, turn off climate entity (close valve)
+            - service: climate.set_hvac_mode
+              target:
+                entity_id: "{{ zone.climate }}"
+              data:
+                hvac_mode: "off"
+
+mode: single
+max_exceeded: silent
