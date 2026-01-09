@@ -1278,6 +1278,7 @@ action:
       entity_id: !input main_thermostat
     data:
       temperature: "{{ final_main_target }}"
+      hvac_mode: "{{ 'cool' if is_cooling_mode else 'heat' }}"
 
   # PHASE 1: Open valves that need to be opened
   # This ensures new valves are opening before we close old ones
