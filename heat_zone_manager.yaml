@@ -320,7 +320,7 @@ blueprint:
 
     zones_group_2:
       name: "🏠 ZONES GROUP 2 (Zones 6-10)"
-      icon: mdi:home-group
+      icon: mdi:home-thermometer
       description: Configure heating zones 6 through 10. Each zone requires climate entity, physical valve, and virtual switch.
       collapsed: true
       input:
@@ -560,7 +560,7 @@ blueprint:
 
     zones_group_3:
       name: "🏠 ZONES GROUP 3 (Zones 11-15)"
-      icon: mdi:home-group
+      icon: mdi:home-thermometer
       description: Configure heating zones 11 through 15. Each zone requires climate entity, physical valve, and virtual switch.
       collapsed: true
       input:
