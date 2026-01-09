@@ -57,7 +57,9 @@ Use these recommended starting values:
 | All Satisfied Mode | 50% | Use average temperature |
 | Min MAIN Temperature | 18°C | Safe minimum |
 | Max MAIN Temperature | 28°C | Safe maximum |
-| Update Interval | 60 sec | Standard responsiveness |
+| Fallback Temperature | 20°C | Default if sensor fails |
+
+**Note:** The blueprint automatically recalculates every 60 seconds.
 
 ## 🎯 Common Setups
 
@@ -94,13 +96,15 @@ Zone 4: climate.kitchen
 
 ## 🔧 Quick Tweaks
 
-### Make it respond faster
-- Reduce **Update Interval** to `30` seconds
+### More responsive behavior
 - Reduce **Open Valve Threshold** to `0.3°C`
+- Reduce **Close Valve Threshold** to `0.1°C`
 
-### Make it more stable
-- Increase **Update Interval** to `120` seconds
+### More stable operation  
 - Increase **Open Valve Threshold** to `1.0°C`
+- Increase **Close Valve Threshold** to `0.5°C`
+
+**Note:** The blueprint runs automatically every 60 seconds to recalculate valve states.
 
 ### Use more conservative heating
 - Set **All Satisfied Mode** to `0%` (lowest)

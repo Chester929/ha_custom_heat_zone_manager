@@ -34,9 +34,6 @@ automation:
         # MAIN thermostat limits
         min_main_temp: 18.0
         max_main_temp: 28.0
-        
-        # Update every 60 seconds
-        update_interval: 60
 
 # ==============================================================================
 # EXAMPLE 2: Advanced Setup with Manual Overrides
@@ -76,8 +73,6 @@ automation:
         min_main_temp: 19.0
         max_main_temp: 26.0
         
-        # Update every 30 seconds for faster response
-        update_interval: 30
 
 # ==============================================================================
 # EXAMPLE 3: Full 5 Zone Setup
@@ -117,7 +112,6 @@ automation:
         all_satisfied_temp_mode: 50  # Use average
         min_main_temp: 18.0
         max_main_temp: 28.0
-        update_interval: 60
 
 # ==============================================================================
 # EXAMPLE 4: Cooling Mode Setup (Air Conditioning)
@@ -151,7 +145,6 @@ automation:
         min_main_temp: 20.0
         max_main_temp: 26.0
         
-        update_interval: 60
 
 # ==============================================================================
 # EXAMPLE 5: Conservative Setup (Slower Response)
@@ -182,8 +175,6 @@ automation:
         min_main_temp: 17.0
         max_main_temp: 30.0
         
-        # Update less frequently
-        update_interval: 120
 
 # ==============================================================================
 # EXAMPLE 6: Aggressive Setup (Faster Response)
@@ -214,8 +205,6 @@ automation:
         min_main_temp: 19.0
         max_main_temp: 27.0
         
-        # Update more frequently
-        update_interval: 30
 
 # ==============================================================================
 # NOTES ON ENTITY NAMING
@@ -243,6 +232,5 @@ automation:
 # - all_satisfied_temp_mode: 50% (average)
 # - min_main_temp: 18.0°C
 # - max_main_temp: 28.0°C
-# - update_interval: 60 seconds
 #
 # Then adjust based on your system's behavior and preferences.

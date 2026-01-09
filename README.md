@@ -145,7 +145,9 @@ This blueprint manages the entire system automatically!
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | **Enable Cooling Mode Support** | Invert logic for cooling | false |
-| **Update Interval** | How often to recalculate (seconds) | 60 |
+| **Fallback Temperature** | Temperature used if sensor fails | 20.0°C |
+
+**Note:** The blueprint automatically recalculates every 60 seconds. Response to zone changes is immediate when triggered by state changes.
 
 ## 🧠 Logic Explanation
 

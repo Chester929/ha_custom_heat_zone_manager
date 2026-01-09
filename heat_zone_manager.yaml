@@ -278,62 +278,26 @@ blueprint:
       selector:
         boolean:
 
-    update_interval:
-      name: Update Interval
-      description: How often to recalculate and update valve states and MAIN thermostat temperature
-      default: 60
+    fallback_temp:
+      name: Fallback Temperature
+      description: >
+        Temperature to use if a sensor fails or returns an invalid value.
+        This prevents automation errors when sensors are unavailable.
+      default: 20.0
       selector:
         number:
-          min: 15
-          max: 300
-          step: 15
-          unit_of_measurement: "seconds"
+          min: 15.0
+          max: 25.0
+          step: 0.5
+          unit_of_measurement: "°C"
           mode: slider
 
 # Automation triggers
 trigger:
-  # Trigger on any zone climate entity state change
-  - platform: state
-    entity_id: !input zone1_climate
-    id: zone1_change
-  - platform: state
-    entity_id: !input zone2_climate
-    id: zone2_change
-  - platform: state
-    entity_id: !input zone3_climate
-    id: zone3_change
-  - platform: state
-    entity_id: !input zone4_climate
-    id: zone4_change
-  - platform: state
-    entity_id: !input zone5_climate
-    id: zone5_change
-  
-  # Trigger on any zone temperature sensor change (if overridden)
-  - platform: state
-    entity_id: !input zone1_temp_sensor
-    id: zone1_temp_change
-  - platform: state
-    entity_id: !input zone2_temp_sensor
-    id: zone2_temp_change
-  - platform: state
-    entity_id: !input zone3_temp_sensor
-    id: zone3_temp_change
-  - platform: state
-    entity_id: !input zone4_temp_sensor
-    id: zone4_temp_change
-  - platform: state
-    entity_id: !input zone5_temp_sensor
-    id: zone5_temp_change
-  
-  # Trigger on MAIN thermostat state change
-  - platform: state
-    entity_id: !input main_thermostat
-    id: main_change
-  
-  # Periodic trigger based on update interval
+  # Periodic trigger - runs every 60 seconds for recalculation
+  # This ensures regular updates regardless of entity state changes
   - platform: time_pattern
-    seconds: !input update_interval
+    seconds: "/60"
     id: periodic_update
 
 # Conditions
@@ -350,6 +314,7 @@ action:
       all_satisfied_mode: !input all_satisfied_temp_mode
       min_temp: !input min_main_temp
       max_temp: !input max_main_temp
+      fallback_temperature: !input fallback_temp
       
       # Zone configurations
       zones:
@@ -388,11 +353,11 @@ action:
             {% set climate_entity = zone.climate %}
             {# Get current temperature - use override sensor if provided, otherwise use climate entity's attribute #}
             {% if zone.temp_sensor and zone.temp_sensor != [] and zone.temp_sensor != '' %}
-              {% set current_temp = states(zone.temp_sensor) | float(20) %}
+              {% set current_temp = states(zone.temp_sensor) | float(fallback_temperature) %}
             {% else %}
-              {% set current_temp = state_attr(climate_entity, 'current_temperature') | float(20) %}
+              {% set current_temp = state_attr(climate_entity, 'current_temperature') | float(fallback_temperature) %}
             {% endif %}
-            {% set target_temp = state_attr(climate_entity, 'temperature') | float(20) %}
+            {% set target_temp = state_attr(climate_entity, 'temperature') | float(fallback_temperature) %}
             {% set zone_mode = states(climate_entity) %}
             
             {# Determine if zone needs heating/cooling #}
@@ -437,25 +402,32 @@ action:
           {% else %}
             {{ zones_needing_action | map(attribute='target_temp') | max | float }}
           {% endif %}
-        {% elif all_zones_satisfied %}
+        {% elif all_zones_satisfied and zone_data | length > 0 %}
           {# All zones satisfied - calculate based on mode slider #}
           {% set all_targets = zone_data | map(attribute='target_temp') | list %}
-          {% set min_target = all_targets | min | float %}
-          {% set max_target = all_targets | max | float %}
-          {% set avg_target = (all_targets | sum / all_targets | length) | float %}
-          
-          {% if all_satisfied_mode <= 5 %}
-            {{ min_target }}
-          {% elif all_satisfied_mode >= 95 %}
-            {{ max_target }}
+          {% if all_targets | length > 0 %}
+            {% set min_target = all_targets | min | float %}
+            {% set max_target = all_targets | max | float %}
+            {% set avg_target = (all_targets | sum / all_targets | length) | float %}
+            
+            {% if all_satisfied_mode <= 5 %}
+              {{ min_target }}
+            {% elif all_satisfied_mode >= 95 %}
+              {{ max_target }}
+            {% else %}
+              {# Interpolate between min and max based on slider position #}
+              {% set mode_percent = all_satisfied_mode / 100.0 %}
+              {{ (min_target + (max_target - min_target) * mode_percent) | round(1) }}
+            {% endif %}
           {% else %}
-            {# Interpolate between min and max based on slider position #}
-            {% set mode_percent = all_satisfied_mode / 100.0 %}
-            {{ (min_target + (max_target - min_target) * mode_percent) | round(1) }}
+            {{ min_temp }}
           {% endif %}
-        {% else %}
+        {% elif zone_data | length > 0 %}
           {# Default: use average of all zone targets #}
           {{ (zone_data | map(attribute='target_temp') | sum / zone_data | length) | float | round(1) }}
+        {% else %}
+          {# No zones configured, use minimum temperature #}
+          {{ min_temp }}
         {% endif %}
       
       # Clamp to min/max limits
