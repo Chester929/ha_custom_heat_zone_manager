@@ -435,7 +435,7 @@ action:
               {# Cooling mode: open valve if temp is above target + threshold #}
               {% set needs_action = current_temp > (target_temp + temp_diff_open) %}
               {% set satisfied = current_temp <= (target_temp - temp_diff_close) %}
-              {# Overheated in cooling = zone is too cold (below target - overheat_threshold) #}
+              {# Over-cooled in cooling mode = zone is excessively cold (below target - overheat_threshold) #}
               {% set is_overheated = current_temp < (target_temp - overheat_threshold) %}
             {% else %}
               {# Heating mode: open valve if temp is below target - threshold #}
@@ -496,9 +496,9 @@ action:
             {% set base_target = zones_needing_action | map(attribute='target_temp') | min | float %}
             {# For cooling, if MAIN sensor is cooler than zones, we may need to compensate downward #}
             {% set max_deficit = zones_needing_action | map(attribute='temp_deficit') | max | float %}
-            {% if main_current_temp < base_target and max_deficit < 0 %}
-              {# MAIN is cooler than target, compensate by lowering target further #}
-              {# max_deficit is negative for cooling, so adding it lowers the target #}
+            {% if main_current_temp < base_target %}
+              {# MAIN is cooler than target zones, compensate by lowering target further #}
+              {# In cooling mode, deficit is negative (target < current), so we use abs #}
               {{ (base_target - (max_deficit | abs * 0.5)) | round(1) }}
             {% else %}
               {{ base_target }}
