@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Climate Entity Conflict Prevention** (NEW)
+  - Prevents conflicts between zone climate entities' internal valve control and blueprint's valve control
+  - When valve override is NOT used, blueprint now sets extreme target temperatures to prevent climate entity from closing valves
+  - When opening valve (heating mode): Sets climate target to maximum temperature
+  - When opening valve (cooling mode): Sets climate target to minimum temperature
+  - When closing valve: Sets climate to OFF mode
+  - Ensures blueprint has full control without fighting against climate entity's thermostat logic
+  - Particularly important for Generic Thermostat and similar climate entities that auto-control valves
+- **Documentation for Climate Entity Conflicts**
+  - Added comprehensive troubleshooting section explaining the conflict issue
+  - Added EXAMPLE 9 showing recommended configuration with valve overrides
+  - Updated README with warning about climate entity conflicts
+  - Updated ARCHITECTURE with detailed explanation of conflict prevention logic
 - **Intelligent Temperature Compensation Algorithm**
   - New optional `main_temp_sensor` parameter for MAIN thermostat location (e.g., corridor)
   - Automatically compensates when MAIN sensor location differs from zones needing heating
@@ -16,14 +29,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Applies 30% compensation when corridor is significantly warmer than coldest zone
   - Ensures HVAC heats water adequately despite warm corridor sensor reading
   - Example: Corridor 23°C, Bedroom 20°C targeting 22°C → MAIN target compensated to 23°C
-- **Fallback Zones Configuration** (NEW)
+- **Fallback Zones Configuration**
   - New optional `fallback_zones` parameter to select which zone(s) stay open when all satisfied/overheated
   - Ensures at least one valve is always open (critical pump safety constraint)
   - Prevents overheating by closing unnecessary valves when all zones satisfied
   - Recommended: Select corridor or least critical room
   - Supports multiple zones for redundancy
   - Defaults to first zone if not configured (backward compatible)
-- **Overheated Protection** (NEW)
+- **Overheated Protection**
   - New `overheated_threshold` parameter (default: 1.0°C)
   - Detects when zones are too hot (current temp > target + threshold)
   - When all zones overheated: Closes all valves EXCEPT fallback zone(s)
@@ -38,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added overheated status tracking for each zone
 
 ### Changed
+- **Valve Control Logic** - Now sets climate entity target temperatures to prevent internal thermostat conflicts
 - MAIN thermostat temperature calculation now uses intelligent weighted algorithm
 - Improved heating effectiveness when MAIN sensor is in a different location than zones
 - Valve open/close logic now supports three modes:

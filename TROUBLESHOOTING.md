@@ -70,6 +70,65 @@ This guide helps resolve common issues when using the Floor Heating Valve Manage
 3. If using manual valve overrides, ensure they support `homeassistant.turn_on/turn_off`
 4. Check that valve entities are working independently
 
+### Climate entity conflicts with blueprint valve control
+
+**Problem**: Zone climate entities (e.g., Generic Thermostat) have their own internal logic that controls valves based on current vs target temperature. This can conflict with the blueprint's valve control decisions.
+
+**Understanding the Issue**:
+When you use a Generic Thermostat or similar climate entity that automatically controls a valve switch:
+- The climate entity opens/closes the valve based on its own temperature comparison
+- The blueprint ALSO tries to control the same valve
+- These two controllers can "fight" each other, leading to:
+  - Valves opening/closing unexpectedly
+  - Inefficient heating/cooling
+  - Conflicts between the two control systems
+
+**How the Blueprint Solves This**:
+The blueprint uses a smart approach to prevent conflicts:
+
+1. **When using valve override** (you specify a separate valve entity):
+   - The blueprint controls the valve directly via `turn_on`/`turn_off`
+   - The climate entity is ignored for valve control
+   - No conflict occurs
+
+2. **When NOT using valve override** (climate entity controls the valve):
+   - When the blueprint wants the valve **OPEN**:
+     - Sets climate to heat/cool mode
+     - Sets climate target temperature to an extreme value (maximum for heating, minimum for cooling)
+     - This ensures the climate entity's internal logic keeps the valve open
+   - When the blueprint wants the valve **CLOSED**:
+     - Sets climate to OFF mode
+     - The valve closes immediately
+   
+This approach ensures the blueprint has full control over valve states while working WITH the climate entity's logic rather than against it.
+
+**Best Practices**:
+1. **Option 1 (Recommended)**: Use valve overrides
+   - Configure separate valve entities in the blueprint
+   - The blueprint controls valves directly
+   - Climate entities are only used for temperature reading
+   - Example:
+     ```yaml
+     zone1_climate: climate.bedroom_thermostat
+     zone1_temp_sensor: sensor.bedroom_temperature  # Optional
+     zone1_valve: switch.bedroom_valve  # Direct valve control
+     ```
+
+2. **Option 2**: Let the blueprint manage climate entities
+   - Don't specify valve overrides
+   - The blueprint will control climate entities using the conflict-prevention logic
+   - Climate target temperatures will be overridden by the blueprint
+   - Example:
+     ```yaml
+     zone1_climate: climate.bedroom_thermostat
+     # No valve override - blueprint manages the climate entity directly
+     ```
+
+**Important Notes**:
+- The zone climate entity's target temperature will be overridden by the blueprint when controlling valves
+- If you manually change a zone's target temperature, it will be reset on the next blueprint cycle
+- The original zone target temperatures are only used for the blueprint's decision logic, not for the actual climate entity control
+
 ## Runtime Issues
 
 ### All valves close (should never happen!)

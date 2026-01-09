@@ -306,6 +306,70 @@ automation:
 
 
 # ==============================================================================
+# EXAMPLE 9: Generic Thermostat with Valve Override (RECOMMENDED)
+# ==============================================================================
+# Scenario: Your zones use Generic Thermostat entities that control valve switches
+# This setup prevents conflicts between the climate entity and blueprint
+
+automation:
+  - alias: Floor Heating - Generic Thermostat with Valve Override
+    use_blueprint:
+      path: chester929/heat_zone_manager.yaml
+      input:
+        # MAIN thermostat
+        main_thermostat: climate.main_hvac
+        main_temp_sensor: sensor.corridor_temperature
+        
+        # Zone 1: Bedroom with Generic Thermostat
+        # IMPORTANT: Specify the valve override to prevent conflicts!
+        zone1_climate: climate.bedroom_generic_thermostat
+        zone1_temp_sensor: sensor.bedroom_temperature
+        zone1_valve: switch.bedroom_valve  # Direct valve control - prevents conflict
+        
+        # Zone 2: Bathroom with Generic Thermostat
+        zone2_climate: climate.bathroom_generic_thermostat
+        zone2_temp_sensor: sensor.bathroom_temperature
+        zone2_valve: switch.bathroom_valve  # Direct valve control - prevents conflict
+        
+        # Zone 3: Living Room with Generic Thermostat
+        zone3_climate: climate.living_generic_thermostat
+        zone3_temp_sensor: sensor.living_temperature
+        zone3_valve: switch.living_valve  # Direct valve control - prevents conflict
+        
+        # Temperature thresholds
+        temp_difference_open: 0.5
+        temp_difference_close: 0.2
+        all_satisfied_temp_mode: 50
+        min_main_temp: 18.0
+        max_main_temp: 28.0
+
+# WHY VALVE OVERRIDE IS RECOMMENDED:
+# 
+# Generic Thermostats (and similar climate entities) have built-in logic that 
+# automatically controls valves based on current vs target temperature.
+# 
+# Without valve override:
+#   - Climate entity controls valve based on its temperature comparison
+#   - Blueprint also controls valve based on ITS temperature comparison
+#   - Result: Two controllers fighting each other
+#   - The blueprint handles this by overriding the climate target temperature,
+#     but this can be confusing
+# 
+# With valve override (RECOMMENDED):
+#   - Blueprint controls valve directly via switch.bedroom_valve
+#   - Climate entity is only used for reading current temperature and target
+#   - No conflict - clear separation of concerns
+#   - Better control and easier to debug
+# 
+# If you CANNOT use valve override:
+#   - The blueprint will automatically handle the conflict by:
+#     * Setting extreme target temperatures when valve should be open
+#     * Setting climate to OFF when valve should be closed
+#   - Your zone climate target temperatures will be overridden
+#   - This works but is less intuitive
+
+
+# ==============================================================================
 # NOTES ON ENTITY NAMING
 # ==============================================================================
 # 

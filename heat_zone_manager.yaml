@@ -628,12 +628,21 @@ action:
                   target:
                     entity_id: "{{ zone.valve }}"
           default:
-            # Otherwise, ensure climate entity is in heating/cooling mode
+            # Otherwise, control the climate entity to open the valve
+            # Set climate to heating/cooling mode AND set extreme target temperature
+            # to override the climate entity's internal thermostat logic
             - service: climate.set_hvac_mode
               target:
                 entity_id: "{{ zone.climate }}"
               data:
                 hvac_mode: "{{ 'cool' if is_cooling_mode else 'heat' }}"
+            # Set extreme target temperature to prevent climate entity from
+            # closing the valve due to its own temperature comparison logic
+            - service: climate.set_temperature
+              target:
+                entity_id: "{{ zone.climate }}"
+              data:
+                temperature: "{{ max_temp if not is_cooling_mode else min_temp }}"
 
   # Wait for valve transition delay (allows valves to fully open)
   - condition: template

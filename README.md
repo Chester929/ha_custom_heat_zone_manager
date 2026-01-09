@@ -89,6 +89,20 @@ This blueprint manages the entire system automatically!
 
 ## 🔧 Configuration
 
+### Important: Climate Entity Valve Control
+
+⚠️ **Climate Entity Conflict Resolution**
+
+If your zone climate entities (e.g., Generic Thermostat) automatically control valves based on temperature, they may conflict with this blueprint's valve control. The blueprint handles this intelligently:
+
+- **When valve override IS specified**: The blueprint controls the valve directly, bypassing the climate entity's valve control
+- **When valve override is NOT specified**: The blueprint overrides the climate entity's target temperature to prevent conflicts
+  - When opening a valve: Sets climate to heat/cool mode with extreme target temperature (max for heating, min for cooling)
+  - When closing a valve: Sets climate to OFF mode
+  - This ensures the climate entity's internal logic doesn't fight with the blueprint's decisions
+
+**Recommendation**: Use valve overrides for best control and clarity. See [TROUBLESHOOTING.md](TROUBLESHOOTING.md#climate-entity-conflicts-with-blueprint-valve-control) for detailed information.
+
 ### Basic Setup
 
 1. **Select MAIN Thermostat**: Your primary HVAC climate entity
@@ -96,7 +110,7 @@ This blueprint manages the entire system automatically!
 2. **Configure Zones**: Add your room thermostats (up to 5)
    - Each zone requires a climate entity
    - Optionally override with custom temperature sensor
-   - Optionally override with custom valve entity
+   - Optionally override with custom valve entity (recommended to prevent conflicts)
 
 3. **Set Temperature Thresholds**:
    - **Open Threshold**: How many degrees below target triggers valve opening (default: 0.5°C)

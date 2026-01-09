@@ -201,8 +201,12 @@ Actions performed:
   ├─ PHASE 1: Open new valves
   │   └─ For each zone that needs to open:
   │       ├─ Manual valve override?
-  │       │   ├─ YES → Turn ON valve entity
-  │       │   └─ NO  → Set climate to heat/cool mode
+  │       │   ├─ YES → Turn ON valve entity directly
+  │       │   └─ NO  → Control via climate entity:
+  │       │           ├─ Set climate to heat/cool mode
+  │       │           └─ Set extreme target temperature to prevent
+  │       │               climate entity's internal logic from closing valve
+  │       │               (max_temp for heating, min_temp for cooling)
   │
   ├─ Wait for valve transition delay (if > 0)
   │   └─ Allows valves to fully open before closing others
@@ -210,11 +214,18 @@ Actions performed:
   ├─ PHASE 2: Close old valves
   │   └─ For each zone that needs to close:
   │       ├─ Manual valve override?
-  │       │   ├─ YES → Turn OFF valve entity
+  │       │   ├─ YES → Turn OFF valve entity directly
   │       │   └─ NO  → Set climate to off mode
   │
   └─ Log action to Home Assistant logbook
 ```
+
+**Climate Entity Conflict Prevention:**
+When NOT using valve overrides, the blueprint controls valves through climate entities. To prevent the climate entity's internal thermostat logic from conflicting with the blueprint's decisions:
+- **Opening a valve**: Set climate to heat/cool mode AND set extreme target temperature (max for heating, min for cooling). This ensures the climate entity's internal comparison (current vs target) always results in keeping the valve open.
+- **Closing a valve**: Set climate to OFF mode, which immediately closes the valve.
+
+This approach allows the blueprint to work WITH the climate entity's logic rather than fighting against it.
 
 **Valve Transition Logic:**
 The two-phase approach ensures at least one valve is always fully open:
