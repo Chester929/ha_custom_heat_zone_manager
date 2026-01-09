@@ -66,10 +66,50 @@ For each configured zone:
   │   ├─ Use override sensor if provided
   │   └─ Else use climate entity's sensor
   ├─ Get target temperature from climate entity
-  └─ Get zone HVAC mode
+  ├─ Get zone HVAC mode
+  └─ Get virtual switch state (if configured)
+      └─ Allows blueprint to understand what climate entity wants
 ```
 
 ### 3. Decision Logic Phase
+
+#### Virtual Switch Pattern (RECOMMENDED for Generic Thermostat)
+
+When a virtual switch is configured:
+
+```
+For each zone:
+  │
+  ├─ Check temperature need
+  │   ├─ Heating: current_temp < (target_temp - open_threshold)?
+  │   └─ Cooling: current_temp > (target_temp + open_threshold)?
+  │   └─ Result: temp_needs_action = true/false
+  │
+  ├─ Check virtual switch state
+  │   └─ Is virtual_switch = ON?
+  │   └─ Result: virtual_switch_on = true/false
+  │
+  └─ Combine both signals
+      └─ needs_action = temp_needs_action AND virtual_switch_on
+      
+This respects what the climate entity wants (virtual switch)
+while applying blueprint's coordinated logic and safety constraints.
+```
+
+**Architecture:**
+```
+Climate Entity (Generic Thermostat)
+    ↓ Controls based on real target temp
+Virtual Switch (input_boolean)
+    ↓ Monitored by blueprint
+Blueprint Decision
+    ↓ Combines virtual switch + temp + coordination
+Physical Valve
+```
+
+#### Without Virtual Switch (Direct Control)
+
+When NO virtual switch is configured:
 
 #### Heating Mode (Default)
 
@@ -200,32 +240,40 @@ Actions performed:
   │
   ├─ PHASE 1: Open new valves
   │   └─ For each zone that needs to open:
-  │       ├─ Manual valve override?
-  │       │   ├─ YES → Turn ON valve entity directly
-  │       │   └─ NO  → Control via climate entity:
-  │       │           ├─ Set climate to heat/cool mode
-  │       │           └─ Set extreme target temperature to prevent
-  │       │               climate entity's internal logic from closing valve
-  │       │               (max_temp for heating, min_temp for cooling)
+  │       ├─ Physical valve configured?
+  │       │   ├─ YES → Turn ON physical valve directly
+  │       │   │         (Used with virtual switch pattern - RECOMMENDED)
+  │       │   └─ NO  → Set climate to heat/cool mode
+  │       │           └─ WARNING: May conflict with climate entity's logic
   │
   ├─ Wait for valve transition delay (if > 0)
   │   └─ Allows valves to fully open before closing others
   │
   ├─ PHASE 2: Close old valves
   │   └─ For each zone that needs to close:
-  │       ├─ Manual valve override?
-  │       │   ├─ YES → Turn OFF valve entity directly
+  │       ├─ Physical valve configured?
+  │       │   ├─ YES → Turn OFF physical valve directly
   │       │   └─ NO  → Set climate to off mode
   │
   └─ Log action to Home Assistant logbook
 ```
 
-**Climate Entity Conflict Prevention:**
-When NOT using valve overrides, the blueprint controls valves through climate entities. To prevent the climate entity's internal thermostat logic from conflicting with the blueprint's decisions:
-- **Opening a valve**: Set climate to heat/cool mode AND set extreme target temperature (max for heating, min for cooling). This ensures the climate entity's internal comparison (current vs target) always results in keeping the valve open.
-- **Closing a valve**: Set climate to OFF mode, which immediately closes the valve.
+**Virtual Switch Pattern (RECOMMENDED)**:
 
-This approach allows the blueprint to work WITH the climate entity's logic rather than fighting against it.
+When using the virtual switch pattern:
+1. Climate entity controls virtual switch based on temperature
+2. Blueprint monitors virtual switch state
+3. Blueprint controls physical valve based on:
+   - Virtual switch state (what climate entity wants)
+   - Temperature analysis
+   - Multi-zone coordination
+   - Safety constraints (at least one valve open)
+
+This ensures:
+- Climate entities maintain real target temperatures
+- No conflicts between controllers
+- Blueprint has final authority for coordination
+- Clean separation of concerns
 
 **Valve Transition Logic:**
 The two-phase approach ensures at least one valve is always fully open:
