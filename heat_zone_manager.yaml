@@ -315,486 +315,484 @@ blueprint:
               multiple: false
 
     # ============================================================================
-    # ZONES GROUP 2 (Zones 6-10)
+    # ZONES GROUP 2 (Zones 6-10) - COLLAPSIBLE
     # ============================================================================
 
-    zones_group_2_header:
-      name: "━━━━━━━━━━━━━ ZONES GROUP 2 (Zones 6-10) ━━━━━━━━━━━━━"
-      description: Configure zones 6 through 10 below
-      default: ""
-      selector:
-        text:
-    
-    # Zone 6 Configuration
-    zone6_climate:
-      name: Zone 6 - Climate Entity
-      description: Climate entity for the sixth heating zone
-      default: []
-      selector:
-        entity:
-          domain: climate
-          multiple: false
+    zones_group_2:
+      name: "🏠 ZONES GROUP 2 (Zones 6-10)"
+      icon: mdi:home-thermometer
+      description: Configure heating zones 6 through 10. Each zone requires climate entity, physical valve, and virtual switch.
+      collapsed: true
+      input:
+        # Zone 6 Configuration
+        zone6_climate:
+          name: Zone 6 - Climate Entity
+          description: Climate entity for the sixth heating zone
+          default: []
+          selector:
+            entity:
+              domain: climate
+              multiple: false
 
-    zone6_temp_sensor:
-      name: Zone 6 - Temperature Sensor (Optional Override)
-      description: Optional temperature sensor to override the climate entity's built-in sensor
-      default: []
-      selector:
-        entity:
-          domain: sensor
-          device_class: temperature
-          multiple: false
+        zone6_temp_sensor:
+          name: Zone 6 - Temperature Sensor (Optional Override)
+          description: Optional temperature sensor to override the climate entity's built-in sensor
+          default: []
+          selector:
+            entity:
+              domain: sensor
+              device_class: temperature
+              multiple: false
 
-    zone6_valve:
-      name: Zone 6 - Physical Valve Entity (REQUIRED if zone configured)
-      description: >
-        Physical valve switch that controls the actual heating valve.
-        REQUIRED when zone is configured - must be specified along with Virtual Switch.
-        The blueprint controls this physical valve directly for coordinated multi-zone heating.
-      default: []
-      selector:
-        entity:
-          multiple: false
+        zone6_valve:
+          name: Zone 6 - Physical Valve Entity (REQUIRED if zone configured)
+          description: >
+            Physical valve switch that controls the actual heating valve.
+            REQUIRED when zone is configured - must be specified along with Virtual Switch.
+            The blueprint controls this physical valve directly for coordinated multi-zone heating.
+          default: []
+          selector:
+            entity:
+              multiple: false
 
-    zone6_virtual_switch:
-      name: Zone 6 - Virtual Switch (REQUIRED if zone configured)
-      description: >
-        Virtual/helper switch (input_boolean or switch helper) controlled by the Generic Thermostat.
-        REQUIRED when zone is configured - must be specified along with Physical Valve Entity.
-        Configure your Generic Thermostat to control this virtual switch instead of the physical valve.
-        The blueprint monitors this switch to understand what the climate entity wants.
-      default: []
-      selector:
-        entity:
-          domain: 
-            - switch
-            - input_boolean
-          multiple: false
+        zone6_virtual_switch:
+          name: Zone 6 - Virtual Switch (REQUIRED if zone configured)
+          description: >
+            Virtual/helper switch (input_boolean or switch helper) controlled by the Generic Thermostat.
+            REQUIRED when zone is configured - must be specified along with Physical Valve Entity.
+            Configure your Generic Thermostat to control this virtual switch instead of the physical valve.
+            The blueprint monitors this switch to understand what the climate entity wants.
+          default: []
+          selector:
+            entity:
+              domain:
+                - switch
+                - input_boolean
+              multiple: false
 
-    # Zone 7 Configuration
-    zone7_climate:
-      name: Zone 7 - Climate Entity
-      description: Climate entity for the seventh heating zone
-      default: []
-      selector:
-        entity:
-          domain: climate
-          multiple: false
+        # Zone 7 Configuration
+        zone7_climate:
+          name: Zone 7 - Climate Entity
+          description: Climate entity for the seventh heating zone
+          default: []
+          selector:
+            entity:
+              domain: climate
+              multiple: false
 
-    zone7_temp_sensor:
-      name: Zone 7 - Temperature Sensor (Optional Override)
-      description: Optional temperature sensor to override the climate entity's built-in sensor
-      default: []
-      selector:
-        entity:
-          domain: sensor
-          device_class: temperature
-          multiple: false
+        zone7_temp_sensor:
+          name: Zone 7 - Temperature Sensor (Optional Override)
+          description: Optional temperature sensor to override the climate entity's built-in sensor
+          default: []
+          selector:
+            entity:
+              domain: sensor
+              device_class: temperature
+              multiple: false
 
-    zone7_valve:
-      name: Zone 7 - Physical Valve Entity (REQUIRED if zone configured)
-      description: >
-        Physical valve switch that controls the actual heating valve.
-        REQUIRED when zone is configured - must be specified along with Virtual Switch.
-        The blueprint controls this physical valve directly for coordinated multi-zone heating.
-      default: []
-      selector:
-        entity:
-          multiple: false
+        zone7_valve:
+          name: Zone 7 - Physical Valve Entity (REQUIRED if zone configured)
+          description: >
+            Physical valve switch that controls the actual heating valve.
+            REQUIRED when zone is configured - must be specified along with Virtual Switch.
+            The blueprint controls this physical valve directly for coordinated multi-zone heating.
+          default: []
+          selector:
+            entity:
+              multiple: false
 
-    zone7_virtual_switch:
-      name: Zone 7 - Virtual Switch (REQUIRED if zone configured)
-      description: >
-        Virtual/helper switch (input_boolean or switch helper) controlled by the Generic Thermostat.
-        REQUIRED when zone is configured - must be specified along with Physical Valve Entity.
-        Configure your Generic Thermostat to control this virtual switch instead of the physical valve.
-        The blueprint monitors this switch to understand what the climate entity wants.
-      default: []
-      selector:
-        entity:
-          domain: 
-            - switch
-            - input_boolean
-          multiple: false
+        zone7_virtual_switch:
+          name: Zone 7 - Virtual Switch (REQUIRED if zone configured)
+          description: >
+            Virtual/helper switch (input_boolean or switch helper) controlled by the Generic Thermostat.
+            REQUIRED when zone is configured - must be specified along with Physical Valve Entity.
+            Configure your Generic Thermostat to control this virtual switch instead of the physical valve.
+            The blueprint monitors this switch to understand what the climate entity wants.
+          default: []
+          selector:
+            entity:
+              domain:
+                - switch
+                - input_boolean
+              multiple: false
 
-    # Zone 8 Configuration
-    zone8_climate:
-      name: Zone 8 - Climate Entity
-      description: Climate entity for the eighth heating zone
-      default: []
-      selector:
-        entity:
-          domain: climate
-          multiple: false
+        # Zone 8 Configuration
+        zone8_climate:
+          name: Zone 8 - Climate Entity
+          description: Climate entity for the eighth heating zone
+          default: []
+          selector:
+            entity:
+              domain: climate
+              multiple: false
 
-    zone8_temp_sensor:
-      name: Zone 8 - Temperature Sensor (Optional Override)
-      description: Optional temperature sensor to override the climate entity's built-in sensor
-      default: []
-      selector:
-        entity:
-          domain: sensor
-          device_class: temperature
-          multiple: false
+        zone8_temp_sensor:
+          name: Zone 8 - Temperature Sensor (Optional Override)
+          description: Optional temperature sensor to override the climate entity's built-in sensor
+          default: []
+          selector:
+            entity:
+              domain: sensor
+              device_class: temperature
+              multiple: false
 
-    zone8_valve:
-      name: Zone 8 - Physical Valve Entity (REQUIRED if zone configured)
-      description: >
-        Physical valve switch that controls the actual heating valve.
-        REQUIRED when zone is configured - must be specified along with Virtual Switch.
-        The blueprint controls this physical valve directly for coordinated multi-zone heating.
-      default: []
-      selector:
-        entity:
-          multiple: false
+        zone8_valve:
+          name: Zone 8 - Physical Valve Entity (REQUIRED if zone configured)
+          description: >
+            Physical valve switch that controls the actual heating valve.
+            REQUIRED when zone is configured - must be specified along with Virtual Switch.
+            The blueprint controls this physical valve directly for coordinated multi-zone heating.
+          default: []
+          selector:
+            entity:
+              multiple: false
 
-    zone8_virtual_switch:
-      name: Zone 8 - Virtual Switch (REQUIRED if zone configured)
-      description: >
-        Virtual/helper switch (input_boolean or switch helper) controlled by the Generic Thermostat.
-        REQUIRED when zone is configured - must be specified along with Physical Valve Entity.
-        Configure your Generic Thermostat to control this virtual switch instead of the physical valve.
-        The blueprint monitors this switch to understand what the climate entity wants.
-      default: []
-      selector:
-        entity:
-          domain: 
-            - switch
-            - input_boolean
-          multiple: false
+        zone8_virtual_switch:
+          name: Zone 8 - Virtual Switch (REQUIRED if zone configured)
+          description: >
+            Virtual/helper switch (input_boolean or switch helper) controlled by the Generic Thermostat.
+            REQUIRED when zone is configured - must be specified along with Physical Valve Entity.
+            Configure your Generic Thermostat to control this virtual switch instead of the physical valve.
+            The blueprint monitors this switch to understand what the climate entity wants.
+          default: []
+          selector:
+            entity:
+              domain:
+                - switch
+                - input_boolean
+              multiple: false
 
-    # Zone 9 Configuration
-    zone9_climate:
-      name: Zone 9 - Climate Entity
-      description: Climate entity for the ninth heating zone
-      default: []
-      selector:
-        entity:
-          domain: climate
-          multiple: false
+        # Zone 9 Configuration
+        zone9_climate:
+          name: Zone 9 - Climate Entity
+          description: Climate entity for the ninth heating zone
+          default: []
+          selector:
+            entity:
+              domain: climate
+              multiple: false
 
-    zone9_temp_sensor:
-      name: Zone 9 - Temperature Sensor (Optional Override)
-      description: Optional temperature sensor to override the climate entity's built-in sensor
-      default: []
-      selector:
-        entity:
-          domain: sensor
-          device_class: temperature
-          multiple: false
+        zone9_temp_sensor:
+          name: Zone 9 - Temperature Sensor (Optional Override)
+          description: Optional temperature sensor to override the climate entity's built-in sensor
+          default: []
+          selector:
+            entity:
+              domain: sensor
+              device_class: temperature
+              multiple: false
 
-    zone9_valve:
-      name: Zone 9 - Physical Valve Entity (REQUIRED if zone configured)
-      description: >
-        Physical valve switch that controls the actual heating valve.
-        REQUIRED when zone is configured - must be specified along with Virtual Switch.
-        The blueprint controls this physical valve directly for coordinated multi-zone heating.
-      default: []
-      selector:
-        entity:
-          multiple: false
+        zone9_valve:
+          name: Zone 9 - Physical Valve Entity (REQUIRED if zone configured)
+          description: >
+            Physical valve switch that controls the actual heating valve.
+            REQUIRED when zone is configured - must be specified along with Virtual Switch.
+            The blueprint controls this physical valve directly for coordinated multi-zone heating.
+          default: []
+          selector:
+            entity:
+              multiple: false
 
-    zone9_virtual_switch:
-      name: Zone 9 - Virtual Switch (REQUIRED if zone configured)
-      description: >
-        Virtual/helper switch (input_boolean or switch helper) controlled by the Generic Thermostat.
-        REQUIRED when zone is configured - must be specified along with Physical Valve Entity.
-        Configure your Generic Thermostat to control this virtual switch instead of the physical valve.
-        The blueprint monitors this switch to understand what the climate entity wants.
-      default: []
-      selector:
-        entity:
-          domain: 
-            - switch
-            - input_boolean
-          multiple: false
+        zone9_virtual_switch:
+          name: Zone 9 - Virtual Switch (REQUIRED if zone configured)
+          description: >
+            Virtual/helper switch (input_boolean or switch helper) controlled by the Generic Thermostat.
+            REQUIRED when zone is configured - must be specified along with Physical Valve Entity.
+            Configure your Generic Thermostat to control this virtual switch instead of the physical valve.
+            The blueprint monitors this switch to understand what the climate entity wants.
+          default: []
+          selector:
+            entity:
+              domain:
+                - switch
+                - input_boolean
+              multiple: false
 
-    # Zone 10 Configuration
-    zone10_climate:
-      name: Zone 10 - Climate Entity
-      description: Climate entity for the tenth heating zone
-      default: []
-      selector:
-        entity:
-          domain: climate
-          multiple: false
+        # Zone 10 Configuration
+        zone10_climate:
+          name: Zone 10 - Climate Entity
+          description: Climate entity for the tenth heating zone
+          default: []
+          selector:
+            entity:
+              domain: climate
+              multiple: false
 
-    zone10_temp_sensor:
-      name: Zone 10 - Temperature Sensor (Optional Override)
-      description: Optional temperature sensor to override the climate entity's built-in sensor
-      default: []
-      selector:
-        entity:
-          domain: sensor
-          device_class: temperature
-          multiple: false
+        zone10_temp_sensor:
+          name: Zone 10 - Temperature Sensor (Optional Override)
+          description: Optional temperature sensor to override the climate entity's built-in sensor
+          default: []
+          selector:
+            entity:
+              domain: sensor
+              device_class: temperature
+              multiple: false
 
-    zone10_valve:
-      name: Zone 10 - Physical Valve Entity (REQUIRED if zone configured)
-      description: >
-        Physical valve switch that controls the actual heating valve.
-        REQUIRED when zone is configured - must be specified along with Virtual Switch.
-        The blueprint controls this physical valve directly for coordinated multi-zone heating.
-      default: []
-      selector:
-        entity:
-          multiple: false
+        zone10_valve:
+          name: Zone 10 - Physical Valve Entity (REQUIRED if zone configured)
+          description: >
+            Physical valve switch that controls the actual heating valve.
+            REQUIRED when zone is configured - must be specified along with Virtual Switch.
+            The blueprint controls this physical valve directly for coordinated multi-zone heating.
+          default: []
+          selector:
+            entity:
+              multiple: false
 
-    zone10_virtual_switch:
-      name: Zone 10 - Virtual Switch (REQUIRED if zone configured)
-      description: >
-        Virtual/helper switch (input_boolean or switch helper) controlled by the Generic Thermostat.
-        REQUIRED when zone is configured - must be specified along with Physical Valve Entity.
-        Configure your Generic Thermostat to control this virtual switch instead of the physical valve.
-        The blueprint monitors this switch to understand what the climate entity wants.
-      default: []
-      selector:
-        entity:
-          domain: 
-            - switch
-            - input_boolean
-          multiple: false
+        zone10_virtual_switch:
+          name: Zone 10 - Virtual Switch (REQUIRED if zone configured)
+          description: >
+            Virtual/helper switch (input_boolean or switch helper) controlled by the Generic Thermostat.
+            REQUIRED when zone is configured - must be specified along with Physical Valve Entity.
+            Configure your Generic Thermostat to control this virtual switch instead of the physical valve.
+            The blueprint monitors this switch to understand what the climate entity wants.
+          default: []
+          selector:
+            entity:
+              domain:
+                - switch
+                - input_boolean
+              multiple: false
 
     # ============================================================================
-    # ZONES GROUP 3 (Zones 11-15)
+    # ZONES GROUP 3 (Zones 11-15) - COLLAPSIBLE
     # ============================================================================
 
-    zones_group_3_header:
-      name: "━━━━━━━━━━━━━ ZONES GROUP 3 (Zones 11-15) ━━━━━━━━━━━━━"
-      description: Configure zones 11 through 15 below
-      default: ""
-      selector:
-        text:
-    
-    # Zone 11 Configuration
-    zone11_climate:
-      name: Zone 11 - Climate Entity
-      description: Climate entity for the eleventh heating zone
-      default: []
-      selector:
-        entity:
-          domain: climate
-          multiple: false
+    zones_group_3:
+      name: "🏠 ZONES GROUP 3 (Zones 11-15)"
+      icon: mdi:home-thermometer
+      description: Configure heating zones 11 through 15. Each zone requires climate entity, physical valve, and virtual switch.
+      collapsed: true
+      input:
+        # Zone 11 Configuration
+        zone11_climate:
+          name: Zone 11 - Climate Entity
+          description: Climate entity for the eleventh heating zone
+          default: []
+          selector:
+            entity:
+              domain: climate
+              multiple: false
 
-    zone11_temp_sensor:
-      name: Zone 11 - Temperature Sensor (Optional Override)
-      description: Optional temperature sensor to override the climate entity's built-in sensor
-      default: []
-      selector:
-        entity:
-          domain: sensor
-          device_class: temperature
-          multiple: false
+        zone11_temp_sensor:
+          name: Zone 11 - Temperature Sensor (Optional Override)
+          description: Optional temperature sensor to override the climate entity's built-in sensor
+          default: []
+          selector:
+            entity:
+              domain: sensor
+              device_class: temperature
+              multiple: false
 
-    zone11_valve:
-      name: Zone 11 - Physical Valve Entity (REQUIRED if zone configured)
-      description: >
-        Physical valve switch that controls the actual heating valve.
-        REQUIRED when zone is configured - must be specified along with Virtual Switch.
-        The blueprint controls this physical valve directly for coordinated multi-zone heating.
-      default: []
-      selector:
-        entity:
-          multiple: false
+        zone11_valve:
+          name: Zone 11 - Physical Valve Entity (REQUIRED if zone configured)
+          description: >
+            Physical valve switch that controls the actual heating valve.
+            REQUIRED when zone is configured - must be specified along with Virtual Switch.
+            The blueprint controls this physical valve directly for coordinated multi-zone heating.
+          default: []
+          selector:
+            entity:
+              multiple: false
 
-    zone11_virtual_switch:
-      name: Zone 11 - Virtual Switch (REQUIRED if zone configured)
-      description: >
-        Virtual/helper switch (input_boolean or switch helper) controlled by the Generic Thermostat.
-        REQUIRED when zone is configured - must be specified along with Physical Valve Entity.
-        Configure your Generic Thermostat to control this virtual switch instead of the physical valve.
-        The blueprint monitors this switch to understand what the climate entity wants.
-      default: []
-      selector:
-        entity:
-          domain: 
-            - switch
-            - input_boolean
-          multiple: false
+        zone11_virtual_switch:
+          name: Zone 11 - Virtual Switch (REQUIRED if zone configured)
+          description: >
+            Virtual/helper switch (input_boolean or switch helper) controlled by the Generic Thermostat.
+            REQUIRED when zone is configured - must be specified along with Physical Valve Entity.
+            Configure your Generic Thermostat to control this virtual switch instead of the physical valve.
+            The blueprint monitors this switch to understand what the climate entity wants.
+          default: []
+          selector:
+            entity:
+              domain:
+                - switch
+                - input_boolean
+              multiple: false
 
-    # Zone 12 Configuration
-    zone12_climate:
-      name: Zone 12 - Climate Entity
-      description: Climate entity for the twelfth heating zone
-      default: []
-      selector:
-        entity:
-          domain: climate
-          multiple: false
+        # Zone 12 Configuration
+        zone12_climate:
+          name: Zone 12 - Climate Entity
+          description: Climate entity for the twelfth heating zone
+          default: []
+          selector:
+            entity:
+              domain: climate
+              multiple: false
 
-    zone12_temp_sensor:
-      name: Zone 12 - Temperature Sensor (Optional Override)
-      description: Optional temperature sensor to override the climate entity's built-in sensor
-      default: []
-      selector:
-        entity:
-          domain: sensor
-          device_class: temperature
-          multiple: false
+        zone12_temp_sensor:
+          name: Zone 12 - Temperature Sensor (Optional Override)
+          description: Optional temperature sensor to override the climate entity's built-in sensor
+          default: []
+          selector:
+            entity:
+              domain: sensor
+              device_class: temperature
+              multiple: false
 
-    zone12_valve:
-      name: Zone 12 - Physical Valve Entity (REQUIRED if zone configured)
-      description: >
-        Physical valve switch that controls the actual heating valve.
-        REQUIRED when zone is configured - must be specified along with Virtual Switch.
-        The blueprint controls this physical valve directly for coordinated multi-zone heating.
-      default: []
-      selector:
-        entity:
-          multiple: false
+        zone12_valve:
+          name: Zone 12 - Physical Valve Entity (REQUIRED if zone configured)
+          description: >
+            Physical valve switch that controls the actual heating valve.
+            REQUIRED when zone is configured - must be specified along with Virtual Switch.
+            The blueprint controls this physical valve directly for coordinated multi-zone heating.
+          default: []
+          selector:
+            entity:
+              multiple: false
 
-    zone12_virtual_switch:
-      name: Zone 12 - Virtual Switch (REQUIRED if zone configured)
-      description: >
-        Virtual/helper switch (input_boolean or switch helper) controlled by the Generic Thermostat.
-        REQUIRED when zone is configured - must be specified along with Physical Valve Entity.
-        Configure your Generic Thermostat to control this virtual switch instead of the physical valve.
-        The blueprint monitors this switch to understand what the climate entity wants.
-      default: []
-      selector:
-        entity:
-          domain: 
-            - switch
-            - input_boolean
-          multiple: false
+        zone12_virtual_switch:
+          name: Zone 12 - Virtual Switch (REQUIRED if zone configured)
+          description: >
+            Virtual/helper switch (input_boolean or switch helper) controlled by the Generic Thermostat.
+            REQUIRED when zone is configured - must be specified along with Physical Valve Entity.
+            Configure your Generic Thermostat to control this virtual switch instead of the physical valve.
+            The blueprint monitors this switch to understand what the climate entity wants.
+          default: []
+          selector:
+            entity:
+              domain:
+                - switch
+                - input_boolean
+              multiple: false
 
-    # Zone 13 Configuration
-    zone13_climate:
-      name: Zone 13 - Climate Entity
-      description: Climate entity for the thirteenth heating zone
-      default: []
-      selector:
-        entity:
-          domain: climate
-          multiple: false
+        # Zone 13 Configuration
+        zone13_climate:
+          name: Zone 13 - Climate Entity
+          description: Climate entity for the thirteenth heating zone
+          default: []
+          selector:
+            entity:
+              domain: climate
+              multiple: false
 
-    zone13_temp_sensor:
-      name: Zone 13 - Temperature Sensor (Optional Override)
-      description: Optional temperature sensor to override the climate entity's built-in sensor
-      default: []
-      selector:
-        entity:
-          domain: sensor
-          device_class: temperature
-          multiple: false
+        zone13_temp_sensor:
+          name: Zone 13 - Temperature Sensor (Optional Override)
+          description: Optional temperature sensor to override the climate entity's built-in sensor
+          default: []
+          selector:
+            entity:
+              domain: sensor
+              device_class: temperature
+              multiple: false
 
-    zone13_valve:
-      name: Zone 13 - Physical Valve Entity (REQUIRED if zone configured)
-      description: >
-        Physical valve switch that controls the actual heating valve.
-        REQUIRED when zone is configured - must be specified along with Virtual Switch.
-        The blueprint controls this physical valve directly for coordinated multi-zone heating.
-      default: []
-      selector:
-        entity:
-          multiple: false
+        zone13_valve:
+          name: Zone 13 - Physical Valve Entity (REQUIRED if zone configured)
+          description: >
+            Physical valve switch that controls the actual heating valve.
+            REQUIRED when zone is configured - must be specified along with Virtual Switch.
+            The blueprint controls this physical valve directly for coordinated multi-zone heating.
+          default: []
+          selector:
+            entity:
+              multiple: false
 
-    zone13_virtual_switch:
-      name: Zone 13 - Virtual Switch (REQUIRED if zone configured)
-      description: >
-        Virtual/helper switch (input_boolean or switch helper) controlled by the Generic Thermostat.
-        REQUIRED when zone is configured - must be specified along with Physical Valve Entity.
-        Configure your Generic Thermostat to control this virtual switch instead of the physical valve.
-        The blueprint monitors this switch to understand what the climate entity wants.
-      default: []
-      selector:
-        entity:
-          domain: 
-            - switch
-            - input_boolean
-          multiple: false
+        zone13_virtual_switch:
+          name: Zone 13 - Virtual Switch (REQUIRED if zone configured)
+          description: >
+            Virtual/helper switch (input_boolean or switch helper) controlled by the Generic Thermostat.
+            REQUIRED when zone is configured - must be specified along with Physical Valve Entity.
+            Configure your Generic Thermostat to control this virtual switch instead of the physical valve.
+            The blueprint monitors this switch to understand what the climate entity wants.
+          default: []
+          selector:
+            entity:
+              domain:
+                - switch
+                - input_boolean
+              multiple: false
 
-    # Zone 14 Configuration
-    zone14_climate:
-      name: Zone 14 - Climate Entity
-      description: Climate entity for the fourteenth heating zone
-      default: []
-      selector:
-        entity:
-          domain: climate
-          multiple: false
+        # Zone 14 Configuration
+        zone14_climate:
+          name: Zone 14 - Climate Entity
+          description: Climate entity for the fourteenth heating zone
+          default: []
+          selector:
+            entity:
+              domain: climate
+              multiple: false
 
-    zone14_temp_sensor:
-      name: Zone 14 - Temperature Sensor (Optional Override)
-      description: Optional temperature sensor to override the climate entity's built-in sensor
-      default: []
-      selector:
-        entity:
-          domain: sensor
-          device_class: temperature
-          multiple: false
+        zone14_temp_sensor:
+          name: Zone 14 - Temperature Sensor (Optional Override)
+          description: Optional temperature sensor to override the climate entity's built-in sensor
+          default: []
+          selector:
+            entity:
+              domain: sensor
+              device_class: temperature
+              multiple: false
 
-    zone14_valve:
-      name: Zone 14 - Physical Valve Entity (REQUIRED if zone configured)
-      description: >
-        Physical valve switch that controls the actual heating valve.
-        REQUIRED when zone is configured - must be specified along with Virtual Switch.
-        The blueprint controls this physical valve directly for coordinated multi-zone heating.
-      default: []
-      selector:
-        entity:
-          multiple: false
+        zone14_valve:
+          name: Zone 14 - Physical Valve Entity (REQUIRED if zone configured)
+          description: >
+            Physical valve switch that controls the actual heating valve.
+            REQUIRED when zone is configured - must be specified along with Virtual Switch.
+            The blueprint controls this physical valve directly for coordinated multi-zone heating.
+          default: []
+          selector:
+            entity:
+              multiple: false
 
-    zone14_virtual_switch:
-      name: Zone 14 - Virtual Switch (REQUIRED if zone configured)
-      description: >
-        Virtual/helper switch (input_boolean or switch helper) controlled by the Generic Thermostat.
-        REQUIRED when zone is configured - must be specified along with Physical Valve Entity.
-        Configure your Generic Thermostat to control this virtual switch instead of the physical valve.
-        The blueprint monitors this switch to understand what the climate entity wants.
-      default: []
-      selector:
-        entity:
-          domain: 
-            - switch
-            - input_boolean
-          multiple: false
+        zone14_virtual_switch:
+          name: Zone 14 - Virtual Switch (REQUIRED if zone configured)
+          description: >
+            Virtual/helper switch (input_boolean or switch helper) controlled by the Generic Thermostat.
+            REQUIRED when zone is configured - must be specified along with Physical Valve Entity.
+            Configure your Generic Thermostat to control this virtual switch instead of the physical valve.
+            The blueprint monitors this switch to understand what the climate entity wants.
+          default: []
+          selector:
+            entity:
+              domain:
+                - switch
+                - input_boolean
+              multiple: false
 
-    # Zone 15 Configuration
-    zone15_climate:
-      name: Zone 15 - Climate Entity
-      description: Climate entity for the fifteenth heating zone
-      default: []
-      selector:
-        entity:
-          domain: climate
-          multiple: false
+        # Zone 15 Configuration
+        zone15_climate:
+          name: Zone 15 - Climate Entity
+          description: Climate entity for the fifteenth heating zone
+          default: []
+          selector:
+            entity:
+              domain: climate
+              multiple: false
 
-    zone15_temp_sensor:
-      name: Zone 15 - Temperature Sensor (Optional Override)
-      description: Optional temperature sensor to override the climate entity's built-in sensor
-      default: []
-      selector:
-        entity:
-          domain: sensor
-          device_class: temperature
-          multiple: false
+        zone15_temp_sensor:
+          name: Zone 15 - Temperature Sensor (Optional Override)
+          description: Optional temperature sensor to override the climate entity's built-in sensor
+          default: []
+          selector:
+            entity:
+              domain: sensor
+              device_class: temperature
+              multiple: false
 
-    zone15_valve:
-      name: Zone 15 - Physical Valve Entity (REQUIRED if zone configured)
-      description: >
-        Physical valve switch that controls the actual heating valve.
-        REQUIRED when zone is configured - must be specified along with Virtual Switch.
-        The blueprint controls this physical valve directly for coordinated multi-zone heating.
-      default: []
-      selector:
-        entity:
-          multiple: false
+        zone15_valve:
+          name: Zone 15 - Physical Valve Entity (REQUIRED if zone configured)
+          description: >
+            Physical valve switch that controls the actual heating valve.
+            REQUIRED when zone is configured - must be specified along with Virtual Switch.
+            The blueprint controls this physical valve directly for coordinated multi-zone heating.
+          default: []
+          selector:
+            entity:
+              multiple: false
 
-    zone15_virtual_switch:
-      name: Zone 15 - Virtual Switch (REQUIRED if zone configured)
-      description: >
-        Virtual/helper switch (input_boolean or switch helper) controlled by the Generic Thermostat.
-        REQUIRED when zone is configured - must be specified along with Physical Valve Entity.
-        Configure your Generic Thermostat to control this virtual switch instead of the physical valve.
-        The blueprint monitors this switch to understand what the climate entity wants.
-      default: []
-      selector:
-        entity:
-          domain: 
-            - switch
-            - input_boolean
-          multiple: false
+        zone15_virtual_switch:
+          name: Zone 15 - Virtual Switch (REQUIRED if zone configured)
+          description: >
+            Virtual/helper switch (input_boolean or switch helper) controlled by the Generic Thermostat.
+            REQUIRED when zone is configured - must be specified along with Physical Valve Entity.
+            Configure your Generic Thermostat to control this virtual switch instead of the physical valve.
+            The blueprint monitors this switch to understand what the climate entity wants.
+          default: []
+          selector:
+            entity:
+              domain:
+                - switch
+                - input_boolean
+              multiple: false
 
     # Temperature Management Settings
     temp_difference_open:
