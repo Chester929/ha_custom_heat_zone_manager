@@ -306,13 +306,47 @@ automation:
 
 
 # ==============================================================================
-# EXAMPLE 9: Generic Thermostat with Valve Override (RECOMMENDED)
+# EXAMPLE 9: Generic Thermostat with Virtual Switch Pattern (RECOMMENDED)
 # ==============================================================================
-# Scenario: Your zones use Generic Thermostat entities that control valve switches
-# This setup prevents conflicts between the climate entity and blueprint
+# Scenario: Your zones use Generic Thermostat entities
+# This is the BEST solution to prevent conflicts while keeping real temperatures
 
+# ARCHITECTURE:
+#   Climate Entity → Virtual Switch → Blueprint → Physical Valve
+#
+# WHY THIS WORKS:
+#   - Climate entity controls virtual switch (keeps real target temps)
+#   - Blueprint monitors virtual switch (understands climate entity's wants)
+#   - Blueprint controls physical valve (final authority, coordination)
+#   - NO CONFLICTS because they control different entities
+
+# STEP 1: Create virtual switches (in configuration.yaml)
+# input_boolean:
+#   bedroom_virtual_valve:
+#     name: "Bedroom Virtual Valve"
+#   bathroom_virtual_valve:
+#     name: "Bathroom Virtual Valve"
+#   living_virtual_valve:
+#     name: "Living Virtual Valve"
+
+# STEP 2: Configure Generic Thermostats to use virtual switches
+# climate:
+#   - platform: generic_thermostat
+#     name: Bedroom Thermostat
+#     heater: input_boolean.bedroom_virtual_valve  # VIRTUAL, not physical!
+#     target_sensor: sensor.bedroom_temperature
+#   - platform: generic_thermostat
+#     name: Bathroom Thermostat
+#     heater: input_boolean.bathroom_virtual_valve  # VIRTUAL, not physical!
+#     target_sensor: sensor.bathroom_temperature
+#   - platform: generic_thermostat
+#     name: Living Thermostat
+#     heater: input_boolean.living_virtual_valve  # VIRTUAL, not physical!
+#     target_sensor: sensor.living_temperature
+
+# STEP 3: Configure blueprint with both virtual switches AND physical valves
 automation:
-  - alias: Floor Heating - Generic Thermostat with Valve Override
+  - alias: Floor Heating - Virtual Switch Pattern
     use_blueprint:
       path: chester929/heat_zone_manager.yaml
       input:
@@ -320,21 +354,23 @@ automation:
         main_thermostat: climate.main_hvac
         main_temp_sensor: sensor.corridor_temperature
         
-        # Zone 1: Bedroom with Generic Thermostat
-        # IMPORTANT: Specify the valve override to prevent conflicts!
-        zone1_climate: climate.bedroom_generic_thermostat
-        zone1_temp_sensor: sensor.bedroom_temperature
-        zone1_valve: switch.bedroom_valve  # Direct valve control - prevents conflict
+        # Zone 1: Bedroom
+        zone1_climate: climate.bedroom_thermostat              # For temp reading
+        zone1_temp_sensor: sensor.bedroom_temperature          # Optional override
+        zone1_valve: switch.bedroom_physical_valve             # PHYSICAL valve (blueprint controls)
+        zone1_virtual_switch: input_boolean.bedroom_virtual_valve  # Virtual switch (climate controls)
         
-        # Zone 2: Bathroom with Generic Thermostat
-        zone2_climate: climate.bathroom_generic_thermostat
+        # Zone 2: Bathroom
+        zone2_climate: climate.bathroom_thermostat
         zone2_temp_sensor: sensor.bathroom_temperature
-        zone2_valve: switch.bathroom_valve  # Direct valve control - prevents conflict
+        zone2_valve: switch.bathroom_physical_valve            # PHYSICAL valve
+        zone2_virtual_switch: input_boolean.bathroom_virtual_valve  # Virtual switch
         
-        # Zone 3: Living Room with Generic Thermostat
-        zone3_climate: climate.living_generic_thermostat
+        # Zone 3: Living Room
+        zone3_climate: climate.living_thermostat
         zone3_temp_sensor: sensor.living_temperature
-        zone3_valve: switch.living_valve  # Direct valve control - prevents conflict
+        zone3_valve: switch.living_physical_valve              # PHYSICAL valve
+        zone3_virtual_switch: input_boolean.living_virtual_valve   # Virtual switch
         
         # Temperature thresholds
         temp_difference_open: 0.5
@@ -342,31 +378,77 @@ automation:
         all_satisfied_temp_mode: 50
         min_main_temp: 18.0
         max_main_temp: 28.0
+        
+        # Fallback zone for pump safety
+        fallback_zones:
+          - climate.living_thermostat
 
-# WHY VALVE OVERRIDE IS RECOMMENDED:
+# HOW IT WORKS:
 # 
-# Generic Thermostats (and similar climate entities) have built-in logic that 
-# automatically controls valves based on current vs target temperature.
+# Example: Bedroom at 20°C, target 22°C
 # 
-# Without valve override:
-#   - Climate entity controls valve based on its temperature comparison
-#   - Blueprint also controls valve based on ITS temperature comparison
-#   - Result: Two controllers fighting each other
-#   - The blueprint handles this by overriding the climate target temperature,
-#     but this can be confusing
+# 1. Generic Thermostat Logic:
+#    - Current (20°C) < Target (22°C)
+#    - Decision: "I need heating"
+#    - Action: Turn ON input_boolean.bedroom_virtual_valve
 # 
-# With valve override (RECOMMENDED):
-#   - Blueprint controls valve directly via switch.bedroom_valve
-#   - Climate entity is only used for reading current temperature and target
-#   - No conflict - clear separation of concerns
-#   - Better control and easier to debug
+# 2. Blueprint Logic:
+#    - Reads: bedroom temp 20°C, target 22°C
+#    - Checks: 20°C < (22°C - 0.5°C)? YES → temperature needs heating
+#    - Checks: virtual_switch (input_boolean.bedroom_virtual_valve) = ON?  YES
+#    - Decision: "Zone needs action" (BOTH conditions true)
+#    - Also considers: coordination with other zones, pump safety
+#    - Action: Turn ON switch.bedroom_physical_valve
 # 
-# If you CANNOT use valve override:
-#   - The blueprint will automatically handle the conflict by:
-#     * Setting extreme target temperatures when valve should be open
-#     * Setting climate to OFF when valve should be closed
-#   - Your zone climate target temperatures will be overridden
-#   - This works but is less intuitive
+# 3. When bedroom reaches 22.2°C:
+#    - Generic Thermostat: "I'm satisfied" → Turn OFF virtual switch
+#    - Blueprint: Sees virtual switch OFF → closes physical valve
+#      (unless needed for pump safety or coordination)
+# 
+# BENEFITS:
+# ✅ Climate entity keeps real target (22°C), not extreme value
+# ✅ You can still adjust target temp in climate entity UI
+# ✅ NO conflicts - separate entities for climate vs blueprint
+# ✅ Blueprint has final control over physical valves
+# ✅ Blueprint can coordinate across zones
+# ✅ Clean architecture, easy to debug
+
+
+# ==============================================================================
+# EXAMPLE 10: Simple Valve Override (Alternative if no virtual switch)
+# ==============================================================================
+# Scenario: You want blueprint to control physical valves directly
+# Without virtual switches - simpler but climate entity loses valve control
+
+automation:
+  - alias: Floor Heating - Simple Valve Override  
+    use_blueprint:
+      path: chester929/heat_zone_manager.yaml
+      input:
+        main_thermostat: climate.main_hvac
+        
+        # Zone 1: Blueprint controls valve based on temperature only
+        zone1_climate: climate.bedroom_thermostat     # For temp reading and target
+        zone1_temp_sensor: sensor.bedroom_temperature
+        zone1_valve: switch.bedroom_valve             # Blueprint controls this
+        # NO virtual_switch - blueprint ignores climate entity's valve logic
+        
+        zone2_climate: climate.bathroom_thermostat
+        zone2_temp_sensor: sensor.bathroom_temperature  
+        zone2_valve: switch.bathroom_valve
+        # NO virtual_switch
+        
+        temp_difference_open: 0.5
+        temp_difference_close: 0.2
+        all_satisfied_temp_mode: 50
+        min_main_temp: 18.0
+        max_main_temp: 28.0
+
+# NOTE: If your climate entities are Generic Thermostats controlling the same
+# physical valve switches, there WILL be a conflict. Both the climate entity
+# and the blueprint will try to control the switch.
+# 
+# RECOMMENDATION: Use the virtual switch pattern (Example 9) instead!
 
 
 # ==============================================================================

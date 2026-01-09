@@ -8,19 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Climate Entity Conflict Prevention** (NEW)
-  - Prevents conflicts between zone climate entities' internal valve control and blueprint's valve control
-  - When valve override is NOT used, blueprint now sets extreme target temperatures to prevent climate entity from closing valves
-  - When opening valve (heating mode): Sets climate target to maximum temperature
-  - When opening valve (cooling mode): Sets climate target to minimum temperature
-  - When closing valve: Sets climate to OFF mode
-  - Ensures blueprint has full control without fighting against climate entity's thermostat logic
-  - Particularly important for Generic Thermostat and similar climate entities that auto-control valves
-- **Documentation for Climate Entity Conflicts**
-  - Added comprehensive troubleshooting section explaining the conflict issue
-  - Added EXAMPLE 9 showing recommended configuration with valve overrides
-  - Updated README with warning about climate entity conflicts
-  - Updated ARCHITECTURE with detailed explanation of conflict prevention logic
+- **Virtual Switch Pattern for Generic Thermostat (RECOMMENDED SOLUTION)**
+  - New `zoneN_virtual_switch` parameters for all 5 zones
+  - Allows Generic Thermostat climate entities to control virtual/helper switches
+  - Blueprint monitors virtual switch state to understand what climate entity wants
+  - Blueprint controls physical valve directly based on both virtual switch state AND coordinated logic
+  - **Benefits**:
+    - Climate entities keep real target temperatures (no overriding with extreme values)
+    - No conflicts between climate entity and blueprint
+    - Blueprint has final control over physical valves
+    - Can coordinate across zones while respecting individual zone requests
+    - Clean separation: Climate entity → Virtual switch, Blueprint → Physical valve
+  - **Setup**: Create helper switch (input_boolean or switch helper) for each zone
+    - Configure Generic Thermostat to control the virtual switch
+    - Configure blueprint with virtual_switch and physical valve parameters
+    - Blueprint monitors virtual switch and controls physical valve accordingly
+- **Documentation for Virtual Switch Pattern**
+  - Updated TROUBLESHOOTING with complete explanation and setup instructions
+  - Added configuration examples showing the virtual switch pattern
+  - Updated README with clear requirements for Generic Thermostat users
 - **Intelligent Temperature Compensation Algorithm**
   - New optional `main_temp_sensor` parameter for MAIN thermostat location (e.g., corridor)
   - Automatically compensates when MAIN sensor location differs from zones needing heating

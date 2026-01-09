@@ -72,62 +72,146 @@ This guide helps resolve common issues when using the Floor Heating Valve Manage
 
 ### Climate entity conflicts with blueprint valve control
 
-**Problem**: Zone climate entities (e.g., Generic Thermostat) have their own internal logic that controls valves based on current vs target temperature. This can conflict with the blueprint's valve control decisions.
+**Problem**: Zone climate entities (e.g., Generic Thermostat) have their own internal logic that controls valves based on current vs target temperature. This **WILL conflict** with the blueprint's valve control decisions.
 
-**Understanding the Issue**:
-When you use a Generic Thermostat or similar climate entity that automatically controls a valve switch:
-- The climate entity opens/closes the valve based on its own temperature comparison
-- The blueprint ALSO tries to control the same valve
-- These two controllers can "fight" each other, leading to:
-  - Valves opening/closing unexpectedly
-  - Inefficient heating/cooling
-  - Conflicts between the two control systems
+**THE SOLUTION: Virtual Switch Pattern (RECOMMENDED)**
 
-**How the Blueprint Solves This**:
-The blueprint uses a smart approach to prevent conflicts:
+Use a virtual/helper switch as an intermediary between the climate entity and the physical valve:
 
-1. **When using valve override** (you specify a separate valve entity):
-   - The blueprint controls the valve directly via `turn_on`/`turn_off`
-   - The climate entity is ignored for valve control
-   - No conflict occurs
+```
+Climate Entity (Generic Thermostat)
+    ↓ (controls based on temp)
+Virtual Switch (input_boolean or switch helper)
+    ↓ (monitored by blueprint)
+Blueprint Logic (considers virtual switch + coordination)
+    ↓ (final control)
+Physical Valve (actual heating valve)
+```
 
-2. **When NOT using valve override** (climate entity controls the valve):
-   - When the blueprint wants the valve **OPEN**:
-     - Sets climate to heat/cool mode
-     - Sets climate target temperature to an extreme value (maximum for heating, minimum for cooling)
-     - This ensures the climate entity's internal logic keeps the valve open
-   - When the blueprint wants the valve **CLOSED**:
-     - Sets climate to OFF mode
-     - The valve closes immediately
-   
-This approach ensures the blueprint has full control over valve states while working WITH the climate entity's logic rather than against it.
+**How It Works:**
 
-**Best Practices**:
-1. **Option 1 (Recommended)**: Use valve overrides
-   - Configure separate valve entities in the blueprint
-   - The blueprint controls valves directly
-   - Climate entities are only used for temperature reading
-   - Example:
-     ```yaml
-     zone1_climate: climate.bedroom_thermostat
-     zone1_temp_sensor: sensor.bedroom_temperature  # Optional
-     zone1_valve: switch.bedroom_valve  # Direct valve control
-     ```
+1. **Generic Thermostat** controls a **virtual switch** based on temperature
+   - Virtual switch is just a helper entity in Home Assistant (not a physical device)
+   - Climate entity keeps its real target temperature
+   - Climate entity's logic determines when virtual switch should be on/off
 
-2. **Option 2**: Let the blueprint manage climate entities
-   - Don't specify valve overrides
-   - The blueprint will control climate entities using the conflict-prevention logic
-   - Climate target temperatures will be overridden by the blueprint
-   - Example:
-     ```yaml
-     zone1_climate: climate.bedroom_thermostat
-     # No valve override - blueprint manages the climate entity directly
-     ```
+2. **Blueprint monitors the virtual switch** to understand what the climate entity wants
+   - Reads virtual switch state as "zone request"
+   - Combines this with temperature data and coordination logic
+   - Makes final decision about physical valve
 
-**Important Notes**:
-- The zone climate entity's target temperature will be overridden by the blueprint when controlling valves
-- If you manually change a zone's target temperature, it will be reset on the next blueprint cycle
-- The original zone target temperatures are only used for the blueprint's decision logic, not for the actual climate entity control
+3. **Blueprint controls physical valve** directly
+   - Has final authority over actual heating
+   - Can override climate entity when needed for coordination
+   - Ensures at least one valve always open (pump safety)
+
+**Benefits:**
+- ✅ Climate entities keep real target temperatures (you can see and adjust them)
+- ✅ No conflicts - climate entity controls virtual switch, blueprint controls physical valve
+- ✅ Blueprint can coordinate across zones
+- ✅ Climate entity's "wants" are respected but not blindly followed
+- ✅ Clean architecture and easy to debug
+
+**Setup Instructions:**
+
+**Step 1: Create Virtual Switches**
+
+For each zone, create a helper switch in Home Assistant:
+
+```yaml
+# configuration.yaml
+input_boolean:
+  bedroom_virtual_valve:
+    name: "Bedroom Virtual Valve"
+    icon: mdi:valve
+  
+  bathroom_virtual_valve:
+    name: "Bathroom Virtual Valve"
+    icon: mdi:valve
+```
+
+Or use UI: Settings → Devices & Services → Helpers → Create Helper → Toggle
+
+**Step 2: Configure Generic Thermostat to Control Virtual Switch**
+
+```yaml
+# configuration.yaml
+climate:
+  - platform: generic_thermostat
+    name: Bedroom Thermostat
+    heater: input_boolean.bedroom_virtual_valve  # Virtual switch, not physical!
+    target_sensor: sensor.bedroom_temperature
+    min_temp: 15
+    max_temp: 25
+    
+  - platform: generic_thermostat
+    name: Bathroom Thermostat
+    heater: input_boolean.bathroom_virtual_valve  # Virtual switch, not physical!
+    target_sensor: sensor.bathroom_temperature
+    min_temp: 15
+    max_temp: 25
+```
+
+**Step 3: Configure Blueprint**
+
+```yaml
+# Blueprint configuration
+zone1_climate: climate.bedroom_thermostat        # Reads temp and target
+zone1_temp_sensor: sensor.bedroom_temperature    # Optional override
+zone1_valve: switch.bedroom_physical_valve       # Controls PHYSICAL valve
+zone1_virtual_switch: input_boolean.bedroom_virtual_valve  # Monitors climate entity's wants
+
+zone2_climate: climate.bathroom_thermostat
+zone2_temp_sensor: sensor.bathroom_temperature
+zone2_valve: switch.bathroom_physical_valve      # Controls PHYSICAL valve
+zone2_virtual_switch: input_boolean.bathroom_virtual_valve
+```
+
+**How the Blueprint Makes Decisions:**
+
+```
+For each zone:
+  1. Check temperature: Does it need heating? (current < target - threshold)
+  2. Check virtual switch: Does climate entity want heating? (virtual switch = on)
+  3. Combine: Zone needs action if BOTH temperature needs it AND virtual switch is on
+  4. Apply coordination: Consider all zones, safety constraints
+  5. Control physical valve: Turn on/off based on final decision
+```
+
+**Example Scenario:**
+
+```
+Bedroom: 20°C, target 22°C
+  → Generic Thermostat: "I need heating" → Turns ON virtual switch
+  → Blueprint sees: temp needs heating (20<22-0.5) AND virtual switch ON
+  → Blueprint opens physical bedroom valve
+
+Bathroom: 25°C, target 25°C  
+  → Generic Thermostat: "I'm satisfied" → Turns OFF virtual switch
+  → Blueprint sees: temp satisfied AND virtual switch OFF
+  → Blueprint closes physical bathroom valve (unless needed for pump safety)
+
+All zones satisfied:
+  → All virtual switches OFF
+  → Blueprint: Opens fallback zone's physical valve (pump safety)
+  → Coordination overrides individual zone requests when necessary
+```
+
+**Without Virtual Switch (NOT RECOMMENDED)**
+
+If you cannot use virtual switches, you have two options:
+
+1. **Use physical valve override only** (No virtual switch):
+   - Configure only the physical valve parameter
+   - Blueprint controls physical valve based on temperature only
+   - Climate entity will try to control the valve too → **CONFLICT**
+   - Result: Unpredictable behavior
+
+2. **Use climate entity directly** (No valve override):
+   - Don't specify valve or virtual switch
+   - Blueprint sets climate entity to heat/cool/off modes
+   - Climate entity controls its own valve
+   - Result: Climate entity may override blueprint's coordinated decisions → **CONFLICT**
 
 ## Runtime Issues
 

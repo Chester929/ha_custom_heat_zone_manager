@@ -95,11 +95,30 @@ blueprint:
           multiple: false
 
     zone1_valve:
-      name: Zone 1 - Valve Entity (Optional Override)
-      description: Optional valve switch/entity to control instead of the climate entity
+      name: Zone 1 - Physical Valve Entity (REQUIRED for Generic Thermostat)
+      description: >
+        Physical valve switch that controls the actual heating valve.
+        REQUIRED when using Generic Thermostat to prevent conflicts.
+        The climate entity should control a virtual/helper switch, and this
+        should be the PHYSICAL valve that actually controls water flow.
       default: []
       selector:
         entity:
+          multiple: false
+
+    zone1_virtual_switch:
+      name: Zone 1 - Virtual Switch (Optional - for Generic Thermostat)
+      description: >
+        Virtual/helper switch controlled by the Generic Thermostat climate entity.
+        The blueprint monitors this switch to understand what the climate entity wants,
+        then controls the physical valve accordingly while maintaining coordination.
+        Leave empty if not using this pattern.
+      default: []
+      selector:
+        entity:
+          domain: 
+            - switch
+            - input_boolean
           multiple: false
 
     # Zone 2 Configuration
@@ -123,11 +142,25 @@ blueprint:
           multiple: false
 
     zone2_valve:
-      name: Zone 2 - Valve Entity (Optional Override)
-      description: Optional valve switch/entity to control instead of the climate entity
+      name: Zone 2 - Physical Valve Entity (REQUIRED for Generic Thermostat)
+      description: >
+        Physical valve switch that controls the actual heating valve.
+        REQUIRED when using Generic Thermostat to prevent conflicts.
       default: []
       selector:
         entity:
+          multiple: false
+
+    zone2_virtual_switch:
+      name: Zone 2 - Virtual Switch (Optional - for Generic Thermostat)
+      description: >
+        Virtual/helper switch controlled by the Generic Thermostat climate entity.
+      default: []
+      selector:
+        entity:
+          domain: 
+            - switch
+            - input_boolean
           multiple: false
 
     # Zone 3 Configuration
@@ -151,11 +184,25 @@ blueprint:
           multiple: false
 
     zone3_valve:
-      name: Zone 3 - Valve Entity (Optional Override)
-      description: Optional valve switch/entity to control instead of the climate entity
+      name: Zone 3 - Physical Valve Entity (REQUIRED for Generic Thermostat)
+      description: >
+        Physical valve switch that controls the actual heating valve.
+        REQUIRED when using Generic Thermostat to prevent conflicts.
       default: []
       selector:
         entity:
+          multiple: false
+
+    zone3_virtual_switch:
+      name: Zone 3 - Virtual Switch (Optional - for Generic Thermostat)
+      description: >
+        Virtual/helper switch controlled by the Generic Thermostat climate entity.
+      default: []
+      selector:
+        entity:
+          domain: 
+            - switch
+            - input_boolean
           multiple: false
 
     # Zone 4 Configuration
@@ -179,11 +226,25 @@ blueprint:
           multiple: false
 
     zone4_valve:
-      name: Zone 4 - Valve Entity (Optional Override)
-      description: Optional valve switch/entity to control instead of the climate entity
+      name: Zone 4 - Physical Valve Entity (REQUIRED for Generic Thermostat)
+      description: >
+        Physical valve switch that controls the actual heating valve.
+        REQUIRED when using Generic Thermostat to prevent conflicts.
       default: []
       selector:
         entity:
+          multiple: false
+
+    zone4_virtual_switch:
+      name: Zone 4 - Virtual Switch (Optional - for Generic Thermostat)
+      description: >
+        Virtual/helper switch controlled by the Generic Thermostat climate entity.
+      default: []
+      selector:
+        entity:
+          domain: 
+            - switch
+            - input_boolean
           multiple: false
 
     # Zone 5 Configuration
@@ -207,11 +268,25 @@ blueprint:
           multiple: false
 
     zone5_valve:
-      name: Zone 5 - Valve Entity (Optional Override)
-      description: Optional valve switch/entity to control instead of the climate entity
+      name: Zone 5 - Physical Valve Entity (REQUIRED for Generic Thermostat)
+      description: >
+        Physical valve switch that controls the actual heating valve.
+        REQUIRED when using Generic Thermostat to prevent conflicts.
       default: []
       selector:
         entity:
+          multiple: false
+
+    zone5_virtual_switch:
+      name: Zone 5 - Virtual Switch (Optional - for Generic Thermostat)
+      description: >
+        Virtual/helper switch controlled by the Generic Thermostat climate entity.
+      default: []
+      selector:
+        entity:
+          domain: 
+            - switch
+            - input_boolean
           multiple: false
 
     # Temperature Management Settings
@@ -383,18 +458,23 @@ action:
         - climate: !input zone1_climate
           temp_sensor: !input zone1_temp_sensor
           valve: !input zone1_valve
+          virtual_switch: !input zone1_virtual_switch
         - climate: !input zone2_climate
           temp_sensor: !input zone2_temp_sensor
           valve: !input zone2_valve
+          virtual_switch: !input zone2_virtual_switch
         - climate: !input zone3_climate
           temp_sensor: !input zone3_temp_sensor
           valve: !input zone3_valve
+          virtual_switch: !input zone3_virtual_switch
         - climate: !input zone4_climate
           temp_sensor: !input zone4_temp_sensor
           valve: !input zone4_valve
+          virtual_switch: !input zone4_virtual_switch
         - climate: !input zone5_climate
           temp_sensor: !input zone5_temp_sensor
           valve: !input zone5_valve
+          virtual_switch: !input zone5_virtual_switch
       
       # Filter out empty zones
       active_zones: >
@@ -430,28 +510,49 @@ action:
             {% set target_temp = state_attr(climate_entity, 'temperature') | float(fallback_temperature) %}
             {% set zone_mode = states(climate_entity) %}
             
-            {# Determine if zone needs heating/cooling #}
+            {# Check if virtual switch is configured and get its state #}
+            {% if zone.virtual_switch and zone.virtual_switch != [] and zone.virtual_switch != '' %}
+              {% set virtual_switch_on = is_state(zone.virtual_switch, 'on') %}
+            {% else %}
+              {% set virtual_switch_on = none %}
+            {% endif %}
+            
+            {# Determine if zone needs heating/cooling based on temperature AND virtual switch #}
             {% if is_cooling_mode %}
               {# Cooling mode: open valve if temp is above target + threshold #}
-              {% set needs_action = current_temp > (target_temp + temp_diff_open) %}
+              {% set temp_needs_action = current_temp > (target_temp + temp_diff_open) %}
               {% set satisfied = current_temp <= (target_temp - temp_diff_close) %}
               {# Over-cooled in cooling mode = zone is excessively cold (below target - overheat_threshold) #}
               {% set is_overheated = current_temp < (target_temp - overheat_threshold) %}
             {% else %}
               {# Heating mode: open valve if temp is below target - threshold #}
-              {% set needs_action = current_temp < (target_temp - temp_diff_open) %}
+              {% set temp_needs_action = current_temp < (target_temp - temp_diff_open) %}
               {% set satisfied = current_temp >= (target_temp + temp_diff_close) %}
               {# Overheated in heating = zone is too hot (above target + overheat_threshold) #}
               {% set is_overheated = current_temp > (target_temp + overheat_threshold) %}
             {% endif %}
             
+            {# Final decision: needs_action considers both temperature AND virtual switch state #}
+            {# If virtual switch is configured, respect what the climate entity wants (virtual switch state) #}
+            {# AND what the blueprint logic determines (temperature-based need) #}
+            {% if virtual_switch_on is not none %}
+              {# Virtual switch configured: zone needs action if BOTH virtual switch is on AND temp indicates need #}
+              {% set needs_action = virtual_switch_on and temp_needs_action %}
+            {% else %}
+              {# No virtual switch: use only temperature-based logic #}
+              {% set needs_action = temp_needs_action %}
+            {% endif %}
+            
             {% set ns.zones = ns.zones + [{
               'climate': climate_entity,
               'valve': zone.valve,
+              'virtual_switch': zone.virtual_switch,
               'temp_sensor': zone.temp_sensor,
               'current_temp': current_temp,
               'target_temp': target_temp,
               'needs_action': needs_action,
+              'virtual_switch_on': virtual_switch_on,
+              'temp_needs_action': temp_needs_action,
               'satisfied': satisfied,
               'overheated': is_overheated,
               'mode': zone_mode,
@@ -619,7 +720,7 @@ action:
         
         # Open valve (turn on climate or valve entity)
         - choose:
-            # If manual valve override is set, turn it on
+            # If manual valve override is set, turn it on directly
             - conditions:
                 - condition: template
                   value_template: "{{ zone.valve != '' and zone.valve != [] }}"
@@ -628,21 +729,19 @@ action:
                   target:
                     entity_id: "{{ zone.valve }}"
           default:
-            # Otherwise, control the climate entity to open the valve
-            # Set climate to heating/cooling mode AND set extreme target temperature
-            # to override the climate entity's internal thermostat logic
+            # WARNING: When no valve override is specified, the climate entity
+            # will control the valve based on its own internal logic.
+            # This may conflict with the blueprint's decisions!
+            # RECOMMENDATION: Always use valve overrides to prevent conflicts.
+            # 
+            # Fallback behavior: Set climate to heating/cooling mode
+            # The climate entity will then control the valve based on its own
+            # temperature comparison, which may differ from the blueprint's logic
             - service: climate.set_hvac_mode
               target:
                 entity_id: "{{ zone.climate }}"
               data:
                 hvac_mode: "{{ 'cool' if is_cooling_mode else 'heat' }}"
-            # Set extreme target temperature to prevent climate entity from
-            # closing the valve due to its own temperature comparison logic
-            - service: climate.set_temperature
-              target:
-                entity_id: "{{ zone.climate }}"
-              data:
-                temperature: "{{ max_temp if not is_cooling_mode else min_temp }}"
 
   # Wait for valve transition delay (allows valves to fully open)
   - condition: template
