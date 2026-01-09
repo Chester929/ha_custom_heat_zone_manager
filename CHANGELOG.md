@@ -162,12 +162,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned Features
-- Support for more than 5 zones
 - Advanced scheduling integration
 - Presence-based zone control
 - Weather-based temperature adjustments
 - Energy optimization modes
 - Multi-floor support with priority zones
+- Historical performance analytics
 
 ---
 
