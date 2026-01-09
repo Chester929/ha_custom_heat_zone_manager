@@ -95,24 +95,23 @@ blueprint:
           multiple: false
 
     zone1_valve:
-      name: Zone 1 - Physical Valve Entity (REQUIRED for Generic Thermostat)
+      name: Zone 1 - Physical Valve Entity (REQUIRED if zone configured)
       description: >
         Physical valve switch that controls the actual heating valve.
-        REQUIRED when using Generic Thermostat to prevent conflicts.
-        The climate entity should control a virtual/helper switch, and this
-        should be the PHYSICAL valve that actually controls water flow.
+        REQUIRED when zone is configured - must be specified along with Virtual Switch.
+        The blueprint controls this physical valve directly for coordinated multi-zone heating.
       default: []
       selector:
         entity:
           multiple: false
 
     zone1_virtual_switch:
-      name: Zone 1 - Virtual Switch (Optional - for Generic Thermostat)
+      name: Zone 1 - Virtual Switch (REQUIRED if zone configured)
       description: >
-        Virtual/helper switch controlled by the Generic Thermostat climate entity.
-        The blueprint monitors this switch to understand what the climate entity wants,
-        then controls the physical valve accordingly while maintaining coordination.
-        Leave empty if not using this pattern.
+        Virtual/helper switch (input_boolean or switch helper) controlled by the Generic Thermostat.
+        REQUIRED when zone is configured - must be specified along with Physical Valve Entity.
+        Configure your Generic Thermostat to control this virtual switch instead of the physical valve.
+        The blueprint monitors this switch to understand what the climate entity wants.
       default: []
       selector:
         entity:
@@ -142,19 +141,23 @@ blueprint:
           multiple: false
 
     zone2_valve:
-      name: Zone 2 - Physical Valve Entity (REQUIRED for Generic Thermostat)
+      name: Zone 2 - Physical Valve Entity (REQUIRED if zone configured)
       description: >
         Physical valve switch that controls the actual heating valve.
-        REQUIRED when using Generic Thermostat to prevent conflicts.
+        REQUIRED when zone is configured - must be specified along with Virtual Switch.
+        The blueprint controls this physical valve directly for coordinated multi-zone heating.
       default: []
       selector:
         entity:
           multiple: false
 
     zone2_virtual_switch:
-      name: Zone 2 - Virtual Switch (Optional - for Generic Thermostat)
+      name: Zone 2 - Virtual Switch (REQUIRED if zone configured)
       description: >
-        Virtual/helper switch controlled by the Generic Thermostat climate entity.
+        Virtual/helper switch (input_boolean or switch helper) controlled by the Generic Thermostat.
+        REQUIRED when zone is configured - must be specified along with Physical Valve Entity.
+        Configure your Generic Thermostat to control this virtual switch instead of the physical valve.
+        The blueprint monitors this switch to understand what the climate entity wants.
       default: []
       selector:
         entity:
@@ -184,19 +187,23 @@ blueprint:
           multiple: false
 
     zone3_valve:
-      name: Zone 3 - Physical Valve Entity (REQUIRED for Generic Thermostat)
+      name: Zone 3 - Physical Valve Entity (REQUIRED if zone configured)
       description: >
         Physical valve switch that controls the actual heating valve.
-        REQUIRED when using Generic Thermostat to prevent conflicts.
+        REQUIRED when zone is configured - must be specified along with Virtual Switch.
+        The blueprint controls this physical valve directly for coordinated multi-zone heating.
       default: []
       selector:
         entity:
           multiple: false
 
     zone3_virtual_switch:
-      name: Zone 3 - Virtual Switch (Optional - for Generic Thermostat)
+      name: Zone 3 - Virtual Switch (REQUIRED if zone configured)
       description: >
-        Virtual/helper switch controlled by the Generic Thermostat climate entity.
+        Virtual/helper switch (input_boolean or switch helper) controlled by the Generic Thermostat.
+        REQUIRED when zone is configured - must be specified along with Physical Valve Entity.
+        Configure your Generic Thermostat to control this virtual switch instead of the physical valve.
+        The blueprint monitors this switch to understand what the climate entity wants.
       default: []
       selector:
         entity:
@@ -226,19 +233,23 @@ blueprint:
           multiple: false
 
     zone4_valve:
-      name: Zone 4 - Physical Valve Entity (REQUIRED for Generic Thermostat)
+      name: Zone 4 - Physical Valve Entity (REQUIRED if zone configured)
       description: >
         Physical valve switch that controls the actual heating valve.
-        REQUIRED when using Generic Thermostat to prevent conflicts.
+        REQUIRED when zone is configured - must be specified along with Virtual Switch.
+        The blueprint controls this physical valve directly for coordinated multi-zone heating.
       default: []
       selector:
         entity:
           multiple: false
 
     zone4_virtual_switch:
-      name: Zone 4 - Virtual Switch (Optional - for Generic Thermostat)
+      name: Zone 4 - Virtual Switch (REQUIRED if zone configured)
       description: >
-        Virtual/helper switch controlled by the Generic Thermostat climate entity.
+        Virtual/helper switch (input_boolean or switch helper) controlled by the Generic Thermostat.
+        REQUIRED when zone is configured - must be specified along with Physical Valve Entity.
+        Configure your Generic Thermostat to control this virtual switch instead of the physical valve.
+        The blueprint monitors this switch to understand what the climate entity wants.
       default: []
       selector:
         entity:
@@ -268,19 +279,23 @@ blueprint:
           multiple: false
 
     zone5_valve:
-      name: Zone 5 - Physical Valve Entity (REQUIRED for Generic Thermostat)
+      name: Zone 5 - Physical Valve Entity (REQUIRED if zone configured)
       description: >
         Physical valve switch that controls the actual heating valve.
-        REQUIRED when using Generic Thermostat to prevent conflicts.
+        REQUIRED when zone is configured - must be specified along with Virtual Switch.
+        The blueprint controls this physical valve directly for coordinated multi-zone heating.
       default: []
       selector:
         entity:
           multiple: false
 
     zone5_virtual_switch:
-      name: Zone 5 - Virtual Switch (Optional - for Generic Thermostat)
+      name: Zone 5 - Virtual Switch (REQUIRED if zone configured)
       description: >
-        Virtual/helper switch controlled by the Generic Thermostat climate entity.
+        Virtual/helper switch (input_boolean or switch helper) controlled by the Generic Thermostat.
+        REQUIRED when zone is configured - must be specified along with Physical Valve Entity.
+        Configure your Generic Thermostat to control this virtual switch instead of the physical valve.
+        The blueprint monitors this switch to understand what the climate entity wants.
       default: []
       selector:
         entity:
@@ -479,6 +494,18 @@ action:
       # Filter out empty zones
       active_zones: >
         {{ zones | selectattr('climate', 'ne', []) | selectattr('climate', 'ne', '') | list }}
+      
+      # Validate zone configuration: valve and virtual_switch must both be specified or both be empty
+      zone_config_validation: >
+        {% set ns = namespace(errors=[]) %}
+        {% for zone in active_zones %}
+          {% set has_valve = zone.valve != '' and zone.valve != [] and zone.valve != none %}
+          {% set has_virtual = zone.virtual_switch != '' and zone.virtual_switch != [] and zone.virtual_switch != none %}
+          {% if has_valve != has_virtual %}
+            {% set ns.errors = ns.errors + ['Zone ' + zone.climate + ': Physical valve and virtual switch must both be specified or both be empty'] %}
+          {% endif %}
+        {% endfor %}
+        {{ ns.errors }}
       
       # Get MAIN thermostat mode (heating or cooling)
       main_hvac_mode: >
@@ -684,6 +711,17 @@ action:
       valves_to_close: >
         {% set open_list = valves_to_open %}
         {{ zone_data | map(attribute='climate') | reject('in', open_list) | list }}
+
+  # Validate configuration - log errors if validation fails
+  - condition: template
+    value_template: "{{ zone_config_validation | length > 0 }}"
+  - service: logbook.log
+    data:
+      name: Floor Heating Valve Manager - Configuration Error
+      message: >
+        CONFIGURATION ERROR: {{ zone_config_validation | join('. ') }}.
+        Each zone must have BOTH physical valve and virtual switch configured,
+        or BOTH must be empty. Fix your blueprint configuration.
 
   # Log the calculation for debugging
   - service: logbook.log

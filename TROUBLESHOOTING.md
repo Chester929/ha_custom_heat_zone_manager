@@ -74,7 +74,22 @@ This guide helps resolve common issues when using the Floor Heating Valve Manage
 
 **Problem**: Zone climate entities (e.g., Generic Thermostat) have their own internal logic that controls valves based on current vs target temperature. This **WILL conflict** with the blueprint's valve control decisions.
 
-**THE SOLUTION: Virtual Switch Pattern (RECOMMENDED)**
+**THE SOLUTION: Virtual Switch Pattern (MANDATORY)**
+
+**⚠️ REQUIRED CONFIGURATION**
+
+For each zone you configure, you MUST specify **BOTH** the physical valve AND virtual switch parameters:
+
+- ✅ **BOTH specified** → Virtual switch pattern (REQUIRED for all zones)
+- ❌ **Only one specified** → INVALID configuration (blueprint will log error)
+- ℹ️ **Zone not used** → Leave zone climate entity empty to skip that zone
+
+**Why Both Are Required:**
+
+Generic Thermostat MUST have a heater entity configured. If you only specify the physical valve in the blueprint, the Generic Thermostat would still try to control it directly, causing conflicts. The virtual switch pattern ensures clean separation:
+
+- Generic Thermostat → Controls virtual switch (based on temperature)
+- Blueprint → Controls physical valve (based on virtual switch + coordination)
 
 Use a virtual/helper switch as an intermediary between the climate entity and the physical valve:
 

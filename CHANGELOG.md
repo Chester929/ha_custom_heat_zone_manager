@@ -8,11 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Virtual Switch Pattern for Generic Thermostat (RECOMMENDED SOLUTION)**
+- **Virtual Switch Pattern for Generic Thermostat (REQUIRED)**
   - New `zoneN_virtual_switch` parameters for all 5 zones
   - Allows Generic Thermostat climate entities to control virtual/helper switches
   - Blueprint monitors virtual switch state to understand what climate entity wants
   - Blueprint controls physical valve directly based on both virtual switch state AND coordinated logic
+  - **MANDATORY REQUIREMENT**: Physical valve and virtual switch MUST BOTH be configured for each zone
+    - ✅ BOTH specified → Virtual switch pattern (REQUIRED)
+    - ❌ Only one specified → INVALID configuration (blueprint logs error)
+    - ℹ️ Zone not needed → Leave climate entity empty
+  - **Rationale**: Generic Thermostat MUST have a heater configured. Virtual switch pattern is the only conflict-free solution.
+  - **Configuration validation**: Blueprint validates zone configuration and logs errors if only one parameter is specified
   - **Benefits**:
     - Climate entities keep real target temperatures (no overriding with extreme values)
     - No conflicts between climate entity and blueprint
@@ -21,12 +27,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Clean separation: Climate entity → Virtual switch, Blueprint → Physical valve
   - **Setup**: Create helper switch (input_boolean or switch helper) for each zone
     - Configure Generic Thermostat to control the virtual switch
-    - Configure blueprint with virtual_switch and physical valve parameters
+    - Configure blueprint with BOTH virtual_switch AND physical valve parameters (REQUIRED)
     - Blueprint monitors virtual switch and controls physical valve accordingly
 - **Documentation for Virtual Switch Pattern**
   - Updated TROUBLESHOOTING with complete explanation and setup instructions
   - Added configuration examples showing the virtual switch pattern
-  - Updated README with clear requirements for Generic Thermostat users
+  - Updated README emphasizing mandatory requirement
+  - Documented that both parameters must be specified together
 - **Intelligent Temperature Compensation Algorithm**
   - New optional `main_temp_sensor` parameter for MAIN thermostat location (e.g., corridor)
   - Automatically compensates when MAIN sensor location differs from zones needing heating
