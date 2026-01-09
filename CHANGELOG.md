@@ -11,8 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **MAIN Climate Entity Target Temperature Not Being Set**
   - Split MAIN thermostat control into two separate service calls for better compatibility
   - First call: `climate.set_hvac_mode` to set the correct mode (heat/cool)
-  - Second call: `climate.set_temperature` to set the target temperature
+  - Second call: `climate.set_temperature` to set the target temperature with explicit float conversion
+  - Added `| float` filter to ensure temperature value is passed as a float, not a string
   - Many climate integrations ignore `hvac_mode` when included with `climate.set_temperature`, causing temperature changes to be ignored
+  - Some climate integrations require temperature to be a float type, not a string representation
   - This fix ensures the temperature is reliably updated across different climate integrations
   - Fixes issue where automation calculations ran correctly but MAIN thermostat temperature remained unchanged
 - **Time Pattern Trigger Validation Error**
