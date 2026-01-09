@@ -297,13 +297,13 @@ blueprint:
       description: >
         Time to wait (in seconds) after opening a new valve before closing the old valve.
         This ensures at least one valve is fully open during transitions. Set to 0 to disable.
-        Recommended: 5-10 seconds for motorized valves, 0 for instant switching.
+        Recommended: 5-10 seconds for fast motorized valves, 60-120 seconds for slow valves.
       default: 5
       selector:
         number:
           min: 0
-          max: 60
-          step: 1
+          max: 180
+          step: 5
           unit_of_measurement: "seconds"
           mode: slider
 

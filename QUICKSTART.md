@@ -58,7 +58,7 @@ Use these recommended starting values:
 | Min MAIN Temperature | 18°C | Safe minimum |
 | Max MAIN Temperature | 28°C | Safe maximum |
 | Fallback Temperature | 20°C | Default if sensor fails |
-| Valve Transition Delay | 5 sec | Time for valves to fully open before closing others |
+| Valve Transition Delay | 5-120 sec | Time for valves to fully open before closing others (adjust for your valve speed) |
 
 **Note:** The blueprint automatically recalculates every 60 seconds.
 

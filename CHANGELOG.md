@@ -8,18 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Valve Transition Delay** parameter (default: 5 seconds)
+- **Valve Transition Delay** parameter (default: 5 seconds, range: 0-180 seconds)
   - Configurable delay between opening new valves and closing old valves
   - Prevents brief periods where all valves are in transition
   - Ensures at least one valve is fully open during valve switching
-  - Recommended for motorized valves that take time to fully open/close
+  - Supports slow motorized valves (up to 3 minutes opening/closing time)
+  - Recommended: 5-10 seconds for fast valves, 60-120 seconds for slow valves
 
 ### Changed
 - Valve control logic now uses two-phase approach:
   - Phase 1: Open all valves that need to be opened
-  - Delay: Wait for configured transition time
+  - Delay: Wait for configured transition time (up to 180 seconds)
   - Phase 2: Close all valves that need to be closed
 - Updated documentation to explain valve transition behavior
+- Increased maximum valve transition delay from 60 to 180 seconds to support slow valves
 
 ## [1.0.0] - 2026-01-09
 
