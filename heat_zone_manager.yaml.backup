@@ -937,7 +937,7 @@ trigger:
   # Periodic trigger - runs every 60 seconds for recalculation
   # This ensures regular updates regardless of entity state changes
   - platform: time_pattern
-    seconds: "/60"
+    minutes: "/1"
     id: periodic_update
 
 # Conditions
