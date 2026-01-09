@@ -1,0 +1,556 @@
+####################################################################################################
+##### Floor Heating Valve Manager Blueprint by Chester929                                     #####
+##### Repository: https://github.com/Chester929/ha_custom_heat_zone_manager                   #####
+##### Blueprint for managing floor heating valves with MAIN thermostat                        #####
+####################################################################################################
+---
+blueprint:
+  name: Floor Heating Valve Manager
+  description: >
+    # Floor Heating Valve Manager - Complete Zone Control
+
+
+    **Version**: v1.0.0
+
+
+    This blueprint manages floor heating valves alongside a MAIN thermostat that controls HVAC water heating.
+    It dynamically adjusts valve states and the MAIN thermostat target temperature based on individual zone demands.
+
+
+    **Key Features:**
+
+    - Manages multiple heating zones (rooms) with individual thermostats/valves
+
+    - Ensures at least one valve is ALWAYS open (critical for water pump operation)
+
+    - Dynamically calculates MAIN thermostat target temperature based on zone demands
+
+    - Supports manual override for temperature sensors and valve entities
+
+    - Configurable temperature thresholds and calculation methods
+
+    - Supports both heating and cooling modes (inverse logic)
+
+
+    **Use Case:**
+
+    Your HVAC unit heats water based on outdoor and indoor temperature sensors. Individual rooms have
+    thermostats that control valves. This blueprint coordinates valve states and MAIN thermostat temperature
+    to efficiently heat zones while preventing all valves from closing simultaneously.
+
+
+    **Documentation:**
+
+    For detailed setup and usage instructions, visit the [GitHub repository](https://github.com/Chester929/ha_custom_heat_zone_manager).
+
+  source_url: https://github.com/Chester929/ha_custom_heat_zone_manager/blob/main/heat_zone_manager.yaml
+  domain: automation
+  homeassistant:
+    min_version: 2024.1.0
+
+  input:
+    # MAIN Thermostat Configuration
+    main_thermostat:
+      name: MAIN Thermostat (REQUIRED)
+      description: >
+        The primary climate entity that controls your HVAC water heating system.
+        This thermostat will have its target temperature automatically adjusted based on zone demands.
+      selector:
+        entity:
+          domain: climate
+          multiple: false
+
+    # Zone 1 Configuration
+    zone1_climate:
+      name: Zone 1 - Climate Entity
+      description: Climate entity for the first heating zone (e.g., bedroom, bathroom)
+      default: []
+      selector:
+        entity:
+          domain: climate
+          multiple: false
+
+    zone1_temp_sensor:
+      name: Zone 1 - Temperature Sensor (Optional Override)
+      description: Optional temperature sensor to override the climate entity's built-in sensor
+      default: []
+      selector:
+        entity:
+          domain: sensor
+          device_class: temperature
+          multiple: false
+
+    zone1_valve:
+      name: Zone 1 - Valve Entity (Optional Override)
+      description: Optional valve switch/entity to control instead of the climate entity
+      default: []
+      selector:
+        entity:
+          multiple: false
+
+    # Zone 2 Configuration
+    zone2_climate:
+      name: Zone 2 - Climate Entity
+      description: Climate entity for the second heating zone
+      default: []
+      selector:
+        entity:
+          domain: climate
+          multiple: false
+
+    zone2_temp_sensor:
+      name: Zone 2 - Temperature Sensor (Optional Override)
+      description: Optional temperature sensor to override the climate entity's built-in sensor
+      default: []
+      selector:
+        entity:
+          domain: sensor
+          device_class: temperature
+          multiple: false
+
+    zone2_valve:
+      name: Zone 2 - Valve Entity (Optional Override)
+      description: Optional valve switch/entity to control instead of the climate entity
+      default: []
+      selector:
+        entity:
+          multiple: false
+
+    # Zone 3 Configuration
+    zone3_climate:
+      name: Zone 3 - Climate Entity
+      description: Climate entity for the third heating zone
+      default: []
+      selector:
+        entity:
+          domain: climate
+          multiple: false
+
+    zone3_temp_sensor:
+      name: Zone 3 - Temperature Sensor (Optional Override)
+      description: Optional temperature sensor to override the climate entity's built-in sensor
+      default: []
+      selector:
+        entity:
+          domain: sensor
+          device_class: temperature
+          multiple: false
+
+    zone3_valve:
+      name: Zone 3 - Valve Entity (Optional Override)
+      description: Optional valve switch/entity to control instead of the climate entity
+      default: []
+      selector:
+        entity:
+          multiple: false
+
+    # Zone 4 Configuration
+    zone4_climate:
+      name: Zone 4 - Climate Entity
+      description: Climate entity for the fourth heating zone
+      default: []
+      selector:
+        entity:
+          domain: climate
+          multiple: false
+
+    zone4_temp_sensor:
+      name: Zone 4 - Temperature Sensor (Optional Override)
+      description: Optional temperature sensor to override the climate entity's built-in sensor
+      default: []
+      selector:
+        entity:
+          domain: sensor
+          device_class: temperature
+          multiple: false
+
+    zone4_valve:
+      name: Zone 4 - Valve Entity (Optional Override)
+      description: Optional valve switch/entity to control instead of the climate entity
+      default: []
+      selector:
+        entity:
+          multiple: false
+
+    # Zone 5 Configuration
+    zone5_climate:
+      name: Zone 5 - Climate Entity
+      description: Climate entity for the fifth heating zone
+      default: []
+      selector:
+        entity:
+          domain: climate
+          multiple: false
+
+    zone5_temp_sensor:
+      name: Zone 5 - Temperature Sensor (Optional Override)
+      description: Optional temperature sensor to override the climate entity's built-in sensor
+      default: []
+      selector:
+        entity:
+          domain: sensor
+          device_class: temperature
+          multiple: false
+
+    zone5_valve:
+      name: Zone 5 - Valve Entity (Optional Override)
+      description: Optional valve switch/entity to control instead of the climate entity
+      default: []
+      selector:
+        entity:
+          multiple: false
+
+    # Temperature Management Settings
+    temp_difference_open:
+      name: Temperature Difference to Open Valve
+      description: >
+        How many degrees below target temperature should trigger valve opening.
+        For example, 0.5°C means the valve opens when current temp is 0.5°C or more below target.
+      default: 0.5
+      selector:
+        number:
+          min: 0.1
+          max: 3.0
+          step: 0.1
+          unit_of_measurement: "°C"
+          mode: slider
+
+    temp_difference_close:
+      name: Temperature Difference to Close Valve
+      description: >
+        How many degrees above target temperature should trigger valve closing.
+        For example, 0.2°C means the valve closes when current temp is 0.2°C or more above target.
+      default: 0.2
+      selector:
+        number:
+          min: 0.0
+          max: 2.0
+          step: 0.1
+          unit_of_measurement: "°C"
+          mode: slider
+
+    all_satisfied_temp_mode:
+      name: All Zones Satisfied - Temperature Calculation Mode
+      description: >
+        When all zones are satisfied (at or above target), this determines the MAIN thermostat target.
+        - 0% = Use lowest zone target temperature
+        - 50% = Use average of all zone target temperatures
+        - 100% = Use highest zone target temperature
+      default: 50
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 5
+          unit_of_measurement: "%"
+          mode: slider
+
+    min_main_temp:
+      name: Minimum MAIN Thermostat Temperature
+      description: The minimum temperature the MAIN thermostat can be set to
+      default: 18.0
+      selector:
+        number:
+          min: 10.0
+          max: 25.0
+          step: 0.5
+          unit_of_measurement: "°C"
+          mode: slider
+
+    max_main_temp:
+      name: Maximum MAIN Thermostat Temperature
+      description: The maximum temperature the MAIN thermostat can be set to
+      default: 28.0
+      selector:
+        number:
+          min: 20.0
+          max: 35.0
+          step: 0.5
+          unit_of_measurement: "°C"
+          mode: slider
+
+    enable_cooling_mode:
+      name: Enable Cooling Mode Support
+      description: >
+        Enable if your MAIN thermostat supports cooling. The logic will be inverted:
+        valves open when temperature is above target (cooling needed).
+      default: false
+      selector:
+        boolean:
+
+    fallback_temp:
+      name: Fallback Temperature
+      description: >
+        Temperature to use if a sensor fails or returns an invalid value.
+        This prevents automation errors when sensors are unavailable.
+      default: 20.0
+      selector:
+        number:
+          min: 15.0
+          max: 25.0
+          step: 0.5
+          unit_of_measurement: "°C"
+          mode: slider
+
+    valve_transition_delay:
+      name: Valve Transition Delay
+      description: >
+        Time to wait (in seconds) after opening a new valve before closing the old valve.
+        This ensures at least one valve is fully open during transitions. Set to 0 to disable.
+        Recommended: 5-10 seconds for fast motorized valves, 60-120 seconds for slow valves.
+      default: 5
+      selector:
+        number:
+          min: 0
+          max: 180
+          step: 5
+          unit_of_measurement: "seconds"
+          mode: slider
+
+# Automation triggers
+trigger:
+  # Periodic trigger - runs every 60 seconds for recalculation
+  # This ensures regular updates regardless of entity state changes
+  - platform: time_pattern
+    seconds: "/60"
+    id: periodic_update
+
+# Conditions
+condition: []
+
+# Actions
+action:
+  - variables:
+      # Input configurations
+      main_climate: !input main_thermostat
+      enable_cooling: !input enable_cooling_mode
+      temp_diff_open: !input temp_difference_open
+      temp_diff_close: !input temp_difference_close
+      all_satisfied_mode: !input all_satisfied_temp_mode
+      min_temp: !input min_main_temp
+      max_temp: !input max_main_temp
+      fallback_temperature: !input fallback_temp
+      valve_delay: !input valve_transition_delay
+      
+      # Zone configurations
+      zones:
+        - climate: !input zone1_climate
+          temp_sensor: !input zone1_temp_sensor
+          valve: !input zone1_valve
+        - climate: !input zone2_climate
+          temp_sensor: !input zone2_temp_sensor
+          valve: !input zone2_valve
+        - climate: !input zone3_climate
+          temp_sensor: !input zone3_temp_sensor
+          valve: !input zone3_valve
+        - climate: !input zone4_climate
+          temp_sensor: !input zone4_temp_sensor
+          valve: !input zone4_valve
+        - climate: !input zone5_climate
+          temp_sensor: !input zone5_temp_sensor
+          valve: !input zone5_valve
+      
+      # Filter out empty zones
+      active_zones: >
+        {{ zones | selectattr('climate', 'ne', []) | selectattr('climate', 'ne', '') | list }}
+      
+      # Get MAIN thermostat mode (heating or cooling)
+      main_hvac_mode: >
+        {{ states(main_climate) }}
+      
+      is_cooling_mode: >
+        {{ enable_cooling and main_hvac_mode in ['cool', 'cool_only'] }}
+      
+      # Calculate zone data: current temp, target temp, needs heating/cooling
+      zone_data: >
+        {% set ns = namespace(zones=[]) %}
+        {% for zone in active_zones %}
+          {% if zone.climate %}
+            {% set climate_entity = zone.climate %}
+            {# Get current temperature - use override sensor if provided, otherwise use climate entity's attribute #}
+            {% if zone.temp_sensor and zone.temp_sensor != [] and zone.temp_sensor != '' %}
+              {% set current_temp = states(zone.temp_sensor) | float(fallback_temperature) %}
+            {% else %}
+              {% set current_temp = state_attr(climate_entity, 'current_temperature') | float(fallback_temperature) %}
+            {% endif %}
+            {% set target_temp = state_attr(climate_entity, 'temperature') | float(fallback_temperature) %}
+            {% set zone_mode = states(climate_entity) %}
+            
+            {# Determine if zone needs heating/cooling #}
+            {% if is_cooling_mode %}
+              {# Cooling mode: open valve if temp is above target + threshold #}
+              {% set needs_action = current_temp > (target_temp + temp_diff_open) %}
+              {% set satisfied = current_temp <= (target_temp - temp_diff_close) %}
+            {% else %}
+              {# Heating mode: open valve if temp is below target - threshold #}
+              {% set needs_action = current_temp < (target_temp - temp_diff_open) %}
+              {% set satisfied = current_temp >= (target_temp + temp_diff_close) %}
+            {% endif %}
+            
+            {% set ns.zones = ns.zones + [{
+              'climate': climate_entity,
+              'valve': zone.valve,
+              'temp_sensor': zone.temp_sensor,
+              'current_temp': current_temp,
+              'target_temp': target_temp,
+              'needs_action': needs_action,
+              'satisfied': satisfied,
+              'mode': zone_mode
+            }] %}
+          {% endif %}
+        {% endfor %}
+        {{ ns.zones }}
+      
+      # Calculate which zones need heating/cooling (valves should be open)
+      zones_needing_action: >
+        {{ zone_data | selectattr('needs_action', 'eq', true) | list }}
+      
+      # Check if all zones are satisfied
+      all_zones_satisfied: >
+        {{ zone_data | selectattr('satisfied', 'eq', false) | list | length == 0 }}
+      
+      # Calculate target temperature for MAIN thermostat
+      calculated_main_target: >
+        {% if zones_needing_action | length > 0 %}
+          {# At least one zone needs heating/cooling - use highest target (heating) or lowest target (cooling) #}
+          {% if is_cooling_mode %}
+            {{ zones_needing_action | map(attribute='target_temp') | min | float }}
+          {% else %}
+            {{ zones_needing_action | map(attribute='target_temp') | max | float }}
+          {% endif %}
+        {% elif all_zones_satisfied and zone_data | length > 0 %}
+          {# All zones satisfied - calculate based on mode slider #}
+          {% set all_targets = zone_data | map(attribute='target_temp') | list %}
+          {% if all_targets | length > 0 %}
+            {% set min_target = all_targets | min | float %}
+            {% set max_target = all_targets | max | float %}
+            {% set avg_target = (all_targets | sum / all_targets | length) | float %}
+            
+            {% if all_satisfied_mode <= 5 %}
+              {{ min_target }}
+            {% elif all_satisfied_mode >= 95 %}
+              {{ max_target }}
+            {% else %}
+              {# Interpolate between min and max based on slider position #}
+              {% set mode_percent = all_satisfied_mode / 100.0 %}
+              {{ (min_target + (max_target - min_target) * mode_percent) | round(1) }}
+            {% endif %}
+          {% else %}
+            {{ min_temp }}
+          {% endif %}
+        {% elif zone_data | length > 0 %}
+          {# Default: use average of all zone targets #}
+          {{ (zone_data | map(attribute='target_temp') | sum / zone_data | length) | float | round(1) }}
+        {% else %}
+          {# No zones configured, use minimum temperature #}
+          {{ min_temp }}
+        {% endif %}
+      
+      # Clamp to min/max limits
+      final_main_target: >
+        {{ [min_temp, [calculated_main_target, max_temp] | min] | max | round(1) }}
+      
+      # Determine which valves should be open
+      # CRITICAL: If all zones are satisfied, open ALL valves to prevent pump issues
+      valves_to_open: >
+        {% if all_zones_satisfied %}
+          {# Open all valves when all zones satisfied #}
+          {{ zone_data | map(attribute='climate') | list }}
+        {% elif zones_needing_action | length > 0 %}
+          {# Open valves for zones that need heating/cooling #}
+          {{ zones_needing_action | map(attribute='climate') | list }}
+        {% else %}
+          {# Fallback: open at least the first zone's valve #}
+          {{ [zone_data[0].climate] if zone_data | length > 0 else [] }}
+        {% endif %}
+      
+      valves_to_close: >
+        {% set open_list = valves_to_open %}
+        {{ zone_data | map(attribute='climate') | reject('in', open_list) | list }}
+
+  # Log the calculation for debugging
+  - service: logbook.log
+    data:
+      name: Floor Heating Valve Manager
+      message: >
+        Recalculating valve states and MAIN temperature.
+        Mode: {{ 'Cooling' if is_cooling_mode else 'Heating' }}.
+        Zones needing action: {{ zones_needing_action | length }}.
+        All satisfied: {{ all_zones_satisfied }}.
+        Target MAIN temp: {{ final_main_target }}°C.
+
+  # Set MAIN thermostat target temperature
+  - service: climate.set_temperature
+    target:
+      entity_id: !input main_thermostat
+    data:
+      temperature: "{{ final_main_target }}"
+
+  # PHASE 1: Open valves that need to be opened
+  # This ensures new valves are opening before we close old ones
+  - repeat:
+      for_each: "{{ zone_data }}"
+      sequence:
+        - variables:
+            zone: "{{ repeat.item }}"
+            should_open: "{{ zone.climate in valves_to_open }}"
+        
+        - condition: template
+          value_template: "{{ should_open }}"
+        
+        # Open valve (turn on climate or valve entity)
+        - choose:
+            # If manual valve override is set, turn it on
+            - conditions:
+                - condition: template
+                  value_template: "{{ zone.valve != '' and zone.valve != [] }}"
+              sequence:
+                - service: homeassistant.turn_on
+                  target:
+                    entity_id: "{{ zone.valve }}"
+          default:
+            # Otherwise, ensure climate entity is in heating/cooling mode
+            - service: climate.set_hvac_mode
+              target:
+                entity_id: "{{ zone.climate }}"
+              data:
+                hvac_mode: "{{ 'cool' if is_cooling_mode else 'heat' }}"
+
+  # Wait for valve transition delay (allows valves to fully open)
+  - condition: template
+    value_template: "{{ valve_delay > 0 }}"
+  - delay:
+      seconds: "{{ valve_delay }}"
+
+  # PHASE 2: Close valves that need to be closed
+  # Now that new valves are open, we can safely close old ones
+  - repeat:
+      for_each: "{{ zone_data }}"
+      sequence:
+        - variables:
+            zone: "{{ repeat.item }}"
+            should_close: "{{ zone.climate in valves_to_close }}"
+        
+        - condition: template
+          value_template: "{{ should_close }}"
+        
+        # Close valve (turn off climate or valve entity)
+        - choose:
+            # If manual valve override is set, turn it off
+            - conditions:
+                - condition: template
+                  value_template: "{{ zone.valve != '' and zone.valve != [] }}"
+              sequence:
+                - service: homeassistant.turn_off
+                  target:
+                    entity_id: "{{ zone.valve }}"
+          default:
+            # Otherwise, turn off climate entity (close valve)
+            - service: climate.set_hvac_mode
+              target:
+                entity_id: "{{ zone.climate }}"
+              data:
+                hvac_mode: "off"
+
+mode: single
+max_exceeded: silent
