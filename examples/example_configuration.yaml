@@ -257,6 +257,55 @@ automation:
 
 
 # ==============================================================================
+# EXAMPLE 8: Fallback Zones to Prevent Overheating
+# ==============================================================================
+# Scenario: Prevent overheating when all zones satisfied
+# Use fallback zones instead of opening all valves
+
+automation:
+  - alias: Floor Heating - Fallback Zones
+    use_blueprint:
+      path: chester929/heat_zone_manager.yaml
+      input:
+        # MAIN thermostat
+        main_thermostat: climate.main_hvac
+        main_temp_sensor: sensor.corridor_temperature
+        
+        # Zones
+        zone1_climate: climate.bedroom_1
+        zone2_climate: climate.bedroom_2
+        zone3_climate: climate.bathroom
+        zone4_climate: climate.corridor
+        
+        # KEY FEATURE: Fallback zones
+        # These zone(s) stay open when all zones are satisfied or overheated
+        # Ensures pump safety without overheating rooms
+        fallback_zones:
+          - climate.corridor  # Corridor is least critical, keeps pump running
+        
+        # Overheated threshold - close all except fallback when zones exceed this
+        overheated_threshold: 1.0  # If zone is 1°C above target, it's overheated
+        
+        # Temperature thresholds
+        temp_difference_open: 0.5
+        temp_difference_close: 0.2
+        all_satisfied_temp_mode: 50
+        min_main_temp: 18.0
+        max_main_temp: 28.0
+
+# HOW IT WORKS:
+# Scenario 1 - All satisfied:
+#   - OLD: Opens ALL valves (bedroom1, bedroom2, bathroom, corridor)
+#   - NEW: Opens ONLY corridor valve (fallback)
+#   - Benefit: Prevents overheating bedrooms while maintaining pump safety
+#
+# Scenario 2 - All overheated (all zones > target + 1°C):
+#   - Closes ALL valves EXCEPT corridor (fallback)
+#   - Sets MAIN target to minimum (18°C)
+#   - System cools down safely without closing all valves
+
+
+# ==============================================================================
 # NOTES ON ENTITY NAMING
 # ==============================================================================
 # 

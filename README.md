@@ -153,13 +153,20 @@ This blueprint manages the entire system automatically!
 | **All Zones Satisfied - Temperature Mode** | How to calculate MAIN temp when all satisfied (0-100%) | 50% |
 | **Minimum MAIN Temperature** | Minimum MAIN thermostat temperature | 18.0°C |
 | **Maximum MAIN Temperature** | Maximum MAIN thermostat temperature | 28.0°C |
+| **MAIN Temperature Sensor** | Optional sensor for MAIN location (enables intelligent compensation) | - |
+
+### Safety & Fallback
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| **Fallback Zone(s)** | Zone(s) to keep open when all satisfied/overheated (ensures pump safety) | First zone |
+| **Overheated Threshold** | Degrees above target that indicates zone is overheated | 1.0°C |
+| **Fallback Temperature** | Temperature used if sensor fails | 20.0°C |
+| **Valve Transition Delay** | Time to wait after opening new valve before closing old valve | 5 seconds |
 
 ### Advanced
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | **Enable Cooling Mode Support** | Invert logic for cooling | false |
-| **Fallback Temperature** | Temperature used if sensor fails | 20.0°C |
-| **Valve Transition Delay** | Time to wait after opening new valve before closing old valve | 5 seconds |
 
 **Note:** The blueprint automatically recalculates every 60 seconds. Response to zone changes is immediate when triggered by state changes.
 

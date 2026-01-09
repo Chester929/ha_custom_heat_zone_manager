@@ -151,16 +151,46 @@ When the MAIN thermostat sensor (typically in a corridor) reads a different temp
 
 If we simply set MAIN target to 22°C, the HVAC sees the corridor is already at 23°C (above target) and won't heat the water sufficiently. By adding compensation based on the temperature deficit, we ensure the HVAC heats the water hot enough to warm the bedroom despite the corridor already being warm.
 
-### 5. Critical Constraint Check
+### 5. Critical Constraint Check & Valve Determination
 
 ```
-Before applying valve states:
+Determine which valves to open (at least one MUST be open):
   │
-  └─ Are ALL valves about to close?
-      ├─ YES → OVERRIDE! Open ALL valves
-      │         └─ Use "all satisfied" temperature
-      └─ NO  → Proceed with calculated states
+  ├─ Are ALL zones overheated?
+  │   ├─ YES → SAFETY MODE!
+  │   │   ├─ Close all valves EXCEPT fallback zone(s)
+  │   │   ├─ Set MAIN target to minimum temperature
+  │   │   └─ Prevent further overheating while maintaining pump safety
+  │   └─ NO → Continue evaluation
+  │
+  ├─ Are ALL zones satisfied (not overheated)?
+  │   ├─ YES → Check fallback configuration
+  │   │   ├─ Fallback zones configured?
+  │   │   │   ├─ YES → Open ONLY fallback zone(s)
+  │   │   │   └─ NO → Open ALL valves (legacy behavior)
+  │   │   └─ Use "all satisfied" temperature calculation
+  │   └─ NO → Continue evaluation
+  │
+  ├─ Are there zones needing action?
+  │   ├─ YES → Open those zone valves
+  │   │         └─ Use compensated temperature for MAIN
+  │   └─ NO → ERROR/FALLBACK
+  │           └─ Open fallback zone(s) only
+  │
+  └─ Calculate which valves to close
+      └─ Any valve NOT in the "open" list gets closed
 ```
+
+**Fallback Zones:**
+- User-configurable zones that stay open when all zones are satisfied/overheated
+- Critical for pump safety - ensures at least one valve always open
+- Recommended: Corridor or least critical room
+- Default: First zone if not configured
+
+**Overheated Detection:**
+- Zone is overheated when: `current_temp > (target_temp + overheated_threshold)`
+- Default threshold: 1.0°C
+- When all zones overheated: Close all except fallback, lower MAIN to minimum
 
 ### 6. Action Phase
 
@@ -313,6 +343,64 @@ Valves:
   ✓ Bathroom: OPEN (needs heat)
   ✗ Living: CLOSED (satisfied)
 ```
+
+### Scenario 6: All Zones Overheated (New Fallback Logic)
+
+**State:**
+- Fallback zones configured: Corridor (climate.corridor)
+- Overheated threshold: 1.0°C
+- Bedroom: 23°C / target 22°C → Overheated ✗
+- Bathroom: 26°C / target 25°C → Overheated ✗
+- Living: 23.5°C / target 22°C → Overheated ✗
+- Corridor: 24°C / target 23°C → Overheated ✗
+
+**Logic (NEW overheated protection):**
+```
+All zones overheated: TRUE
+Fallback zones: [climate.corridor]
+
+Action:
+- Close all valves EXCEPT corridor (fallback)
+- Set MAIN target to minimum (18°C)
+- Prevent further heating while maintaining pump safety
+
+Result: System cools down safely without closing all valves
+Valves:
+  ✗ Bedroom: CLOSED (overheated)
+  ✗ Bathroom: CLOSED (overheated)
+  ✗ Living: CLOSED (overheated)
+  ✓ Corridor: OPEN (fallback - ensures pump safety)
+MAIN target: 18°C (minimum to stop heating)
+```
+
+### Scenario 7: All Satisfied with Fallback Zones
+
+**State:**
+- Fallback zones configured: Living Room
+- Bedroom: 22.1°C / target 22°C → Satisfied ✓
+- Bathroom: 25.1°C / target 25°C → Satisfied ✓
+- Living: 22.3°C / target 22°C → Satisfied ✓
+
+**Logic (NEW fallback behavior):**
+```
+All zones satisfied: TRUE
+All zones overheated: FALSE
+Fallback zones configured: [climate.living_room]
+
+Action:
+- Open ONLY fallback zone (living room)
+- Close other zones to prevent overheating
+- Use "all satisfied" temperature mode
+
+Result: Better temperature control, prevents unnecessary heating
+Valves:
+  ✗ Bedroom: CLOSED (satisfied, not fallback)
+  ✗ Bathroom: CLOSED (satisfied, not fallback)
+  ✓ Living: OPEN (fallback zone)
+MAIN target: 23°C (based on slider at 50%)
+```
+
+**Note:** If no fallback zones configured, legacy behavior opens ALL valves when satisfied.
 
 ## Temperature Calculation Examples
 
