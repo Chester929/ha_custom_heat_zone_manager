@@ -14,12 +14,49 @@ Get your Floor Heating Valve Manager up and running in 5 minutes!
    ```
 4. Click **Import**
 
-### Step 2: Create Automation (2 minutes)
+### Step 2: Create Virtual Switches (2 minutes)
+
+⚠️ **REQUIRED STEP - Do NOT skip!**
+
+For each zone, you need a virtual switch (helper):
+
+1. Go to **Settings** → **Devices & Services** → **Helpers**
+2. Click **Create Helper** → **Toggle**
+3. Create switches for your zones:
+   - Name: `bedroom_virtual_valve`
+   - Name: `bathroom_virtual_valve`
+   - (Add more as needed)
+
+### Step 3: Configure Generic Thermostats (3 minutes)
+
+Add this to your `configuration.yaml`:
+
+```yaml
+input_boolean:
+  bedroom_virtual_valve:
+    name: "Bedroom Virtual Valve"
+  bathroom_virtual_valve:
+    name: "Bathroom Virtual Valve"
+
+climate:
+  - platform: generic_thermostat
+    name: Bedroom Thermostat
+    heater: input_boolean.bedroom_virtual_valve  # Use VIRTUAL switch!
+    target_sensor: sensor.bedroom_temperature
+  - platform: generic_thermostat
+    name: Bathroom Thermostat
+    heater: input_boolean.bathroom_virtual_valve  # Use VIRTUAL switch!
+    target_sensor: sensor.bathroom_temperature
+```
+
+Restart Home Assistant to apply changes.
+
+### Step 4: Create Automation (2 minutes)
 
 1. Click **Create Automation**
 2. Select **Use a blueprint**
 3. Choose **Floor Heating Valve Manager**
-4. Fill in the basics:
+4. Fill in the configuration:
 
    **MAIN Thermostat (REQUIRED):**
    - Select your main HVAC climate entity
@@ -29,15 +66,29 @@ Get your Floor Heating Valve Manager up and running in 5 minutes!
    - Select first room's climate entity
    - Example: `climate.bedroom`
 
+   **Zone 1 - Physical Valve Entity (REQUIRED):**
+   - Select the physical valve switch
+   - Example: `switch.bedroom_valve`
+
+   **Zone 1 - Virtual Switch (REQUIRED):**
+   - Select the virtual switch you created
+   - Example: `input_boolean.bedroom_virtual_valve`
+
    **Zone 2 - Climate Entity:**
    - Select second room's climate entity
    - Example: `climate.bathroom`
+
+   **Zone 2 - Physical Valve Entity (REQUIRED):**
+   - Example: `switch.bathroom_valve`
+
+   **Zone 2 - Virtual Switch (REQUIRED):**
+   - Example: `input_boolean.bathroom_virtual_valve`
 
 5. Leave other settings at defaults for now
 6. Name it: "Floor Heating - Auto Manager"
 7. Click **Save**
 
-### Step 3: Done! (1 minute)
+### Step 5: Done! (1 minute)
 
 ✅ Your automation is now running!
 
@@ -67,20 +118,32 @@ Use these recommended starting values:
 ### 2-Zone House (Bedroom + Bathroom)
 
 ```yaml
+# In configuration.yaml:
+input_boolean:
+  bedroom_virtual_valve:
+    name: "Bedroom Virtual Valve"
+  bathroom_virtual_valve:
+    name: "Bathroom Virtual Valve"
+
+climate:
+  - platform: generic_thermostat
+    name: Bedroom
+    heater: input_boolean.bedroom_virtual_valve
+    target_sensor: sensor.bedroom_temperature
+  - platform: generic_thermostat
+    name: Bathroom
+    heater: input_boolean.bathroom_virtual_valve
+    target_sensor: sensor.bathroom_temperature
+
+# In blueprint configuration:
 MAIN Thermostat: climate.main_hvac
-Zone 1: climate.bedroom
-Zone 2: climate.bathroom
+Zone 1 Climate: climate.bedroom
+Zone 1 Valve: switch.bedroom_valve
+Zone 1 Virtual Switch: input_boolean.bedroom_virtual_valve
+Zone 2 Climate: climate.bathroom
+Zone 2 Valve: switch.bathroom_valve
+Zone 2 Virtual Switch: input_boolean.bathroom_virtual_valve
 All others: Leave empty
-```
-
-### 3-Zone House with Override Sensor
-
-```yaml
-MAIN Thermostat: climate.main_hvac
-Zone 1: climate.bedroom
-Zone 2: climate.bathroom
-Zone 2 Temp Sensor: sensor.bathroom_temperature_accurate
-Zone 3: climate.living_room
 ```
 
 ### 3-Zone House with Corridor Compensation (RECOMMENDED)
@@ -88,29 +151,47 @@ Zone 3: climate.living_room
 **Best for:** MAIN sensor in corridor, bedrooms often cooler than corridor
 
 ```yaml
+# In configuration.yaml:
+input_boolean:
+  bedroom1_virtual_valve:
+    name: "Bedroom 1 Virtual Valve"
+  bedroom2_virtual_valve:
+    name: "Bedroom 2 Virtual Valve"
+  bathroom_virtual_valve:
+    name: "Bathroom Virtual Valve"
+
+climate:
+  - platform: generic_thermostat
+    name: Bedroom 1
+    heater: input_boolean.bedroom1_virtual_valve
+    target_sensor: sensor.bedroom1_temperature
+  - platform: generic_thermostat
+    name: Bedroom 2
+    heater: input_boolean.bedroom2_virtual_valve
+    target_sensor: sensor.bedroom2_temperature
+  - platform: generic_thermostat
+    name: Bathroom
+    heater: input_boolean.bathroom_virtual_valve
+    target_sensor: sensor.bathroom_temperature
+
+# In blueprint configuration:
 MAIN Thermostat: climate.main_hvac
 MAIN Temp Sensor: sensor.corridor_temperature  # KEY: Enables intelligent compensation
-Zone 1: climate.bedroom_1
-Zone 1 Temp Sensor: sensor.bedroom_1_temperature
-Zone 2: climate.bedroom_2
-Zone 2 Temp Sensor: sensor.bedroom_2_temperature
-Zone 3: climate.bathroom
+Zone 1 Climate: climate.bedroom1
+Zone 1 Temp Sensor: sensor.bedroom1_temperature
+Zone 1 Valve: switch.bedroom1_valve
+Zone 1 Virtual Switch: input_boolean.bedroom1_virtual_valve
+Zone 2 Climate: climate.bedroom2
+Zone 2 Temp Sensor: sensor.bedroom2_temperature
+Zone 2 Valve: switch.bedroom2_valve
+Zone 2 Virtual Switch: input_boolean.bedroom2_virtual_valve
+Zone 3 Climate: climate.bathroom
+Zone 3 Valve: switch.bathroom_valve
+Zone 3 Virtual Switch: input_boolean.bathroom_virtual_valve
 ```
 
 **Why this works better:**
 When corridor is 23°C and bedroom needs 22°C but is at 20°C, the blueprint automatically compensates by setting MAIN target higher (e.g., 23°C) to ensure adequate heating despite the warm corridor.
-
-### 4-Zone House with Manual Valves
-
-```yaml
-MAIN Thermostat: climate.main_hvac
-Zone 1: climate.bedroom
-Zone 1 Valve: switch.bedroom_floor_valve
-Zone 2: climate.bathroom
-Zone 2 Valve: switch.bathroom_floor_valve
-Zone 3: climate.living_room
-Zone 4: climate.kitchen
-```
 
 ## 🔧 Quick Tweaks
 

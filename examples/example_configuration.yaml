@@ -8,8 +8,27 @@
 # EXAMPLE 1: Basic Setup with 2 Zones
 # ==============================================================================
 # Scenario: You have a MAIN thermostat and 2 rooms (bedroom and bathroom)
-# Both rooms use climate entities that directly control their valves
+# Using the virtual switch pattern (REQUIRED for Generic Thermostat)
 
+# STEP 1: Create virtual switches in configuration.yaml
+# input_boolean:
+#   bedroom_virtual_valve:
+#     name: "Bedroom Virtual Valve"
+#   bathroom_virtual_valve:
+#     name: "Bathroom Virtual Valve"
+
+# STEP 2: Configure Generic Thermostats to use virtual switches
+# climate:
+#   - platform: generic_thermostat
+#     name: Bedroom Thermostat
+#     heater: input_boolean.bedroom_virtual_valve  # VIRTUAL, not physical!
+#     target_sensor: sensor.bedroom_temperature
+#   - platform: generic_thermostat
+#     name: Bathroom Thermostat
+#     heater: input_boolean.bathroom_virtual_valve  # VIRTUAL, not physical!
+#     target_sensor: sensor.bathroom_temperature
+
+# STEP 3: Configure blueprint with BOTH valve and virtual_switch (REQUIRED)
 automation:
   - alias: Floor Heating - Basic 2 Zone
     use_blueprint:
@@ -18,11 +37,15 @@ automation:
         # MAIN thermostat
         main_thermostat: climate.main_hvac
         
-        # Zone 1: Bedroom
+        # Zone 1: Bedroom (BOTH valve and virtual_switch REQUIRED)
         zone1_climate: climate.bedroom_thermostat
+        zone1_valve: switch.bedroom_physical_valve           # REQUIRED
+        zone1_virtual_switch: input_boolean.bedroom_virtual_valve  # REQUIRED
         
-        # Zone 2: Bathroom
+        # Zone 2: Bathroom (BOTH valve and virtual_switch REQUIRED)
         zone2_climate: climate.bathroom_thermostat
+        zone2_valve: switch.bathroom_physical_valve          # REQUIRED
+        zone2_virtual_switch: input_boolean.bathroom_virtual_valve  # REQUIRED
         
         # Temperature thresholds
         temp_difference_open: 0.5
@@ -39,8 +62,33 @@ automation:
 # EXAMPLE 2: Advanced Setup with Manual Overrides
 # ==============================================================================
 # Scenario: You have separate temperature sensors and valve switches
-# that are not part of the climate entities
+# Using virtual switch pattern for proper coordination
 
+# STEP 1: Create virtual switches in configuration.yaml
+# input_boolean:
+#   bedroom_virtual_valve:
+#     name: "Bedroom Virtual Valve"
+#   bathroom_virtual_valve:
+#     name: "Bathroom Virtual Valve"
+#   living_virtual_valve:
+#     name: "Living Room Virtual Valve"
+
+# STEP 2: Configure Generic Thermostats
+# climate:
+#   - platform: generic_thermostat
+#     name: Bedroom Controller
+#     heater: input_boolean.bedroom_virtual_valve
+#     target_sensor: sensor.bedroom_temperature
+#   - platform: generic_thermostat
+#     name: Bathroom Controller
+#     heater: input_boolean.bathroom_virtual_valve
+#     target_sensor: sensor.bathroom_temperature_accurate
+#   - platform: generic_thermostat
+#     name: Living Thermostat
+#     heater: input_boolean.living_virtual_valve
+#     target_sensor: sensor.living_temperature
+
+# STEP 3: Configure blueprint
 automation:
   - alias: Floor Heating - Advanced with Overrides
     use_blueprint:
@@ -56,15 +104,19 @@ automation:
         # Zone 1: Bedroom (with manual overrides)
         zone1_climate: climate.bedroom_controller
         zone1_temp_sensor: sensor.bedroom_temperature
-        zone1_valve: switch.bedroom_valve
+        zone1_valve: switch.bedroom_valve                    # REQUIRED
+        zone1_virtual_switch: input_boolean.bedroom_virtual_valve  # REQUIRED
         
-        # Zone 2: Bathroom (with temperature sensor override only)
+        # Zone 2: Bathroom (with temperature sensor override)
         zone2_climate: climate.bathroom_controller
         zone2_temp_sensor: sensor.bathroom_temperature_accurate
-        # No valve override - use climate entity to control valve
+        zone2_valve: switch.bathroom_valve                   # REQUIRED
+        zone2_virtual_switch: input_boolean.bathroom_virtual_valve  # REQUIRED
         
-        # Zone 3: Living Room (climate entity controls everything)
+        # Zone 3: Living Room
         zone3_climate: climate.living_room_thermostat
+        zone3_valve: switch.living_valve                     # REQUIRED
+        zone3_virtual_switch: input_boolean.living_virtual_valve  # REQUIRED
         
         # Fine-tuned temperature thresholds
         temp_difference_open: 0.3
@@ -83,6 +135,28 @@ automation:
 # ==============================================================================
 # Scenario: Maximum zones with different configurations per room
 
+# STEP 1: Create virtual switches
+# input_boolean:
+#   master_bedroom_virtual_valve:
+#     name: "Master Bedroom Virtual Valve"
+#   guest_bedroom_virtual_valve:
+#     name: "Guest Bedroom Virtual Valve"
+#   bathroom_virtual_valve:
+#     name: "Bathroom Virtual Valve"
+#   living_virtual_valve:
+#     name: "Living Room Virtual Valve"
+#   kitchen_virtual_valve:
+#     name: "Kitchen Virtual Valve"
+
+# STEP 2: Configure Generic Thermostats (abbreviated for space)
+# climate:
+#   - platform: generic_thermostat
+#     name: Master Bedroom
+#     heater: input_boolean.master_bedroom_virtual_valve
+#     target_sensor: sensor.master_bedroom_temp
+#   # ... (similar for other zones)
+
+# STEP 3: Configure blueprint
 automation:
   - alias: Floor Heating - Full 5 Zone House
     use_blueprint:
@@ -94,21 +168,30 @@ automation:
         # Zone 1: Master Bedroom
         zone1_climate: climate.master_bedroom
         zone1_temp_sensor: sensor.master_bedroom_temp
+        zone1_valve: switch.master_bedroom_valve             # REQUIRED
+        zone1_virtual_switch: input_boolean.master_bedroom_virtual_valve  # REQUIRED
         
         # Zone 2: Guest Bedroom
         zone2_climate: climate.guest_bedroom
+        zone2_valve: switch.guest_bedroom_valve              # REQUIRED
+        zone2_virtual_switch: input_boolean.guest_bedroom_virtual_valve  # REQUIRED
         
         # Zone 3: Bathroom
         zone3_climate: climate.bathroom
         zone3_temp_sensor: sensor.bathroom_temp
-        zone3_valve: switch.bathroom_floor_valve
+        zone3_valve: switch.bathroom_floor_valve             # REQUIRED
+        zone3_virtual_switch: input_boolean.bathroom_virtual_valve  # REQUIRED
         
         # Zone 4: Living Room
         zone4_climate: climate.living_room
         zone4_temp_sensor: sensor.living_room_temp
+        zone4_valve: switch.living_valve                     # REQUIRED
+        zone4_virtual_switch: input_boolean.living_virtual_valve  # REQUIRED
         
         # Zone 5: Kitchen
         zone5_climate: climate.kitchen
+        zone5_valve: switch.kitchen_valve                    # REQUIRED
+        zone5_virtual_switch: input_boolean.kitchen_virtual_valve  # REQUIRED
         
         # Temperature management
         temp_difference_open: 0.5
@@ -122,6 +205,10 @@ automation:
 # ==============================================================================
 # Scenario: Your system supports cooling and you want inverse logic
 
+# STEP 1: Create virtual switches (see previous examples)
+# STEP 2: Configure Generic Thermostats (see previous examples)
+
+# STEP 3: Configure blueprint with cooling mode
 automation:
   - alias: Floor Cooling - Summer Mode
     use_blueprint:
@@ -132,8 +219,16 @@ automation:
         
         # Zones
         zone1_climate: climate.bedroom
+        zone1_valve: switch.bedroom_valve
+        zone1_virtual_switch: input_boolean.bedroom_virtual_valve
+        
         zone2_climate: climate.bathroom
+        zone2_valve: switch.bathroom_valve
+        zone2_virtual_switch: input_boolean.bathroom_virtual_valve
+        
         zone3_climate: climate.living_room
+        zone3_valve: switch.living_valve
+        zone3_virtual_switch: input_boolean.living_virtual_valve
         
         # Enable cooling mode (inverse logic)
         enable_cooling_mode: true
@@ -155,6 +250,8 @@ automation:
 # ==============================================================================
 # Scenario: You want more stable operation with less frequent changes
 
+# Virtual switches and Generic Thermostats required (see Example 1)
+
 automation:
   - alias: Floor Heating - Conservative Mode
     use_blueprint:
@@ -163,10 +260,18 @@ automation:
         # MAIN thermostat
         main_thermostat: climate.main_thermostat
         
-        # Zones
+        # Zones (BOTH valve and virtual_switch REQUIRED for each)
         zone1_climate: climate.bedroom
+        zone1_valve: switch.bedroom_valve
+        zone1_virtual_switch: input_boolean.bedroom_virtual_valve
+        
         zone2_climate: climate.bathroom
+        zone2_valve: switch.bathroom_valve
+        zone2_virtual_switch: input_boolean.bathroom_virtual_valve
+        
         zone3_climate: climate.living_room
+        zone3_valve: switch.living_valve
+        zone3_virtual_switch: input_boolean.living_virtual_valve
         
         # Larger thresholds = less frequent valve switching
         temp_difference_open: 1.0
@@ -185,6 +290,8 @@ automation:
 # ==============================================================================
 # Scenario: You want quick response and frequent adjustments
 
+# Virtual switches and Generic Thermostats required (see Example 1)
+
 automation:
   - alias: Floor Heating - Aggressive Mode
     use_blueprint:
@@ -193,10 +300,18 @@ automation:
         # MAIN thermostat
         main_thermostat: climate.main_thermostat
         
-        # Zones
+        # Zones (BOTH valve and virtual_switch REQUIRED for each)
         zone1_climate: climate.bedroom
+        zone1_valve: switch.bedroom_valve
+        zone1_virtual_switch: input_boolean.bedroom_virtual_valve
+        
         zone2_climate: climate.bathroom
+        zone2_valve: switch.bathroom_valve
+        zone2_virtual_switch: input_boolean.bathroom_virtual_valve
+        
         zone3_climate: climate.living_room
+        zone3_valve: switch.living_valve
+        zone3_virtual_switch: input_boolean.living_virtual_valve
         
         # Smaller thresholds = more frequent valve switching
         temp_difference_open: 0.2
@@ -216,6 +331,8 @@ automation:
 # Scenario: MAIN sensor is in corridor which is often warmer than bedrooms
 # This example shows how to use the intelligent compensation feature
 
+# Virtual switches and Generic Thermostats required (see Example 1)
+
 automation:
   - alias: Floor Heating - Corridor Compensation
     use_blueprint:
@@ -231,12 +348,18 @@ automation:
         # Zones - bedrooms are typically cooler than corridor
         zone1_climate: climate.bedroom_1
         zone1_temp_sensor: sensor.bedroom_1_temperature
+        zone1_valve: switch.bedroom1_valve
+        zone1_virtual_switch: input_boolean.bedroom1_virtual_valve
         
         zone2_climate: climate.bedroom_2
         zone2_temp_sensor: sensor.bedroom_2_temperature
+        zone2_valve: switch.bedroom2_valve
+        zone2_virtual_switch: input_boolean.bedroom2_virtual_valve
         
         zone3_climate: climate.bathroom
         zone3_temp_sensor: sensor.bathroom_temperature
+        zone3_valve: switch.bathroom_valve
+        zone3_virtual_switch: input_boolean.bathroom_virtual_valve
         
         # Temperature thresholds
         temp_difference_open: 0.5
@@ -262,6 +385,8 @@ automation:
 # Scenario: Prevent overheating when all zones satisfied
 # Use fallback zones instead of opening all valves
 
+# Virtual switches and Generic Thermostats required (see Example 1)
+
 automation:
   - alias: Floor Heating - Fallback Zones
     use_blueprint:
@@ -273,9 +398,20 @@ automation:
         
         # Zones
         zone1_climate: climate.bedroom_1
+        zone1_valve: switch.bedroom1_valve
+        zone1_virtual_switch: input_boolean.bedroom1_virtual_valve
+        
         zone2_climate: climate.bedroom_2
+        zone2_valve: switch.bedroom2_valve
+        zone2_virtual_switch: input_boolean.bedroom2_virtual_valve
+        
         zone3_climate: climate.bathroom
+        zone3_valve: switch.bathroom_valve
+        zone3_virtual_switch: input_boolean.bathroom_virtual_valve
+        
         zone4_climate: climate.corridor
+        zone4_valve: switch.corridor_valve
+        zone4_virtual_switch: input_boolean.corridor_virtual_valve
         
         # KEY FEATURE: Fallback zones
         # These zone(s) stay open when all zones are satisfied or overheated
@@ -415,40 +551,22 @@ automation:
 
 
 # ==============================================================================
-# EXAMPLE 10: Simple Valve Override (Alternative if no virtual switch)
+# EXAMPLE 10: DEPRECATED - This pattern NO LONGER WORKS
 # ==============================================================================
-# Scenario: You want blueprint to control physical valves directly
-# Without virtual switches - simpler but climate entity loses valve control
-
-automation:
-  - alias: Floor Heating - Simple Valve Override  
-    use_blueprint:
-      path: chester929/heat_zone_manager.yaml
-      input:
-        main_thermostat: climate.main_hvac
-        
-        # Zone 1: Blueprint controls valve based on temperature only
-        zone1_climate: climate.bedroom_thermostat     # For temp reading and target
-        zone1_temp_sensor: sensor.bedroom_temperature
-        zone1_valve: switch.bedroom_valve             # Blueprint controls this
-        # NO virtual_switch - blueprint ignores climate entity's valve logic
-        
-        zone2_climate: climate.bathroom_thermostat
-        zone2_temp_sensor: sensor.bathroom_temperature  
-        zone2_valve: switch.bathroom_valve
-        # NO virtual_switch
-        
-        temp_difference_open: 0.5
-        temp_difference_close: 0.2
-        all_satisfied_temp_mode: 50
-        min_main_temp: 18.0
-        max_main_temp: 28.0
-
-# NOTE: If your climate entities are Generic Thermostats controlling the same
-# physical valve switches, there WILL be a conflict. Both the climate entity
-# and the blueprint will try to control the switch.
-# 
-# RECOMMENDATION: Use the virtual switch pattern (Example 9) instead!
+# ⚠️ WARNING: This example is kept for reference only. The blueprint now REQUIRES
+# both valve and virtual_switch to be specified together for proper operation.
+#
+# The validation in the blueprint will reject configurations that only specify
+# the valve without a virtual switch (or vice versa).
+#
+# REASON: Generic Thermostat entities MUST have a heater configured and will
+# conflict with the blueprint if both try to control the same physical valve.
+#
+# SOLUTION: Use the virtual switch pattern shown in Example 9 (REQUIRED).
+#
+# If you previously used this pattern, please migrate to the virtual switch
+# pattern as shown in Example 1 or Example 9.
+# ==============================================================================
 
 
 # ==============================================================================
