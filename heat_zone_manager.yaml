@@ -386,7 +386,12 @@ action:
         {% for zone in active_zones %}
           {% if zone.climate %}
             {% set climate_entity = zone.climate %}
-            {% set current_temp = state_attr(zone.temp_sensor if zone.temp_sensor else climate_entity, 'current_temperature') | float(20) %}
+            {# Get current temperature - use override sensor if provided, otherwise use climate entity's attribute #}
+            {% if zone.temp_sensor and zone.temp_sensor != [] and zone.temp_sensor != '' %}
+              {% set current_temp = states(zone.temp_sensor) | float(20) %}
+            {% else %}
+              {% set current_temp = state_attr(climate_entity, 'current_temperature') | float(20) %}
+            {% endif %}
             {% set target_temp = state_attr(climate_entity, 'temperature') | float(20) %}
             {% set zone_mode = states(climate_entity) %}
             
