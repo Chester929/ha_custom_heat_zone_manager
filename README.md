@@ -203,7 +203,8 @@ zone1_virtual_switch: input_boolean.bedroom_virtual_valve  # REQUIRED
 |-----------|-------------|---------|
 | **Zone N - Climate Entity** | Climate entity for zone | - |
 | **Zone N - Temperature Sensor** | Optional temp sensor override | - |
-| **Zone N - Valve Entity** | Optional valve entity override | - |
+| **Zone N - Physical Valve Entity** | **REQUIRED** if zone configured - Physical valve switch | - |
+| **Zone N - Virtual Switch** | **REQUIRED** if zone configured - Virtual switch controlled by climate entity | - |
 
 ### Temperature Management
 | Parameter | Description | Default |
@@ -228,7 +229,7 @@ zone1_virtual_switch: input_boolean.bedroom_virtual_valve  # REQUIRED
 |-----------|-------------|---------|
 | **Enable Cooling Mode Support** | Invert logic for cooling | false |
 
-**Note:** The blueprint automatically recalculates every 60 seconds. Response to zone changes is immediate when triggered by state changes.
+**Note:** The blueprint automatically recalculates every 60 seconds on a fixed periodic timer. This interval is hardcoded and cannot be changed.
 
 **Valve Transition Delay:** When switching valves (e.g., closing Valve 1 and opening Valve 2), the blueprint first opens the new valve, waits for the specified delay to allow it to fully open, then closes the old valve. This ensures at least one valve is always fully open during transitions, preventing water pump issues. Range: 0-180 seconds (0-3 minutes). Recommended: 5-10 seconds for fast motorized valves, 60-120 seconds for slow valves.
 

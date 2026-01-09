@@ -10,17 +10,19 @@ This repository contains a complete, production-ready Home Assistant Blueprint f
 **File:** `heat_zone_manager.yaml`
 
 A comprehensive Home Assistant automation blueprint that:
-- Manages up to 5 heating/cooling zones
+- Manages up to 15 heating/cooling zones (organized in 3 groups of 5)
 - Dynamically controls MAIN thermostat target temperature
 - Ensures at least one valve is always open (critical constraint)
 - Supports both heating and cooling modes
-- Provides extensive configuration options
+- **REQUIRES virtual switch pattern** for each zone (valve + virtual_switch)
+- Provides extensive configuration options including fallback zones and overheated threshold
 
 **Statistics:**
-- 23 configurable input parameters
-- 12 automation triggers
-- 550+ lines of YAML
+- 30+ configurable input parameters
+- 1 periodic trigger (every 60 seconds)
+- 1350+ lines of YAML
 - Fully validated and tested
+- Virtual switch pattern support (REQUIRED)
 
 ### Documentation Suite
 
@@ -57,9 +59,10 @@ A comprehensive Home Assistant automation blueprint that:
    - Performance considerations
 
 6. **examples/example_configuration.yaml** - Real-world examples
-   - 6 different configuration scenarios
+   - 10 different configuration scenarios
    - Basic to advanced setups
    - Recommended starting values
+   - Virtual switch pattern examples (REQUIRED)
 
 7. **CHANGELOG.md** - Version history
    - Release notes
@@ -98,11 +101,14 @@ A comprehensive Home Assistant automation blueprint that:
 - Automatic fallback when all zones satisfied
 
 ### 4. Flexible Configuration
+- **Virtual switch pattern (REQUIRED)** - Prevents conflicts with Generic Thermostat
 - Manual temperature sensor overrides
-- Manual valve entity overrides
 - Adjustable thresholds
-- Periodic update interval
+- Fixed 60-second update interval
 - Cooling mode support
+- Fallback zones for preventing overheating
+- Overheated threshold detection
+- Valve transition delay with 2-phase operation
 
 ### 5. User Experience
 - Comprehensive documentation
@@ -146,9 +152,10 @@ A comprehensive Home Assistant automation blueprint that:
 - At least one zone climate entity or valve
 
 ### Performance
-- Update interval: 15-300 seconds (configurable)
+- Update interval: 60 seconds (fixed, hardcoded in blueprint)
 - Calculation complexity: O(n) where n = zones
 - Execution mode: Single (prevents race conditions)
+- 2-phase valve operation (open first, then close after delay)
 
 ### Compatibility
 - Works with any climate entity
@@ -163,10 +170,11 @@ A comprehensive Home Assistant automation blueprint that:
 ## Usage Statistics
 
 - **Installation methods:** 3 (URL import, manual, SSH)
-- **Configuration examples:** 6 scenarios
+- **Configuration examples:** 10 scenarios
 - **Documentation pages:** 10 files
-- **Total documentation:** ~40,000 words
-- **Code examples:** 15+
+- **Total documentation:** ~50,000 words
+- **Code examples:** 20+
+- **Supported zones:** Up to 15 (3 groups of 5)
 
 ## Quality Assurance
 

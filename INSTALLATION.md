@@ -107,21 +107,39 @@ After installation, create your first automation:
 
 ### Step 3: Configure Zones
 
-Configure at least one zone (up to 5 available):
+⚠️ **IMPORTANT: Virtual Switch Pattern REQUIRED**
 
-1. **Zone 1 - Climate Entity**
-   - Select the climate entity for your first zone
-   - Example: `climate.bedroom_thermostat`
+For each zone you configure, you **MUST** specify **BOTH** the physical valve AND virtual switch parameters. This is mandatory to prevent conflicts between the climate entity and the blueprint.
 
-2. **Zone 1 - Temperature Sensor (Optional)**
-   - Leave empty to use climate entity's built-in sensor
-   - OR select a more accurate sensor: `sensor.bedroom_temperature`
+**Setup Process for Each Zone:**
 
-3. **Zone 1 - Valve Entity (Optional)**
-   - Leave empty to use climate entity for valve control
-   - OR select a specific valve switch: `switch.bedroom_valve`
+1. **Create Virtual Switch** (if not already created)
+   - Go to **Settings** → **Devices & Services** → **Helpers**
+   - Click **Create Helper** → **Toggle**
+   - Name it: `bedroom_virtual_valve` (or similar for your zone)
 
-Repeat for additional zones (Zone 2, 3, 4, 5).
+2. **Configure Generic Thermostat** (in configuration.yaml)
+   ```yaml
+   climate:
+     - platform: generic_thermostat
+       name: Bedroom Thermostat
+       heater: input_boolean.bedroom_virtual_valve  # VIRTUAL switch, not physical!
+       target_sensor: sensor.bedroom_temperature
+   ```
+
+3. **Configure Zone in Blueprint:**
+   - **Zone 1 - Climate Entity**: `climate.bedroom_thermostat`
+   - **Zone 1 - Temperature Sensor** (Optional): `sensor.bedroom_temperature` or leave empty
+   - **Zone 1 - Physical Valve Entity** (**REQUIRED**): `switch.bedroom_physical_valve`
+   - **Zone 1 - Virtual Switch** (**REQUIRED**): `input_boolean.bedroom_virtual_valve`
+
+**Why Both Are Required:**
+- Generic Thermostat entities MUST have a heater configured (cannot be disabled)
+- To prevent conflicts, the climate entity controls the virtual switch
+- The blueprint monitors the virtual switch and controls the physical valve
+- This ensures clean separation and proper coordination across zones
+
+Repeat for additional zones (up to 15 zones available, organized in 3 collapsible UI groups for easier navigation).
 
 ### Step 4: Configure Temperature Settings
 
@@ -188,9 +206,28 @@ Repeat for additional zones (Zone 2, 3, 4, 5).
 
 ## Example Configuration
 
-Here's a complete basic example:
+Here's a complete basic example with virtual switch pattern:
 
 ```yaml
+# First, create virtual switches in configuration.yaml:
+input_boolean:
+  bedroom_virtual_valve:
+    name: "Bedroom Virtual Valve"
+  bathroom_virtual_valve:
+    name: "Bathroom Virtual Valve"
+
+# Configure Generic Thermostats to use virtual switches:
+climate:
+  - platform: generic_thermostat
+    name: Bedroom Thermostat
+    heater: input_boolean.bedroom_virtual_valve  # VIRTUAL!
+    target_sensor: sensor.bedroom_temperature
+  - platform: generic_thermostat
+    name: Bathroom Thermostat
+    heater: input_boolean.bathroom_virtual_valve  # VIRTUAL!
+    target_sensor: sensor.bathroom_temperature
+
+# Then configure the blueprint automation:
 automation:
   - alias: Floor Heating - My House
     use_blueprint:
@@ -199,15 +236,16 @@ automation:
         # MAIN thermostat
         main_thermostat: climate.main_hvac
         
-        # Zone 1: Bedroom
+        # Zone 1: Bedroom (BOTH valve and virtual_switch REQUIRED)
         zone1_climate: climate.bedroom_thermostat
+        zone1_valve: switch.bedroom_physical_valve
+        zone1_virtual_switch: input_boolean.bedroom_virtual_valve
         
-        # Zone 2: Bathroom
+        # Zone 2: Bathroom (BOTH valve and virtual_switch REQUIRED)
         zone2_climate: climate.bathroom_thermostat
         zone2_temp_sensor: sensor.bathroom_temperature
-        
-        # Zone 3: Living Room
-        zone3_climate: climate.living_room_thermostat
+        zone2_valve: switch.bathroom_physical_valve
+        zone2_virtual_switch: input_boolean.bathroom_virtual_valve
         
         # Settings
         temp_difference_open: 0.5
@@ -215,7 +253,6 @@ automation:
         all_satisfied_temp_mode: 50
         min_main_temp: 18.0
         max_main_temp: 28.0
-        update_interval: 60
 ```
 
 ## Next Steps

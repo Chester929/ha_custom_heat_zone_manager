@@ -49,13 +49,14 @@ This document explains how the Floor Heating Valve Manager blueprint works inter
 
 ```
 Trigger Events:
-  ├─ Zone climate entity state change
-  ├─ Zone temperature sensor change
-  ├─ MAIN thermostat state change
-  └─ Periodic timer (every X seconds)
+  └─ Periodic timer (every 60 seconds)
        │
        ▼
   Blueprint Activates
+
+Note: The blueprint runs on a fixed 60-second interval. It does NOT
+trigger on entity state changes. All zone updates happen during the
+next scheduled execution cycle.
 ```
 
 ### 2. Data Collection Phase
