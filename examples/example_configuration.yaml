@@ -1,0 +1,248 @@
+# Example Configuration for Floor Heating Valve Manager Blueprint
+# 
+# This file shows how to configure the blueprint for different scenarios.
+# Copy the relevant configuration to your Home Assistant automations.yaml
+# or create via the UI (Settings -> Automations & Scenes -> Create Automation -> Use Blueprint)
+
+# ==============================================================================
+# EXAMPLE 1: Basic Setup with 2 Zones
+# ==============================================================================
+# Scenario: You have a MAIN thermostat and 2 rooms (bedroom and bathroom)
+# Both rooms use climate entities that directly control their valves
+
+automation:
+  - alias: Floor Heating - Basic 2 Zone
+    use_blueprint:
+      path: chester929/heat_zone_manager.yaml
+      input:
+        # MAIN thermostat
+        main_thermostat: climate.main_hvac
+        
+        # Zone 1: Bedroom
+        zone1_climate: climate.bedroom_thermostat
+        
+        # Zone 2: Bathroom
+        zone2_climate: climate.bathroom_thermostat
+        
+        # Temperature thresholds
+        temp_difference_open: 0.5
+        temp_difference_close: 0.2
+        
+        # When all zones satisfied, use average temperature
+        all_satisfied_temp_mode: 50
+        
+        # MAIN thermostat limits
+        min_main_temp: 18.0
+        max_main_temp: 28.0
+        
+        # Update every 60 seconds
+        update_interval: 60
+
+# ==============================================================================
+# EXAMPLE 2: Advanced Setup with Manual Overrides
+# ==============================================================================
+# Scenario: You have separate temperature sensors and valve switches
+# that are not part of the climate entities
+
+automation:
+  - alias: Floor Heating - Advanced with Overrides
+    use_blueprint:
+      path: chester929/heat_zone_manager.yaml
+      input:
+        # MAIN thermostat
+        main_thermostat: climate.de_dietrich_main
+        
+        # Zone 1: Bedroom (with manual overrides)
+        zone1_climate: climate.bedroom_controller
+        zone1_temp_sensor: sensor.bedroom_temperature
+        zone1_valve: switch.bedroom_valve
+        
+        # Zone 2: Bathroom (with temperature sensor override only)
+        zone2_climate: climate.bathroom_controller
+        zone2_temp_sensor: sensor.bathroom_temperature_accurate
+        # No valve override - use climate entity to control valve
+        
+        # Zone 3: Living Room (climate entity controls everything)
+        zone3_climate: climate.living_room_thermostat
+        
+        # Fine-tuned temperature thresholds
+        temp_difference_open: 0.3
+        temp_difference_close: 0.1
+        
+        # When all zones satisfied, use lowest temperature (conservative)
+        all_satisfied_temp_mode: 10
+        
+        # MAIN thermostat limits
+        min_main_temp: 19.0
+        max_main_temp: 26.0
+        
+        # Update every 30 seconds for faster response
+        update_interval: 30
+
+# ==============================================================================
+# EXAMPLE 3: Full 5 Zone Setup
+# ==============================================================================
+# Scenario: Maximum zones with different configurations per room
+
+automation:
+  - alias: Floor Heating - Full 5 Zone House
+    use_blueprint:
+      path: chester929/heat_zone_manager.yaml
+      input:
+        # MAIN thermostat
+        main_thermostat: climate.main_heat_pump
+        
+        # Zone 1: Master Bedroom
+        zone1_climate: climate.master_bedroom
+        zone1_temp_sensor: sensor.master_bedroom_temp
+        
+        # Zone 2: Guest Bedroom
+        zone2_climate: climate.guest_bedroom
+        
+        # Zone 3: Bathroom
+        zone3_climate: climate.bathroom
+        zone3_temp_sensor: sensor.bathroom_temp
+        zone3_valve: switch.bathroom_floor_valve
+        
+        # Zone 4: Living Room
+        zone4_climate: climate.living_room
+        zone4_temp_sensor: sensor.living_room_temp
+        
+        # Zone 5: Kitchen
+        zone5_climate: climate.kitchen
+        
+        # Temperature management
+        temp_difference_open: 0.5
+        temp_difference_close: 0.2
+        all_satisfied_temp_mode: 50  # Use average
+        min_main_temp: 18.0
+        max_main_temp: 28.0
+        update_interval: 60
+
+# ==============================================================================
+# EXAMPLE 4: Cooling Mode Setup (Air Conditioning)
+# ==============================================================================
+# Scenario: Your system supports cooling and you want inverse logic
+
+automation:
+  - alias: Floor Cooling - Summer Mode
+    use_blueprint:
+      path: chester929/heat_zone_manager.yaml
+      input:
+        # MAIN thermostat with cooling capability
+        main_thermostat: climate.main_hvac_heat_cool
+        
+        # Zones
+        zone1_climate: climate.bedroom
+        zone2_climate: climate.bathroom
+        zone3_climate: climate.living_room
+        
+        # Enable cooling mode (inverse logic)
+        enable_cooling_mode: true
+        
+        # Temperature thresholds
+        temp_difference_open: 0.5
+        temp_difference_close: 0.2
+        
+        # When all zones satisfied, use highest temperature (for cooling)
+        all_satisfied_temp_mode: 90
+        
+        # MAIN thermostat limits for cooling
+        min_main_temp: 20.0
+        max_main_temp: 26.0
+        
+        update_interval: 60
+
+# ==============================================================================
+# EXAMPLE 5: Conservative Setup (Slower Response)
+# ==============================================================================
+# Scenario: You want more stable operation with less frequent changes
+
+automation:
+  - alias: Floor Heating - Conservative Mode
+    use_blueprint:
+      path: chester929/heat_zone_manager.yaml
+      input:
+        # MAIN thermostat
+        main_thermostat: climate.main_thermostat
+        
+        # Zones
+        zone1_climate: climate.bedroom
+        zone2_climate: climate.bathroom
+        zone3_climate: climate.living_room
+        
+        # Larger thresholds = less frequent valve switching
+        temp_difference_open: 1.0
+        temp_difference_close: 0.5
+        
+        # Use lowest temperature when all satisfied (conservative)
+        all_satisfied_temp_mode: 0
+        
+        # Wider limits
+        min_main_temp: 17.0
+        max_main_temp: 30.0
+        
+        # Update less frequently
+        update_interval: 120
+
+# ==============================================================================
+# EXAMPLE 6: Aggressive Setup (Faster Response)
+# ==============================================================================
+# Scenario: You want quick response and frequent adjustments
+
+automation:
+  - alias: Floor Heating - Aggressive Mode
+    use_blueprint:
+      path: chester929/heat_zone_manager.yaml
+      input:
+        # MAIN thermostat
+        main_thermostat: climate.main_thermostat
+        
+        # Zones
+        zone1_climate: climate.bedroom
+        zone2_climate: climate.bathroom
+        zone3_climate: climate.living_room
+        
+        # Smaller thresholds = more frequent valve switching
+        temp_difference_open: 0.2
+        temp_difference_close: 0.1
+        
+        # Use highest temperature when all satisfied (aggressive heating)
+        all_satisfied_temp_mode: 100
+        
+        # Tighter limits
+        min_main_temp: 19.0
+        max_main_temp: 27.0
+        
+        # Update more frequently
+        update_interval: 30
+
+# ==============================================================================
+# NOTES ON ENTITY NAMING
+# ==============================================================================
+# 
+# Replace the example entity IDs with your actual entities:
+#
+# climate.main_hvac              -> Your MAIN HVAC thermostat
+# climate.bedroom_thermostat     -> Your bedroom climate entity
+# sensor.bedroom_temperature     -> Your bedroom temperature sensor
+# switch.bedroom_valve           -> Your bedroom valve switch
+#
+# To find your entity IDs:
+# 1. Go to Developer Tools -> States in Home Assistant
+# 2. Search for your devices
+# 3. Copy the entity_id column values
+#
+# ==============================================================================
+# RECOMMENDED STARTING VALUES
+# ==============================================================================
+#
+# For most setups, start with these values:
+# - temp_difference_open: 0.5°C
+# - temp_difference_close: 0.2°C
+# - all_satisfied_temp_mode: 50% (average)
+# - min_main_temp: 18.0°C
+# - max_main_temp: 28.0°C
+# - update_interval: 60 seconds
+#
+# Then adjust based on your system's behavior and preferences.
