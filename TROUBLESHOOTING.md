@@ -70,6 +70,168 @@ This guide helps resolve common issues when using the Floor Heating Valve Manage
 3. If using manual valve overrides, ensure they support `homeassistant.turn_on/turn_off`
 4. Check that valve entities are working independently
 
+### Climate entity conflicts with blueprint valve control
+
+**Problem**: Zone climate entities (e.g., Generic Thermostat) have their own internal logic that controls valves based on current vs target temperature. This **WILL conflict** with the blueprint's valve control decisions.
+
+**THE SOLUTION: Virtual Switch Pattern (MANDATORY)**
+
+**⚠️ REQUIRED CONFIGURATION**
+
+For each zone you configure, you MUST specify **BOTH** the physical valve AND virtual switch parameters:
+
+- ✅ **BOTH specified** → Virtual switch pattern (REQUIRED for all zones)
+- ❌ **Only one specified** → INVALID configuration (blueprint will log error)
+- ℹ️ **Zone not used** → Leave zone climate entity empty to skip that zone
+
+**Why Both Are Required:**
+
+Generic Thermostat MUST have a heater entity configured. If you only specify the physical valve in the blueprint, the Generic Thermostat would still try to control it directly, causing conflicts. The virtual switch pattern ensures clean separation:
+
+- Generic Thermostat → Controls virtual switch (based on temperature)
+- Blueprint → Controls physical valve (based on virtual switch + coordination)
+
+Use a virtual/helper switch as an intermediary between the climate entity and the physical valve:
+
+```
+Climate Entity (Generic Thermostat)
+    ↓ (controls based on temp)
+Virtual Switch (input_boolean or switch helper)
+    ↓ (monitored by blueprint)
+Blueprint Logic (considers virtual switch + coordination)
+    ↓ (final control)
+Physical Valve (actual heating valve)
+```
+
+**How It Works:**
+
+1. **Generic Thermostat** controls a **virtual switch** based on temperature
+   - Virtual switch is just a helper entity in Home Assistant (not a physical device)
+   - Climate entity keeps its real target temperature
+   - Climate entity's logic determines when virtual switch should be on/off
+
+2. **Blueprint monitors the virtual switch** to understand what the climate entity wants
+   - Reads virtual switch state as "zone request"
+   - Combines this with temperature data and coordination logic
+   - Makes final decision about physical valve
+
+3. **Blueprint controls physical valve** directly
+   - Has final authority over actual heating
+   - Can override climate entity when needed for coordination
+   - Ensures at least one valve always open (pump safety)
+
+**Benefits:**
+- ✅ Climate entities keep real target temperatures (you can see and adjust them)
+- ✅ No conflicts - climate entity controls virtual switch, blueprint controls physical valve
+- ✅ Blueprint can coordinate across zones
+- ✅ Climate entity's "wants" are respected but not blindly followed
+- ✅ Clean architecture and easy to debug
+
+**Setup Instructions:**
+
+**Step 1: Create Virtual Switches**
+
+For each zone, create a helper switch in Home Assistant:
+
+```yaml
+# configuration.yaml
+input_boolean:
+  bedroom_virtual_valve:
+    name: "Bedroom Virtual Valve"
+    icon: mdi:valve
+  
+  bathroom_virtual_valve:
+    name: "Bathroom Virtual Valve"
+    icon: mdi:valve
+```
+
+Or use UI: Settings → Devices & Services → Helpers → Create Helper → Toggle
+
+**Step 2: Configure Generic Thermostat to Control Virtual Switch**
+
+```yaml
+# configuration.yaml
+climate:
+  - platform: generic_thermostat
+    name: Bedroom Thermostat
+    heater: input_boolean.bedroom_virtual_valve  # Virtual switch, not physical!
+    target_sensor: sensor.bedroom_temperature
+    min_temp: 15
+    max_temp: 25
+    
+  - platform: generic_thermostat
+    name: Bathroom Thermostat
+    heater: input_boolean.bathroom_virtual_valve  # Virtual switch, not physical!
+    target_sensor: sensor.bathroom_temperature
+    min_temp: 15
+    max_temp: 25
+```
+
+**Step 3: Configure Blueprint**
+
+```yaml
+# Blueprint configuration
+zone1_climate: climate.bedroom_thermostat        # Reads temp and target
+zone1_temp_sensor: sensor.bedroom_temperature    # Optional override
+zone1_valve: switch.bedroom_physical_valve       # Controls PHYSICAL valve
+zone1_virtual_switch: input_boolean.bedroom_virtual_valve  # Monitors climate entity's wants
+
+zone2_climate: climate.bathroom_thermostat
+zone2_temp_sensor: sensor.bathroom_temperature
+zone2_valve: switch.bathroom_physical_valve      # Controls PHYSICAL valve
+zone2_virtual_switch: input_boolean.bathroom_virtual_valve
+```
+
+**How the Blueprint Makes Decisions:**
+
+```
+For each zone:
+  1. Check temperature: Does it need heating? (current < target - threshold)
+  2. Check virtual switch: Does climate entity want heating? (virtual switch = on)
+  3. Combine: Zone needs action if BOTH temperature needs it AND virtual switch is on
+  4. Apply coordination: Consider all zones, safety constraints
+  5. Control physical valve: Turn on/off based on final decision
+```
+
+**Example Scenario:**
+
+```
+Bedroom: 20°C, target 22°C
+  → Generic Thermostat: "I need heating" → Turns ON virtual switch
+  → Blueprint sees: temp needs heating (20<22-0.5) AND virtual switch ON
+  → Blueprint opens physical bedroom valve
+
+Bathroom: 25°C, target 25°C  
+  → Generic Thermostat: "I'm satisfied" → Turns OFF virtual switch
+  → Blueprint sees: temp satisfied AND virtual switch OFF
+  → Blueprint closes physical bathroom valve (unless needed for pump safety)
+
+All zones satisfied:
+  → All virtual switches OFF
+  → Blueprint: Opens fallback zone's physical valve (pump safety)
+  → Coordination overrides individual zone requests when necessary
+```
+
+**Without Virtual Switch (UNSUPPORTED CONFIGURATION)**
+
+Virtual switches are **mandatory** for this blueprint. Running the blueprint without virtual switches is **not supported** and will lead to conflicts between the climate entities and the physical valves.
+
+If the blueprint is misconfigured without a virtual switch, you will experience one of the following unsupported scenarios:
+
+1. **Physical valve override only** (no virtual switch configured):
+   - Only the physical valve parameter is configured
+   - Blueprint controls the physical valve based on temperature only
+   - Climate entity will also try to control the same valve → **CONFLICT**
+   - Result: Unpredictable behavior, valve fighting between controllers
+
+2. **Climate entity controlled directly** (no valve override and no virtual switch configured):
+   - No valve or virtual switch is specified  
+   - Blueprint attempts to set the climate entity to heat/cool/off modes
+   - Climate entity controls its own valve independently
+   - Result: Climate entity may override the blueprint's coordinated decisions → **CONFLICT**
+
+**Solution**: Update your configuration to include BOTH a virtual switch and physical valve for each zone, as described in the installation and configuration sections. The virtual switch pattern is the only supported configuration mode.
+
 ## Runtime Issues
 
 ### All valves close (should never happen!)
@@ -180,7 +342,7 @@ data:
 
 ### Q: How many zones can I configure?
 
-**A**: The blueprint supports up to 5 zones. If you need more, you can:
+**A**: The blueprint supports up to 15 zones (organized in 3 groups of 5). If you need more, you can:
 1. Create multiple instances of the automation
 2. Modify the blueprint to add more zones
 3. Group some zones together

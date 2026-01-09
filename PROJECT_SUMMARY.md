@@ -83,7 +83,7 @@ A comprehensive Home Assistant automation blueprint that:
 ## Key Features Implemented
 
 ### 1. Multi-Zone Management
-- Support for up to 5 zones
+- Support for up to 15 zones (organized in 3 groups of 5)
 - Each zone independently controlled
 - Optional manual overrides per zone
 

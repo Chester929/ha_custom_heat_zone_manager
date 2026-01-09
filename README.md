@@ -39,7 +39,7 @@ This blueprint manages the entire system automatically!
 ## ✨ Features
 
 ### Core Functionality
-- ✅ Manages up to 5 heating/cooling zones
+- ✅ Manages up to 15 heating/cooling zones (organized in 3 groups of 5)
 - ✅ **Guarantees at least one valve is always open** (critical!)
 - ✅ Dynamically calculates MAIN thermostat target temperature
 - ✅ **Intelligent temperature compensation** when MAIN sensor location differs from zones
@@ -89,14 +89,74 @@ This blueprint manages the entire system automatically!
 
 ## 🔧 Configuration
 
+### ⚠️ CRITICAL: Virtual Switch Pattern REQUIRED
+
+**All zones MUST use the virtual switch pattern - this is mandatory, not optional.**
+
+**REQUIRED Configuration for Each Zone:**
+
+For each zone you configure, you must specify **BOTH** parameters:
+
+- ✅ **Physical Valve Entity** - REQUIRED
+- ✅ **Virtual Switch Entity** - REQUIRED  
+- ❌ **Only one specified** → INVALID (blueprint will log error)
+- ℹ️ **Don't need zone** → Leave climate entity empty to skip that zone
+
+**Why This Is Mandatory:**
+
+Generic Thermostat climate entities MUST have a heater/valve configured. There's no way to "disable" their automatic valve control. The ONLY conflict-free solution is the virtual switch pattern where:
+
+- **Generic Thermostat** controls a virtual switch (based on temperature)
+- **Blueprint** controls the physical valve (based on virtual switch + coordination logic)
+
+This ensures clean separation with no conflicts while preserving real target temperatures.
+
+**The Virtual Switch Pattern:**
+
+```
+Generic Thermostat → Virtual Switch → Blueprint → Physical Valve
+```
+
+1. **Create virtual/helper switches** for each zone (input_boolean or switch helper)
+2. **Configure Generic Thermostat** to control the virtual switch (not physical valve)
+3. **Configure blueprint** with **BOTH** parameters (REQUIRED):
+   - `zone_climate`: Your Generic Thermostat (for temperature reading)
+   - `zone_virtual_switch`: The virtual switch (blueprint monitors this) - REQUIRED
+   - `zone_valve`: The physical valve switch (blueprint controls this) - REQUIRED
+
+**Benefits:**
+- ✅ Climate entities keep real target temperatures (you can adjust them normally)
+- ✅ No conflicts - climate controls virtual switch, blueprint controls physical valve
+- ✅ Blueprint coordinates across zones while respecting individual requests
+- ✅ Clean separation and easy debugging
+
+**Quick Setup:**
+```yaml
+# 1. Create virtual switch (Settings → Helpers → Toggle)
+input_boolean.bedroom_virtual_valve
+
+# 2. Configure Generic Thermostat
+climate:
+  - platform: generic_thermostat
+    heater: input_boolean.bedroom_virtual_valve  # Virtual!
+    target_sensor: sensor.bedroom_temperature
+
+# 3. Configure blueprint with BOTH parameters (REQUIRED)
+zone1_climate: climate.bedroom_thermostat
+zone1_valve: switch.bedroom_physical_valve       # Physical valve - REQUIRED
+zone1_virtual_switch: input_boolean.bedroom_virtual_valve  # REQUIRED
+```
+
+**See detailed setup instructions**: [TROUBLESHOOTING.md - Virtual Switch Pattern](TROUBLESHOOTING.md#climate-entity-conflicts-with-blueprint-valve-control)
+
 ### Basic Setup
 
 1. **Select MAIN Thermostat**: Your primary HVAC climate entity
 
-2. **Configure Zones**: Add your room thermostats (up to 5)
+2. **Configure Zones**: Add your room thermostats (up to 15, organized in 3 groups)
    - Each zone requires a climate entity
    - Optionally override with custom temperature sensor
-   - Optionally override with custom valve entity
+   - **REQUIRED**: Specify BOTH physical valve AND virtual switch for each zone
 
 3. **Set Temperature Thresholds**:
    - **Open Threshold**: How many degrees below target triggers valve opening (default: 0.5°C)

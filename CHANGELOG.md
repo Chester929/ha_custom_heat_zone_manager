@@ -8,6 +8,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Expanded Zone Support: 15 Zones in 3 Groups**
+  - Increased maximum zones from 5 to 15
+  - Zones organized into 3 groups of 5 for better UI organization:
+    - Group 1: Zones 1-5
+    - Group 2: Zones 6-10
+    - Group 3: Zones 11-15
+  - Each group has a visual header separator in the UI
+  - All zones follow the same configuration pattern (climate, temp_sensor, valve, virtual_switch)
+- **Virtual Switch Pattern for Generic Thermostat (REQUIRED)**
+  - New `zoneN_virtual_switch` parameters for all 15 zones
+  - Allows Generic Thermostat climate entities to control virtual/helper switches
+  - Blueprint monitors virtual switch state to understand what climate entity wants
+  - Blueprint controls physical valve directly based on both virtual switch state AND coordinated logic
+  - **MANDATORY REQUIREMENT**: Physical valve and virtual switch MUST BOTH be configured for each zone
+    - ✅ BOTH specified → Virtual switch pattern (REQUIRED)
+    - ❌ Only one specified → INVALID configuration (blueprint logs error)
+    - ℹ️ Zone not needed → Leave climate entity empty
+  - **Rationale**: Generic Thermostat MUST have a heater configured. Virtual switch pattern is the only conflict-free solution.
+  - **Configuration validation**: Blueprint validates zone configuration and logs errors if only one parameter is specified
+  - **Benefits**:
+    - Climate entities keep real target temperatures (no overriding with extreme values)
+    - No conflicts between climate entity and blueprint
+    - Blueprint has final control over physical valves
+    - Can coordinate across zones while respecting individual zone requests
+    - Clean separation: Climate entity → Virtual switch, Blueprint → Physical valve
+  - **Setup**: Create helper switch (input_boolean or switch helper) for each zone
+    - Configure Generic Thermostat to control the virtual switch
+    - Configure blueprint with BOTH virtual_switch AND physical valve parameters (REQUIRED)
+    - Blueprint monitors virtual switch and controls physical valve accordingly
+- **Documentation for Virtual Switch Pattern**
+  - Updated TROUBLESHOOTING with complete explanation and setup instructions
+  - Added configuration examples showing the virtual switch pattern
+  - Updated README emphasizing mandatory requirement
+  - Documented that both parameters must be specified together
 - **Intelligent Temperature Compensation Algorithm**
   - New optional `main_temp_sensor` parameter for MAIN thermostat location (e.g., corridor)
   - Automatically compensates when MAIN sensor location differs from zones needing heating
@@ -16,14 +50,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Applies 30% compensation when corridor is significantly warmer than coldest zone
   - Ensures HVAC heats water adequately despite warm corridor sensor reading
   - Example: Corridor 23°C, Bedroom 20°C targeting 22°C → MAIN target compensated to 23°C
-- **Fallback Zones Configuration** (NEW)
+- **Fallback Zones Configuration**
   - New optional `fallback_zones` parameter to select which zone(s) stay open when all satisfied/overheated
   - Ensures at least one valve is always open (critical pump safety constraint)
   - Prevents overheating by closing unnecessary valves when all zones satisfied
   - Recommended: Select corridor or least critical room
   - Supports multiple zones for redundancy
   - Defaults to first zone if not configured (backward compatible)
-- **Overheated Protection** (NEW)
+- **Overheated Protection**
   - New `overheated_threshold` parameter (default: 1.0°C)
   - Detects when zones are too hot (current temp > target + threshold)
   - When all zones overheated: Closes all valves EXCEPT fallback zone(s)
@@ -38,6 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added overheated status tracking for each zone
 
 ### Changed
+- **Valve Control Logic** - Now uses the virtual switch pattern to prevent internal thermostat conflicts while preserving real climate target temperatures
 - MAIN thermostat temperature calculation now uses intelligent weighted algorithm
 - Improved heating effectiveness when MAIN sensor is in a different location than zones
 - Valve open/close logic now supports three modes:
@@ -107,7 +142,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Features
 - **Heating Mode**: Opens valves when zones need heat, closes when satisfied
 - **Cooling Mode**: Inverse logic for air conditioning systems
-- **Zone Flexibility**: Configure 1-5 zones, each with optional overrides
+- **Zone Flexibility**: Configure 1-15 zones, each with optional overrides
 - **Temperature Management**: Intelligent calculation based on zone demands
 - **Safety**: Guarantees at least one valve is always open (prevents pump issues)
 - **Logging**: Detailed logbook entries for debugging
