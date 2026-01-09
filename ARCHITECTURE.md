@@ -110,9 +110,26 @@ For each zone:
 ```
 Calculate MAIN target temperature:
   │
+  ├─ Get MAIN sensor (corridor) temperature
+  │   ├─ Use override sensor if provided
+  │   └─ Else use MAIN climate entity's sensor
+  │
   ├─ Are there zones needing action?
-  │   ├─ YES (Heating) → MAIN target = HIGHEST zone target
-  │   ├─ YES (Cooling) → MAIN target = LOWEST zone target
+  │   ├─ YES (Heating) → Use intelligent compensation algorithm:
+  │   │   ├─ Base target = HIGHEST zone target
+  │   │   ├─ Calculate max temperature deficit of zones
+  │   │   ├─ If corridor temp > base target:
+  │   │   │   └─ Add 50% of max deficit as compensation
+  │   │   ├─ Else if corridor temp > coldest zone + 1°C:
+  │   │   │   └─ Add 30% of temp gap as compensation
+  │   │   └─ Else: Use base target (no compensation)
+  │   │
+  │   ├─ YES (Cooling) → Use intelligent compensation algorithm:
+  │   │   ├─ Base target = LOWEST zone target
+  │   │   ├─ If corridor temp < base target and zones need cooling:
+  │   │   │   └─ Lower target by 50% of max deficit
+  │   │   └─ Else: Use base target
+  │   │
   │   └─ NO → Go to "All Satisfied" logic
   │
   └─ All zones satisfied?
@@ -126,16 +143,54 @@ Calculate MAIN target temperature:
       └─ Final MAIN target = clamp(calculated, min_temp, max_temp)
 ```
 
-### 5. Critical Constraint Check
+**Why This Matters:**
+
+When the MAIN thermostat sensor (typically in a corridor) reads a different temperature than zones that need heating, the HVAC system may not heat adequately. For example:
+- Corridor: 23°C
+- Bedroom: 20°C, target 22°C
+
+If we simply set MAIN target to 22°C, the HVAC sees the corridor is already at 23°C (above target) and won't heat the water sufficiently. By adding compensation based on the temperature deficit, we ensure the HVAC heats the water hot enough to warm the bedroom despite the corridor already being warm.
+
+### 5. Critical Constraint Check & Valve Determination
 
 ```
-Before applying valve states:
+Determine which valves to open (at least one MUST be open):
   │
-  └─ Are ALL valves about to close?
-      ├─ YES → OVERRIDE! Open ALL valves
-      │         └─ Use "all satisfied" temperature
-      └─ NO  → Proceed with calculated states
+  ├─ Are ALL zones overheated?
+  │   ├─ YES → SAFETY MODE!
+  │   │   ├─ Close all valves EXCEPT fallback zone(s)
+  │   │   ├─ Set MAIN target to minimum temperature
+  │   │   └─ Prevent further overheating while maintaining pump safety
+  │   └─ NO → Continue evaluation
+  │
+  ├─ Are ALL zones satisfied (not overheated)?
+  │   ├─ YES → Check fallback configuration
+  │   │   ├─ Fallback zones configured?
+  │   │   │   ├─ YES → Open ONLY fallback zone(s)
+  │   │   │   └─ NO → Open ALL valves (legacy behavior)
+  │   │   └─ Use "all satisfied" temperature calculation
+  │   └─ NO → Continue evaluation
+  │
+  ├─ Are there zones needing action?
+  │   ├─ YES → Open those zone valves
+  │   │         └─ Use compensated temperature for MAIN
+  │   └─ NO → ERROR/FALLBACK
+  │           └─ Open fallback zone(s) only
+  │
+  └─ Calculate which valves to close
+      └─ Any valve NOT in the "open" list gets closed
 ```
+
+**Fallback Zones:**
+- User-configurable zones that stay open when all zones are satisfied/overheated
+- Critical for pump safety - ensures at least one valve always open
+- Recommended: Corridor or least critical room
+- Default: First zone if not configured
+
+**Overheated Detection:**
+- Zone is overheated when: `current_temp > (target_temp + overheated_threshold)`
+- Default threshold: 1.0°C
+- When all zones overheated: Close all except fallback, lower MAIN to minimum
 
 ### 6. Action Phase
 
@@ -222,6 +277,130 @@ Valves:
   ✓ Bathroom: OPEN (needs heat)
   ✗ Living: CLOSED (satisfied)
 ```
+
+### Scenario 4: Corridor Warmer Than Zones (Intelligent Compensation)
+
+**State:**
+- Corridor (MAIN sensor): 23°C
+- Bedroom: 20°C / target 22°C → Needs heat ✗
+- Bathroom: 21°C / target 21°C → Satisfied ✓
+- Living: 22°C / target 22°C → Satisfied ✓
+
+**Logic (OLD algorithm):**
+```
+Zones needing heat: Bedroom
+Base MAIN target: 22°C (highest requesting = bedroom target)
+Problem: Corridor is 23°C, already above 22°C target
+Result: HVAC may not heat water sufficiently because corridor sensor shows temp above target
+```
+
+**Logic (NEW intelligent algorithm):**
+```
+Zones needing heat: Bedroom
+Base MAIN target: 22°C (bedroom target)
+Corridor temp: 23°C
+Coldest zone needing heat: Bedroom at 20°C
+Temperature deficit: 22°C - 20°C = 2°C
+
+Calculation:
+- Corridor (23°C) > Base target (22°C): TRUE
+- Apply 50% compensation: 22°C + (2°C × 0.5) = 23°C
+- Final MAIN target: 23°C
+
+Result: HVAC heats water more aggressively because target matches corridor temp,
+        ensuring sufficient heat reaches bedroom despite corridor already being warm
+Valves:
+  ✓ Bedroom: OPEN (needs heat)
+  ✗ Bathroom: CLOSED (satisfied)
+  ✗ Living: CLOSED (satisfied)
+```
+
+### Scenario 5: Large Temperature Difference (Maximum Compensation)
+
+**State:**
+- Corridor (MAIN sensor): 24°C
+- Bedroom: 18°C / target 22°C → Needs heat ✗ (4°C deficit!)
+- Bathroom: 19°C / target 23°C → Needs heat ✗ (4°C deficit)
+- Living: 24°C / target 22°C → Satisfied ✓
+
+**Logic (NEW intelligent algorithm):**
+```
+Zones needing heat: Bedroom, Bathroom
+Base MAIN target: 23°C (highest requesting = bathroom target)
+Corridor temp: 24°C
+Coldest zone: Bedroom at 18°C
+Max temperature deficit: 4°C
+
+Calculation:
+- Corridor (24°C) > Base target (23°C): TRUE
+- Apply 50% compensation: 23°C + (4°C × 0.5) = 25°C
+- Final MAIN target: 25°C (after min/max clamping)
+
+Result: Higher MAIN target ensures HVAC heats water hot enough to overcome
+        the large temperature gap between warm corridor and cold bedrooms
+Valves:
+  ✓ Bedroom: OPEN (needs heat)
+  ✓ Bathroom: OPEN (needs heat)
+  ✗ Living: CLOSED (satisfied)
+```
+
+### Scenario 6: All Zones Overheated (New Fallback Logic)
+
+**State:**
+- Fallback zones configured: Corridor (climate.corridor)
+- Overheated threshold: 1.0°C
+- Bedroom: 23°C / target 22°C → Overheated ✗
+- Bathroom: 26°C / target 25°C → Overheated ✗
+- Living: 23.5°C / target 22°C → Overheated ✗
+- Corridor: 24°C / target 23°C → Overheated ✗
+
+**Logic (NEW overheated protection):**
+```
+All zones overheated: TRUE
+Fallback zones: [climate.corridor]
+
+Action:
+- Close all valves EXCEPT corridor (fallback)
+- Set MAIN target to minimum (18°C)
+- Prevent further heating while maintaining pump safety
+
+Result: System cools down safely without closing all valves
+Valves:
+  ✗ Bedroom: CLOSED (overheated)
+  ✗ Bathroom: CLOSED (overheated)
+  ✗ Living: CLOSED (overheated)
+  ✓ Corridor: OPEN (fallback - ensures pump safety)
+MAIN target: 18°C (minimum to stop heating)
+```
+
+### Scenario 7: All Satisfied with Fallback Zones
+
+**State:**
+- Fallback zones configured: Living Room
+- Bedroom: 22.1°C / target 22°C → Satisfied ✓
+- Bathroom: 25.1°C / target 25°C → Satisfied ✓
+- Living: 22.3°C / target 22°C → Satisfied ✓
+
+**Logic (NEW fallback behavior):**
+```
+All zones satisfied: TRUE
+All zones overheated: FALSE
+Fallback zones configured: [climate.living_room]
+
+Action:
+- Open ONLY fallback zone (living room)
+- Close other zones to prevent overheating
+- Use "all satisfied" temperature mode
+
+Result: Better temperature control, prevents unnecessary heating
+Valves:
+  ✗ Bedroom: CLOSED (satisfied, not fallback)
+  ✗ Bathroom: CLOSED (satisfied, not fallback)
+  ✓ Living: OPEN (fallback zone)
+MAIN target: 23°C (based on slider at 50%)
+```
+
+**Note:** If no fallback zones configured, legacy behavior opens ALL valves when satisfied.
 
 ## Temperature Calculation Examples
 

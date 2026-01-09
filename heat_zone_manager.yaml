@@ -60,6 +60,20 @@ blueprint:
           domain: climate
           multiple: false
 
+    main_temp_sensor:
+      name: MAIN Temperature Sensor (Optional Override)
+      description: >
+        Optional temperature sensor for the MAIN thermostat location (e.g., corridor).
+        If provided, the blueprint will use this to calculate smarter MAIN target temperatures
+        that compensate for the difference between corridor and zone temperatures.
+        This improves heating effectiveness when the MAIN sensor location differs from zones.
+      default: []
+      selector:
+        entity:
+          domain: sensor
+          device_class: temperature
+          multiple: false
+
     # Zone 1 Configuration
     zone1_climate:
       name: Zone 1 - Climate Entity
@@ -307,6 +321,35 @@ blueprint:
           unit_of_measurement: "seconds"
           mode: slider
 
+    fallback_zones:
+      name: Fallback Zone(s) - Always Keep Open
+      description: >
+        Select which zone(s) to keep open when all other zones are satisfied or overheated.
+        This is critical to ensure at least one valve is always open for pump operation.
+        If not specified, defaults to opening all zones when satisfied (current behavior).
+        Recommended: Select corridor or least critical zone(s).
+        You can select multiple zones for redundancy.
+      default: []
+      selector:
+        entity:
+          domain: climate
+          multiple: true
+
+    overheated_threshold:
+      name: Overheated Threshold
+      description: >
+        How many degrees ABOVE target temperature indicates a zone is overheated.
+        When all zones are overheated, only fallback zone(s) stay open and MAIN target is lowered.
+        Default: 1.0°C means zone at 23°C with target 22°C is considered overheated.
+      default: 1.0
+      selector:
+        number:
+          min: 0.3
+          max: 3.0
+          step: 0.1
+          unit_of_measurement: "°C"
+          mode: slider
+
 # Automation triggers
 trigger:
   # Periodic trigger - runs every 60 seconds for recalculation
@@ -323,6 +366,7 @@ action:
   - variables:
       # Input configurations
       main_climate: !input main_thermostat
+      main_sensor: !input main_temp_sensor
       enable_cooling: !input enable_cooling_mode
       temp_diff_open: !input temp_difference_open
       temp_diff_close: !input temp_difference_close
@@ -331,6 +375,8 @@ action:
       max_temp: !input max_main_temp
       fallback_temperature: !input fallback_temp
       valve_delay: !input valve_transition_delay
+      fallback_zone_list: !input fallback_zones
+      overheat_threshold: !input overheated_threshold
       
       # Zone configurations
       zones:
@@ -361,6 +407,14 @@ action:
       is_cooling_mode: >
         {{ enable_cooling and main_hvac_mode in ['cool', 'cool_only'] }}
       
+      # Get MAIN sensor temperature (if override is provided)
+      main_current_temp: >
+        {% if main_sensor not in [none, '', []] %}
+          {{ states(main_sensor) | float(fallback_temperature) }}
+        {% else %}
+          {{ state_attr(main_climate, 'current_temperature') | float(fallback_temperature) }}
+        {% endif %}
+      
       # Calculate zone data: current temp, target temp, needs heating/cooling
       zone_data: >
         {% set ns = namespace(zones=[]) %}
@@ -381,10 +435,14 @@ action:
               {# Cooling mode: open valve if temp is above target + threshold #}
               {% set needs_action = current_temp > (target_temp + temp_diff_open) %}
               {% set satisfied = current_temp <= (target_temp - temp_diff_close) %}
+              {# Over-cooled in cooling mode = zone is excessively cold (below target - overheat_threshold) #}
+              {% set is_overheated = current_temp < (target_temp - overheat_threshold) %}
             {% else %}
               {# Heating mode: open valve if temp is below target - threshold #}
               {% set needs_action = current_temp < (target_temp - temp_diff_open) %}
               {% set satisfied = current_temp >= (target_temp + temp_diff_close) %}
+              {# Overheated in heating = zone is too hot (above target + overheat_threshold) #}
+              {% set is_overheated = current_temp > (target_temp + overheat_threshold) %}
             {% endif %}
             
             {% set ns.zones = ns.zones + [{
@@ -395,7 +453,9 @@ action:
               'target_temp': target_temp,
               'needs_action': needs_action,
               'satisfied': satisfied,
-              'mode': zone_mode
+              'overheated': is_overheated,
+              'mode': zone_mode,
+              'temp_deficit': target_temp - current_temp
             }] %}
           {% endif %}
         {% endfor %}
@@ -409,14 +469,61 @@ action:
       all_zones_satisfied: >
         {{ zone_data | selectattr('satisfied', 'eq', false) | list | length == 0 }}
       
+      # Check if all zones are overheated
+      all_zones_overheated: >
+        {{ zone_data | selectattr('overheated', 'eq', false) | list | length == 0 and zone_data | length > 0 }}
+      
+      # Get fallback zones (default to first zone if not specified)
+      fallback_zones: >
+        {% if fallback_zone_list and fallback_zone_list | length > 0 %}
+          {{ fallback_zone_list }}
+        {% elif zone_data | length > 0 %}
+          {{ [zone_data[0].climate] }}
+        {% else %}
+          []
+        {% endif %}
+      
       # Calculate target temperature for MAIN thermostat
       calculated_main_target: >
-        {% if zones_needing_action | length > 0 %}
-          {# At least one zone needs heating/cooling - use highest target (heating) or lowest target (cooling) #}
+        {% if all_zones_overheated %}
+          {# All zones are overheated - lower MAIN target to minimum #}
+          {# Only fallback zone(s) will be open to prevent pump issues #}
+          {{ min_temp }}
+        {% elif zones_needing_action | length > 0 %}
+          {# At least one zone needs heating/cooling - use improved algorithm #}
           {% if is_cooling_mode %}
-            {{ zones_needing_action | map(attribute='target_temp') | min | float }}
+            {# Cooling mode: use lowest target (coldest setting needed) #}
+            {% set base_target = zones_needing_action | map(attribute='target_temp') | min | float %}
+            {# For cooling, if MAIN sensor is cooler than zones, we may need to compensate downward #}
+            {% set max_deficit = zones_needing_action | map(attribute='temp_deficit') | max | float %}
+            {% if main_current_temp < base_target %}
+              {# MAIN is cooler than target zones, compensate by lowering target further #}
+              {# In cooling mode, deficit is negative (target < current), so we use abs #}
+              {{ (base_target - (max_deficit | abs * 0.5)) | round(1) }}
+            {% else %}
+              {{ base_target }}
+            {% endif %}
           {% else %}
-            {{ zones_needing_action | map(attribute='target_temp') | max | float }}
+            {# Heating mode: use improved weighted algorithm #}
+            {% set base_target = zones_needing_action | map(attribute='target_temp') | max | float %}
+            {# Calculate maximum temperature deficit among zones needing heating #}
+            {% set max_deficit = zones_needing_action | map(attribute='temp_deficit') | max | float %}
+            {# Get minimum current temp among zones needing heating #}
+            {% set min_zone_temp = zones_needing_action | map(attribute='current_temp') | min | float %}
+            
+            {# If MAIN sensor (corridor) is warmer than zones needing heat, add compensation #}
+            {% if main_current_temp > base_target %}
+              {# Corridor is warmer than target - need to heat water more to reach zones #}
+              {# Add 50% of the max deficit as compensation #}
+              {{ (base_target + (max_deficit * 0.5)) | round(1) }}
+            {% elif main_current_temp > min_zone_temp + 1.0 %}
+              {# Corridor is significantly warmer than coldest zone - add partial compensation #}
+              {% set temp_gap = main_current_temp - min_zone_temp %}
+              {{ (base_target + (temp_gap * 0.3)) | round(1) }}
+            {% else %}
+              {# No significant temperature difference, use base target #}
+              {{ base_target }}
+            {% endif %}
           {% endif %}
         {% elif all_zones_satisfied and zone_data | length > 0 %}
           {# All zones satisfied - calculate based on mode slider #}
@@ -451,17 +558,26 @@ action:
         {{ [min_temp, [calculated_main_target, max_temp] | min] | max | round(1) }}
       
       # Determine which valves should be open
-      # CRITICAL: If all zones are satisfied, open ALL valves to prevent pump issues
+      # CRITICAL: At least one valve must always be open to prevent pump issues
       valves_to_open: >
-        {% if all_zones_satisfied %}
-          {# Open all valves when all zones satisfied #}
-          {{ zone_data | map(attribute='climate') | list }}
+        {% if all_zones_overheated %}
+          {# All zones overheated - close all EXCEPT fallback zone(s) to prevent overheating #}
+          {{ fallback_zones }}
+        {% elif all_zones_satisfied %}
+          {# All zones satisfied but not overheated #}
+          {% if fallback_zone_list and fallback_zone_list | length > 0 %}
+            {# If fallback zones configured, open only those to prevent overheating #}
+            {{ fallback_zones }}
+          {% else %}
+            {# No fallback configured, use legacy behavior: open all valves #}
+            {{ zone_data | map(attribute='climate') | list }}
+          {% endif %}
         {% elif zones_needing_action | length > 0 %}
           {# Open valves for zones that need heating/cooling #}
           {{ zones_needing_action | map(attribute='climate') | list }}
         {% else %}
-          {# Fallback: open at least the first zone's valve #}
-          {{ [zone_data[0].climate] if zone_data | length > 0 else [] }}
+          {# Fallback: open fallback zone(s) or at least the first zone's valve #}
+          {{ fallback_zones }}
         {% endif %}
       
       valves_to_close: >
@@ -475,8 +591,11 @@ action:
       message: >
         Recalculating valve states and MAIN temperature.
         Mode: {{ 'Cooling' if is_cooling_mode else 'Heating' }}.
+        MAIN sensor temp: {{ main_current_temp }}°C.
         Zones needing action: {{ zones_needing_action | length }}.
         All satisfied: {{ all_zones_satisfied }}.
+        All overheated: {{ all_zones_overheated }}.
+        Valves to open: {{ valves_to_open | length }}.
         Target MAIN temp: {{ final_main_target }}°C.
 
   # Set MAIN thermostat target temperature

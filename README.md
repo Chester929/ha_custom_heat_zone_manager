@@ -42,6 +42,7 @@ This blueprint manages the entire system automatically!
 - ✅ Manages up to 5 heating/cooling zones
 - ✅ **Guarantees at least one valve is always open** (critical!)
 - ✅ Dynamically calculates MAIN thermostat target temperature
+- ✅ **Intelligent temperature compensation** when MAIN sensor location differs from zones
 - ✅ Supports both heating and cooling modes
 - ✅ Configurable temperature thresholds for valve control
 
@@ -49,10 +50,12 @@ This blueprint manages the entire system automatically!
 - ✅ Each zone can use a climate entity
 - ✅ Optional manual overrides for temperature sensors
 - ✅ Optional manual overrides for valve entities
+- ✅ Optional MAIN sensor override for accurate corridor temperature
 - ✅ Flexible: add 1-5 zones as needed
 
 ### Temperature Management
 - ✅ Adjustable open/close temperature thresholds
+- ✅ **Smart compensation algorithm** accounts for temperature differences between corridor and zones
 - ✅ Configurable "all zones satisfied" behavior:
   - 0% = Use lowest zone target
   - 50% = Use average of all targets
@@ -103,20 +106,30 @@ This blueprint manages the entire system automatically!
    - Use slider to set how MAIN temperature is calculated when all zones are satisfied
    - 0% = lowest, 50% = average, 100% = highest
 
+5. **Optional: Set MAIN Temperature Sensor**:
+   - If your MAIN thermostat sensor is in a location (e.g., corridor) that differs from your zones
+   - Providing this enables intelligent temperature compensation
+   - The blueprint will adjust MAIN target to overcome temperature differences
+
 ### Example Configuration
 
 **Scenario**: 
-- MAIN thermostat in corridor
-- Bedroom: target 20°C, current 21°C (satisfied)
-- Bathroom: target 25°C, current 22°C (needs heating)
+- MAIN thermostat in corridor (corridor temp: 23°C)
+- Bedroom: target 22°C, current 20°C (needs heating)
+- Bathroom: target 25°C, current 25°C (satisfied)
 
-**Blueprint Behavior**:
-1. Opens bathroom valve (22°C < 25°C - 0.5°C)
-2. Closes bedroom valve (21°C > 20°C + 0.2°C)
-3. Sets MAIN thermostat to 25°C (highest requesting zone)
-4. When bathroom reaches 25°C:
+**Blueprint Behavior (with intelligent compensation)**:
+1. Opens bedroom valve (20°C < 22°C - 0.5°C)
+2. Closes bathroom valve (25°C > 25°C + 0.2°C)
+3. Calculates smart MAIN target:
+   - Base target: 22°C (bedroom target)
+   - Corridor is 23°C (warmer than target)
+   - Temperature deficit: 2°C (22°C - 20°C)
+   - Applies 50% compensation: 22°C + (2°C × 0.5) = 23°C
+   - **Sets MAIN thermostat to 23°C** (ensures adequate heating despite warm corridor)
+4. When bedroom reaches target:
    - Opens ALL valves (prevent all-closed scenario)
-   - Sets MAIN to calculated temperature (e.g., average = 22.5°C if slider at 50%)
+   - Sets MAIN to calculated temperature (e.g., average = 23.5°C if slider at 50%)
 
 ## ⚙️ Configuration Parameters
 
@@ -140,13 +153,20 @@ This blueprint manages the entire system automatically!
 | **All Zones Satisfied - Temperature Mode** | How to calculate MAIN temp when all satisfied (0-100%) | 50% |
 | **Minimum MAIN Temperature** | Minimum MAIN thermostat temperature | 18.0°C |
 | **Maximum MAIN Temperature** | Maximum MAIN thermostat temperature | 28.0°C |
+| **MAIN Temperature Sensor** | Optional sensor for MAIN location (enables intelligent compensation) | - |
+
+### Safety & Fallback
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| **Fallback Zone(s)** | Zone(s) to keep open when all satisfied/overheated (ensures pump safety) | First zone |
+| **Overheated Threshold** | Degrees above target that indicates zone is overheated | 1.0°C |
+| **Fallback Temperature** | Temperature used if sensor fails | 20.0°C |
+| **Valve Transition Delay** | Time to wait after opening new valve before closing old valve | 5 seconds |
 
 ### Advanced
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | **Enable Cooling Mode Support** | Invert logic for cooling | false |
-| **Fallback Temperature** | Temperature used if sensor fails | 20.0°C |
-| **Valve Transition Delay** | Time to wait after opening new valve before closing old valve | 5 seconds |
 
 **Note:** The blueprint automatically recalculates every 60 seconds. Response to zone changes is immediate when triggered by state changes.
 

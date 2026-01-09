@@ -8,6 +8,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Intelligent Temperature Compensation Algorithm**
+  - New optional `main_temp_sensor` parameter for MAIN thermostat location (e.g., corridor)
+  - Automatically compensates when MAIN sensor location differs from zones needing heating
+  - Accounts for temperature deficits between zones and corridor
+  - Applies 50% compensation when corridor is warmer than target zones
+  - Applies 30% compensation when corridor is significantly warmer than coldest zone
+  - Ensures HVAC heats water adequately despite warm corridor sensor reading
+  - Example: Corridor 23°C, Bedroom 20°C targeting 22°C → MAIN target compensated to 23°C
+- **Fallback Zones Configuration** (NEW)
+  - New optional `fallback_zones` parameter to select which zone(s) stay open when all satisfied/overheated
+  - Ensures at least one valve is always open (critical pump safety constraint)
+  - Prevents overheating by closing unnecessary valves when all zones satisfied
+  - Recommended: Select corridor or least critical room
+  - Supports multiple zones for redundancy
+  - Defaults to first zone if not configured (backward compatible)
+- **Overheated Protection** (NEW)
+  - New `overheated_threshold` parameter (default: 1.0°C)
+  - Detects when zones are too hot (current temp > target + threshold)
+  - When all zones overheated: Closes all valves EXCEPT fallback zone(s)
+  - Automatically lowers MAIN target to minimum temperature
+  - Prevents system from continuing to heat when all zones are too hot
+  - Maintains pump safety by keeping fallback zone(s) open
+- Enhanced logbook entries now include:
+  - MAIN sensor temperature
+  - All overheated status
+  - Number of valves to open
+- Added temperature deficit calculation for each zone
+- Added overheated status tracking for each zone
+
+### Changed
+- MAIN thermostat temperature calculation now uses intelligent weighted algorithm
+- Improved heating effectiveness when MAIN sensor is in a different location than zones
+- Valve open/close logic now supports three modes:
+  1. **All overheated**: Open only fallback zone(s), MAIN to minimum
+  2. **All satisfied**: Open only fallback zone(s) if configured, otherwise all zones (legacy)
+  3. **Normal operation**: Open zones needing action
+- Updated documentation with new compensation algorithm explanation
+- Added new example configuration (Example 7) demonstrating corridor compensation
+- Updated ARCHITECTURE.md with detailed algorithm flow and scenarios (6 & 7)
+- Updated README.md and QUICKSTART.md to highlight intelligent compensation and fallback features
+- Improved condition checks to use `not in [none, '', []]` pattern
+
+### Technical
+- Zone data structure now includes `temp_deficit` and `overheated` fields
+- New variable `main_current_temp` captures MAIN sensor reading
+- New variable `all_zones_overheated` detects overheating condition
+- New variable `fallback_zones` determines which zones to keep open
+- Backward compatible: works without `main_temp_sensor` and `fallback_zones` parameters
+- Cooling mode compensation uses explicit subtraction for clarity
+
+### Documentation
+- Added Scenario 4, 5, 6, & 7 to ARCHITECTURE.md explaining new features
+- Updated example configurations with corridor sensor and fallback zone examples
+- Enhanced README with detailed compensation and fallback examples
+- Added fallback zones section to configuration parameters
+
+---
+
+### Added (from previous unreleased)
 - **Valve Transition Delay** parameter (default: 5 seconds, range: 0-180 seconds)
   - Configurable delay between opening new valves and closing old valves
   - Prevents brief periods where all valves are in transition
@@ -15,7 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Supports slow motorized valves (up to 3 minutes opening/closing time)
   - Recommended: 5-10 seconds for fast valves, 60-120 seconds for slow valves
 
-### Changed
+### Changed (from previous unreleased)
 - Valve control logic now uses two-phase approach:
   - Phase 1: Open all valves that need to be opened
   - Delay: Wait for configured transition time (up to 180 seconds)
