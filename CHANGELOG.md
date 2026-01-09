@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Time Pattern Trigger Validation Error**
+  - Fixed invalid `seconds: "/60"` in time_pattern trigger that caused automation save errors
+  - Changed to `minutes: "/1"` to comply with Home Assistant validation (seconds must be 0-59)
+  - Error message was: "Message malformed: must be a value between 0 and 59 for dictionary value @ data['seconds']"
+  - The automation now correctly triggers every 60 seconds (every 1 minute) without validation errors
+
 ### Added
 - **Expanded Zone Support: 15 Zones in 3 Groups**
   - Increased maximum zones from 5 to 15
