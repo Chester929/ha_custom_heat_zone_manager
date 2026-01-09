@@ -72,7 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added overheated status tracking for each zone
 
 ### Changed
-- **Valve Control Logic** - Now sets climate entity target temperatures to prevent internal thermostat conflicts
+- **Valve Control Logic** - Now uses the virtual switch pattern to prevent internal thermostat conflicts while preserving real climate target temperatures
 - MAIN thermostat temperature calculation now uses intelligent weighted algorithm
 - Improved heating effectiveness when MAIN sensor is in a different location than zones
 - Valve open/close logic now supports three modes:

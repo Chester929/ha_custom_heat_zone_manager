@@ -212,21 +212,25 @@ All zones satisfied:
   → Coordination overrides individual zone requests when necessary
 ```
 
-**Without Virtual Switch (NOT RECOMMENDED)**
+**Without Virtual Switch (UNSUPPORTED CONFIGURATION)**
 
-If you cannot use virtual switches, you have two options:
+Virtual switches are **mandatory** for this blueprint. Running the blueprint without virtual switches is **not supported** and will lead to conflicts between the climate entities and the physical valves.
 
-1. **Use physical valve override only** (No virtual switch):
-   - Configure only the physical valve parameter
-   - Blueprint controls physical valve based on temperature only
-   - Climate entity will try to control the valve too → **CONFLICT**
-   - Result: Unpredictable behavior
+If the blueprint is misconfigured without a virtual switch, you will experience one of the following unsupported scenarios:
 
-2. **Use climate entity directly** (No valve override):
-   - Don't specify valve or virtual switch
-   - Blueprint sets climate entity to heat/cool/off modes
-   - Climate entity controls its own valve
-   - Result: Climate entity may override blueprint's coordinated decisions → **CONFLICT**
+1. **Physical valve override only** (no virtual switch configured):
+   - Only the physical valve parameter is configured
+   - Blueprint controls the physical valve based on temperature only
+   - Climate entity will also try to control the same valve → **CONFLICT**
+   - Result: Unpredictable behavior, valve fighting between controllers
+
+2. **Climate entity controlled directly** (no valve override and no virtual switch configured):
+   - No valve or virtual switch is specified  
+   - Blueprint attempts to set the climate entity to heat/cool/off modes
+   - Climate entity controls its own valve independently
+   - Result: Climate entity may override the blueprint's coordinated decisions → **CONFLICT**
+
+**Solution**: Update your configuration to include BOTH a virtual switch and physical valve for each zone, as described in the installation and configuration sections. The virtual switch pattern is the only supported configuration mode.
 
 ## Runtime Issues
 

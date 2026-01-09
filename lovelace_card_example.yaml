@@ -5,7 +5,7 @@
 # Requirements:
 #   - card-mod (for styling)
 #   - fold-entity-row (for collapsible sections)
-#   - Install via HACS: https://github.com/thomasloven/lovelace-fold-entity-row
+#   - Install via HACS frontend: search for "fold-entity-row" in the Frontend store
 #
 # Installation:
 #   1. Install fold-entity-row via HACS
