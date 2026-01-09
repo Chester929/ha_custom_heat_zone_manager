@@ -83,6 +83,23 @@ Zone 2 Temp Sensor: sensor.bathroom_temperature_accurate
 Zone 3: climate.living_room
 ```
 
+### 3-Zone House with Corridor Compensation (RECOMMENDED)
+
+**Best for:** MAIN sensor in corridor, bedrooms often cooler than corridor
+
+```yaml
+MAIN Thermostat: climate.main_hvac
+MAIN Temp Sensor: sensor.corridor_temperature  # KEY: Enables intelligent compensation
+Zone 1: climate.bedroom_1
+Zone 1 Temp Sensor: sensor.bedroom_1_temperature
+Zone 2: climate.bedroom_2
+Zone 2 Temp Sensor: sensor.bedroom_2_temperature
+Zone 3: climate.bathroom
+```
+
+**Why this works better:**
+When corridor is 23°C and bedroom needs 22°C but is at 20°C, the blueprint automatically compensates by setting MAIN target higher (e.g., 23°C) to ensure adequate heating despite the warm corridor.
+
 ### 4-Zone House with Manual Valves
 
 ```yaml

@@ -49,6 +49,10 @@ automation:
         # MAIN thermostat
         main_thermostat: climate.de_dietrich_main
         
+        # IMPORTANT: Add MAIN sensor for intelligent compensation
+        # This sensor is typically in the corridor where HVAC measures temperature
+        main_temp_sensor: sensor.corridor_temperature
+        
         # Zone 1: Bedroom (with manual overrides)
         zone1_climate: climate.bedroom_controller
         zone1_temp_sensor: sensor.bedroom_temperature
@@ -205,6 +209,52 @@ automation:
         min_main_temp: 19.0
         max_main_temp: 27.0
         
+
+# ==============================================================================
+# EXAMPLE 7: Intelligent Compensation for Corridor/Zone Temperature Differences
+# ==============================================================================
+# Scenario: MAIN sensor is in corridor which is often warmer than bedrooms
+# This example shows how to use the intelligent compensation feature
+
+automation:
+  - alias: Floor Heating - Corridor Compensation
+    use_blueprint:
+      path: chester929/heat_zone_manager.yaml
+      input:
+        # MAIN thermostat
+        main_thermostat: climate.main_hvac
+        
+        # KEY FEATURE: Provide corridor temperature sensor
+        # This enables intelligent compensation when corridor differs from zones
+        main_temp_sensor: sensor.corridor_temperature
+        
+        # Zones - bedrooms are typically cooler than corridor
+        zone1_climate: climate.bedroom_1
+        zone1_temp_sensor: sensor.bedroom_1_temperature
+        
+        zone2_climate: climate.bedroom_2
+        zone2_temp_sensor: sensor.bedroom_2_temperature
+        
+        zone3_climate: climate.bathroom
+        zone3_temp_sensor: sensor.bathroom_temperature
+        
+        # Temperature thresholds
+        temp_difference_open: 0.5
+        temp_difference_close: 0.2
+        
+        # Use average when all satisfied
+        all_satisfied_temp_mode: 50
+        
+        # MAIN thermostat limits
+        min_main_temp: 18.0
+        max_main_temp: 28.0
+
+# HOW IT WORKS:
+# When corridor is 23°C and bedroom needs to reach 22°C from 20°C:
+# - Without compensation: MAIN target = 22°C (HVAC sees corridor at 23°C, won't heat enough)
+# - With compensation: MAIN target = 23°C (compensates for 2°C deficit, heats adequately)
+# The blueprint automatically adds 50% of temperature deficit as compensation
+
 
 # ==============================================================================
 # NOTES ON ENTITY NAMING

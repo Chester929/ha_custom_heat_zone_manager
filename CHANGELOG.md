@@ -8,6 +8,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Intelligent Temperature Compensation Algorithm**
+  - New optional `main_temp_sensor` parameter for MAIN thermostat location (e.g., corridor)
+  - Automatically compensates when MAIN sensor location differs from zones needing heating
+  - Accounts for temperature deficits between zones and corridor
+  - Applies 50% compensation when corridor is warmer than target zones
+  - Applies 30% compensation when corridor is significantly warmer than coldest zone
+  - Ensures HVAC heats water adequately despite warm corridor sensor reading
+  - Example: Corridor 23°C, Bedroom 20°C targeting 22°C → MAIN target compensated to 23°C
+- Enhanced logbook entries now include MAIN sensor temperature
+- Added temperature deficit calculation for each zone
+
+### Changed
+- MAIN thermostat temperature calculation now uses intelligent weighted algorithm
+- Improved heating effectiveness when MAIN sensor is in a different location than zones
+- Updated documentation with new compensation algorithm explanation
+- Added new example configuration (Example 7) demonstrating corridor compensation
+- Updated ARCHITECTURE.md with detailed algorithm flow and scenarios
+- Updated README.md and QUICKSTART.md to highlight intelligent compensation feature
+
+### Technical
+- Zone data structure now includes `temp_deficit` field
+- New variable `main_current_temp` captures MAIN sensor reading
+- Backward compatible: works without `main_temp_sensor` (uses MAIN climate entity sensor)
+
+### Documentation
+- Added Scenario 4 & 5 to ARCHITECTURE.md explaining compensation algorithm
+- Updated example configurations with corridor sensor examples
+- Enhanced README with detailed compensation example
+
+---
+
+### Added (from previous unreleased)
 - **Valve Transition Delay** parameter (default: 5 seconds, range: 0-180 seconds)
   - Configurable delay between opening new valves and closing old valves
   - Prevents brief periods where all valves are in transition
@@ -15,7 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Supports slow motorized valves (up to 3 minutes opening/closing time)
   - Recommended: 5-10 seconds for fast valves, 60-120 seconds for slow valves
 
-### Changed
+### Changed (from previous unreleased)
 - Valve control logic now uses two-phase approach:
   - Phase 1: Open all valves that need to be opened
   - Delay: Wait for configured transition time (up to 180 seconds)
