@@ -110,9 +110,26 @@ For each zone:
 ```
 Calculate MAIN target temperature:
   │
+  ├─ Get MAIN sensor (corridor) temperature
+  │   ├─ Use override sensor if provided
+  │   └─ Else use MAIN climate entity's sensor
+  │
   ├─ Are there zones needing action?
-  │   ├─ YES (Heating) → MAIN target = HIGHEST zone target
-  │   ├─ YES (Cooling) → MAIN target = LOWEST zone target
+  │   ├─ YES (Heating) → Use intelligent compensation algorithm:
+  │   │   ├─ Base target = HIGHEST zone target
+  │   │   ├─ Calculate max temperature deficit of zones
+  │   │   ├─ If corridor temp > base target:
+  │   │   │   └─ Add 50% of max deficit as compensation
+  │   │   ├─ Else if corridor temp > coldest zone + 1°C:
+  │   │   │   └─ Add 30% of temp gap as compensation
+  │   │   └─ Else: Use base target (no compensation)
+  │   │
+  │   ├─ YES (Cooling) → Use intelligent compensation algorithm:
+  │   │   ├─ Base target = LOWEST zone target
+  │   │   ├─ If corridor temp < base target and zones need cooling:
+  │   │   │   └─ Lower target by 50% of max deficit
+  │   │   └─ Else: Use base target
+  │   │
   │   └─ NO → Go to "All Satisfied" logic
   │
   └─ All zones satisfied?
@@ -125,6 +142,14 @@ Calculate MAIN target temperature:
   └─ Apply min/max limits
       └─ Final MAIN target = clamp(calculated, min_temp, max_temp)
 ```
+
+**Why This Matters:**
+
+When the MAIN thermostat sensor (typically in a corridor) reads a different temperature than zones that need heating, the HVAC system may not heat adequately. For example:
+- Corridor: 23°C
+- Bedroom: 20°C, target 22°C
+
+If we simply set MAIN target to 22°C, the HVAC sees the corridor is already at 23°C (above target) and won't heat the water sufficiently. By adding compensation based on the temperature deficit, we ensure the HVAC heats the water hot enough to warm the bedroom despite the corridor already being warm.
 
 ### 5. Critical Constraint Check
 
@@ -217,6 +242,72 @@ Valves:
 ```
 Zones needing heat: Bedroom, Bathroom
 MAIN target: 25°C (highest requesting)
+Valves:
+  ✓ Bedroom: OPEN (needs heat)
+  ✓ Bathroom: OPEN (needs heat)
+  ✗ Living: CLOSED (satisfied)
+```
+
+### Scenario 4: Corridor Warmer Than Zones (Intelligent Compensation)
+
+**State:**
+- Corridor (MAIN sensor): 23°C
+- Bedroom: 20°C / target 22°C → Needs heat ✗
+- Bathroom: 21°C / target 21°C → Satisfied ✓
+- Living: 22°C / target 22°C → Satisfied ✓
+
+**Logic (OLD algorithm):**
+```
+Zones needing heat: Bedroom
+Base MAIN target: 22°C (highest requesting = bedroom target)
+Problem: Corridor is 23°C, already above 22°C target
+Result: HVAC may not heat water sufficiently because corridor sensor shows temp above target
+```
+
+**Logic (NEW intelligent algorithm):**
+```
+Zones needing heat: Bedroom
+Base MAIN target: 22°C (bedroom target)
+Corridor temp: 23°C
+Coldest zone needing heat: Bedroom at 20°C
+Temperature deficit: 22°C - 20°C = 2°C
+
+Calculation:
+- Corridor (23°C) > Base target (22°C): TRUE
+- Apply 50% compensation: 22°C + (2°C × 0.5) = 23°C
+- Final MAIN target: 23°C
+
+Result: HVAC heats water more aggressively because target matches corridor temp,
+        ensuring sufficient heat reaches bedroom despite corridor already being warm
+Valves:
+  ✓ Bedroom: OPEN (needs heat)
+  ✗ Bathroom: CLOSED (satisfied)
+  ✗ Living: CLOSED (satisfied)
+```
+
+### Scenario 5: Large Temperature Difference (Maximum Compensation)
+
+**State:**
+- Corridor (MAIN sensor): 24°C
+- Bedroom: 18°C / target 22°C → Needs heat ✗ (4°C deficit!)
+- Bathroom: 19°C / target 23°C → Needs heat ✗ (4°C deficit)
+- Living: 24°C / target 22°C → Satisfied ✓
+
+**Logic (NEW intelligent algorithm):**
+```
+Zones needing heat: Bedroom, Bathroom
+Base MAIN target: 23°C (highest requesting = bathroom target)
+Corridor temp: 24°C
+Coldest zone: Bedroom at 18°C
+Max temperature deficit: 4°C
+
+Calculation:
+- Corridor (24°C) > Base target (23°C): TRUE
+- Apply 50% compensation: 23°C + (4°C × 0.5) = 25°C
+- Final MAIN target: 25°C (after min/max clamping)
+
+Result: Higher MAIN target ensures HVAC heats water hot enough to overcome
+        the large temperature gap between warm corridor and cold bedrooms
 Valves:
   ✓ Bedroom: OPEN (needs heat)
   ✓ Bathroom: OPEN (needs heat)

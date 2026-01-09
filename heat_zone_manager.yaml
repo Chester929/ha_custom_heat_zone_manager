@@ -60,6 +60,20 @@ blueprint:
           domain: climate
           multiple: false
 
+    main_temp_sensor:
+      name: MAIN Temperature Sensor (Optional Override)
+      description: >
+        Optional temperature sensor for the MAIN thermostat location (e.g., corridor).
+        If provided, the blueprint will use this to calculate smarter MAIN target temperatures
+        that compensate for the difference between corridor and zone temperatures.
+        This improves heating effectiveness when the MAIN sensor location differs from zones.
+      default: []
+      selector:
+        entity:
+          domain: sensor
+          device_class: temperature
+          multiple: false
+
     # Zone 1 Configuration
     zone1_climate:
       name: Zone 1 - Climate Entity
@@ -323,6 +337,7 @@ action:
   - variables:
       # Input configurations
       main_climate: !input main_thermostat
+      main_sensor: !input main_temp_sensor
       enable_cooling: !input enable_cooling_mode
       temp_diff_open: !input temp_difference_open
       temp_diff_close: !input temp_difference_close
@@ -361,6 +376,14 @@ action:
       is_cooling_mode: >
         {{ enable_cooling and main_hvac_mode in ['cool', 'cool_only'] }}
       
+      # Get MAIN sensor temperature (if override is provided)
+      main_current_temp: >
+        {% if main_sensor and main_sensor != [] and main_sensor != '' %}
+          {{ states(main_sensor) | float(fallback_temperature) }}
+        {% else %}
+          {{ state_attr(main_climate, 'current_temperature') | float(fallback_temperature) }}
+        {% endif %}
+      
       # Calculate zone data: current temp, target temp, needs heating/cooling
       zone_data: >
         {% set ns = namespace(zones=[]) %}
@@ -395,7 +418,8 @@ action:
               'target_temp': target_temp,
               'needs_action': needs_action,
               'satisfied': satisfied,
-              'mode': zone_mode
+              'mode': zone_mode,
+              'temp_deficit': target_temp - current_temp
             }] %}
           {% endif %}
         {% endfor %}
@@ -412,11 +436,39 @@ action:
       # Calculate target temperature for MAIN thermostat
       calculated_main_target: >
         {% if zones_needing_action | length > 0 %}
-          {# At least one zone needs heating/cooling - use highest target (heating) or lowest target (cooling) #}
+          {# At least one zone needs heating/cooling - use improved algorithm #}
           {% if is_cooling_mode %}
-            {{ zones_needing_action | map(attribute='target_temp') | min | float }}
+            {# Cooling mode: use lowest target (coldest setting needed) #}
+            {% set base_target = zones_needing_action | map(attribute='target_temp') | min | float %}
+            {# For cooling, if MAIN sensor is cooler than zones, we may need to compensate downward #}
+            {% set max_deficit = zones_needing_action | map(attribute='temp_deficit') | max | float %}
+            {% if main_current_temp < base_target and max_deficit < 0 %}
+              {# MAIN is cooler than target, compensate by lowering target further #}
+              {{ (base_target + (max_deficit * 0.5)) | round(1) }}
+            {% else %}
+              {{ base_target }}
+            {% endif %}
           {% else %}
-            {{ zones_needing_action | map(attribute='target_temp') | max | float }}
+            {# Heating mode: use improved weighted algorithm #}
+            {% set base_target = zones_needing_action | map(attribute='target_temp') | max | float %}
+            {# Calculate maximum temperature deficit among zones needing heating #}
+            {% set max_deficit = zones_needing_action | map(attribute='temp_deficit') | max | float %}
+            {# Get minimum current temp among zones needing heating #}
+            {% set min_zone_temp = zones_needing_action | map(attribute='current_temp') | min | float %}
+            
+            {# If MAIN sensor (corridor) is warmer than zones needing heat, add compensation #}
+            {% if main_current_temp > base_target %}
+              {# Corridor is warmer than target - need to heat water more to reach zones #}
+              {# Add 50% of the max deficit as compensation #}
+              {{ (base_target + (max_deficit * 0.5)) | round(1) }}
+            {% elif main_current_temp > min_zone_temp + 1.0 %}
+              {# Corridor is significantly warmer than coldest zone - add partial compensation #}
+              {% set temp_gap = main_current_temp - min_zone_temp %}
+              {{ (base_target + (temp_gap * 0.3)) | round(1) }}
+            {% else %}
+              {# No significant temperature difference, use base target #}
+              {{ base_target }}
+            {% endif %}
           {% endif %}
         {% elif all_zones_satisfied and zone_data | length > 0 %}
           {# All zones satisfied - calculate based on mode slider #}
@@ -475,6 +527,7 @@ action:
       message: >
         Recalculating valve states and MAIN temperature.
         Mode: {{ 'Cooling' if is_cooling_mode else 'Heating' }}.
+        MAIN sensor temp: {{ main_current_temp }}°C.
         Zones needing action: {{ zones_needing_action | length }}.
         All satisfied: {{ all_zones_satisfied }}.
         Target MAIN temp: {{ final_main_target }}°C.
