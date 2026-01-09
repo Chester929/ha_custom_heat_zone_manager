@@ -338,7 +338,7 @@ data:
 
 ### Q: How many zones can I configure?
 
-**A**: The blueprint supports up to 5 zones. If you need more, you can:
+**A**: The blueprint supports up to 15 zones (organized in 3 groups of 5). If you need more, you can:
 1. Create multiple instances of the automation
 2. Modify the blueprint to add more zones
 3. Group some zones together

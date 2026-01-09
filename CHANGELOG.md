@@ -8,8 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Expanded Zone Support: 15 Zones in 3 Groups**
+  - Increased maximum zones from 5 to 15
+  - Zones organized into 3 groups of 5 for better UI organization:
+    - Group 1: Zones 1-5
+    - Group 2: Zones 6-10
+    - Group 3: Zones 11-15
+  - Each group has a visual header separator in the UI
+  - All zones follow the same configuration pattern (climate, temp_sensor, valve, virtual_switch)
 - **Virtual Switch Pattern for Generic Thermostat (REQUIRED)**
-  - New `zoneN_virtual_switch` parameters for all 5 zones
+  - New `zoneN_virtual_switch` parameters for all 15 zones
   - Allows Generic Thermostat climate entities to control virtual/helper switches
   - Blueprint monitors virtual switch state to understand what climate entity wants
   - Blueprint controls physical valve directly based on both virtual switch state AND coordinated logic
@@ -134,7 +142,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Features
 - **Heating Mode**: Opens valves when zones need heat, closes when satisfied
 - **Cooling Mode**: Inverse logic for air conditioning systems
-- **Zone Flexibility**: Configure 1-5 zones, each with optional overrides
+- **Zone Flexibility**: Configure 1-15 zones, each with optional overrides
 - **Temperature Management**: Intelligent calculation based on zone demands
 - **Safety**: Guarantees at least one valve is always open (prevents pump issues)
 - **Logging**: Detailed logbook entries for debugging

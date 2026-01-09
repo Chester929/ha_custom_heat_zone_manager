@@ -39,7 +39,7 @@ This blueprint manages the entire system automatically!
 ## ✨ Features
 
 ### Core Functionality
-- ✅ Manages up to 5 heating/cooling zones
+- ✅ Manages up to 15 heating/cooling zones (organized in 3 groups of 5)
 - ✅ **Guarantees at least one valve is always open** (critical!)
 - ✅ Dynamically calculates MAIN thermostat target temperature
 - ✅ **Intelligent temperature compensation** when MAIN sensor location differs from zones
@@ -153,7 +153,7 @@ zone1_virtual_switch: input_boolean.bedroom_virtual_valve  # REQUIRED
 
 1. **Select MAIN Thermostat**: Your primary HVAC climate entity
 
-2. **Configure Zones**: Add your room thermostats (up to 5)
+2. **Configure Zones**: Add your room thermostats (up to 15, organized in 3 groups)
    - Each zone requires a climate entity
    - Optionally override with custom temperature sensor
    - **REQUIRED**: Specify BOTH physical valve AND virtual switch for each zone
