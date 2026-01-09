@@ -2,8 +2,19 @@
 
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Blueprint-blue.svg)](https://www.home-assistant.io/)
 [![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/Chester929/ha_custom_heat_zone_manager)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 A comprehensive Home Assistant Blueprint for intelligently managing floor heating valves alongside a MAIN thermostat that controls your HVAC water heating system.
+
+## 📚 Documentation
+
+- **[Quick Start Guide](QUICKSTART.md)** - Get running in 5 minutes!
+- **[Installation Guide](INSTALLATION.md)** - Detailed setup instructions
+- **[Troubleshooting](TROUBLESHOOTING.md)** - Common issues and solutions
+- **[Architecture](ARCHITECTURE.md)** - How it works internally
+- **[Examples](examples/)** - Example configurations
+- **[Contributing](CONTRIBUTING.md)** - How to contribute
+- **[Changelog](CHANGELOG.md)** - Version history
 
 ## 🎯 Purpose
 
