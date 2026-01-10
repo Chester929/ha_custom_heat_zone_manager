@@ -1353,7 +1353,7 @@ action:
       # Note: this.last_triggered is only available after the first run
       enough_time_passed: >
         {% set last_triggered = this.last_triggered %}
-        {% if last_triggered is none or last_triggered in ['unknown', 'unavailable', none] %}
+        {% if last_triggered is none %}
           {{ true }}
         {% else %}
           {% set elapsed = (now() - last_triggered).total_seconds() %}
