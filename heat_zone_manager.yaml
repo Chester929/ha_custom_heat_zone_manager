@@ -1631,7 +1631,7 @@ action:
         {{ zone_data | map(attribute='climate') | reject('in', open_list) | list }}
 
       # Duplicate trigger prevention: Check current MAIN thermostat target temperature
-      # Only change if it differs from our calculated value (with 0.1°C tolerance)
+      # Only change if it differs from our calculated value (with 0.05°C tolerance)
       current_main_target: >
         {{ state_attr(main_climate, 'temperature') | float(fallback_temperature) }}
 
@@ -1885,7 +1885,7 @@ action:
                 {{ is_state(zone.valve, 'off') }}
               {% else %}
                 {% set zone_state = states(zone.climate) %}
-                {{ zone_state in ['off', 'unavailable', 'unknown'] }}
+                {{ zone_state not in ['heat', 'cool', 'heat_cool', 'auto'] }}
               {% endif %}
 
         # Only close if not already closed
