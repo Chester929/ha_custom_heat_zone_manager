@@ -935,33 +935,33 @@ blueprint:
       description: >
         How often (in minutes) the automation should run periodic updates.
         This ensures regular recalculation even if no state changes are detected.
+        Set to "Disabled" to completely disable periodic updates (rely only on state-change triggers).
         Lower values provide more responsive control but may increase system load.
         Default: 1 minute. The automation will also trigger on any state changes of climate entities.
       default: "/1"
       selector:
         select:
           options:
+            - label: "Disabled (state-change triggers only)"
+              value: "disabled"
             - label: "Every 1 minute"
               value: "/1"
             - label: "Every 2 minutes"
               value: "/2"
-            - label: "Every 5 minutes"
-              value: "/5"
-            - label: "Every 10 minutes"
-              value: "/10"
-            - label: "Every 15 minutes"
-              value: "/15"
-            - label: "Every 30 minutes"
-              value: "/30"
           mode: dropdown
 
 # Automation triggers
 trigger:
   # Periodic trigger - runs at configured interval for recalculation
-  # This ensures regular updates regardless of entity state changes
+  # When set to "disabled", still triggers every minute but execution is stopped early via condition
+  # When set to "/1" or "/2", triggers at that interval
   - platform: time_pattern
-    minutes: !input trigger_time_interval
-    id: periodic_update
+    minutes: "/1"
+    id: periodic_update_1min
+  
+  - platform: time_pattern
+    minutes: "/2"
+    id: periodic_update_2min
   
   # MAIN thermostat state change triggers
   - platform: state
@@ -1303,6 +1303,7 @@ action:
       valve_delay: !input valve_transition_delay
       fallback_zone_list: !input fallback_zones
       overheat_threshold: !input overheated_threshold
+      trigger_interval: !input trigger_time_interval
       
       # Zone configurations
       zones:
@@ -1610,6 +1611,20 @@ action:
       valves_to_close: >
         {% set open_list = valves_to_open %}
         {{ zone_data | map(attribute='climate') | reject('in', open_list) | list }}
+
+  # Check if periodic trigger should be ignored based on user's interval setting
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ 
+                (trigger_interval == 'disabled' and trigger.id in ['periodic_update_1min', 'periodic_update_2min']) or
+                (trigger_interval == '/1' and trigger.id == 'periodic_update_2min') or
+                (trigger_interval == '/2' and trigger.id == 'periodic_update_1min')
+              }}
+        sequence:
+          - stop: "Periodic trigger filtered based on interval setting."
+    default: []
 
   # Validate configuration - if invalid, log errors and stop execution
   - choose:
