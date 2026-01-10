@@ -1910,5 +1910,5 @@ action:
               data:
                 hvac_mode: "off"
 
-mode: restart
+mode: queued
 max: 10
