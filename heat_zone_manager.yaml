@@ -1667,6 +1667,23 @@ action:
     default: []
 
   # Validate configuration - if invalid, log errors and stop execution
+  # Check 1: At least one zone must be configured
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ active_zones | length == 0 }}"
+        sequence:
+          - service: logbook.log
+            data:
+              name: Floor Heating Valve Manager - Configuration Error
+              message: >
+                CONFIGURATION ERROR: No zones configured.
+                At least one zone must be set up with a climate entity for the automation to work.
+                Please configure at least one zone (zone 1-15) with a climate entity.
+          - stop: "No zones configured. Stopping automation."
+    default: []
+  
+  # Check 2: Zone configuration validity (valve and virtual_switch must match)
   - choose:
       - conditions:
           - condition: template

@@ -55,6 +55,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enhanced logbook entries to indicate unavailable zones
   - Helps users quickly identify and troubleshoot connectivity issues
 
+- **Configuration Validation**
+  - Added validation to ensure at least one zone is configured
+  - Automation will not run if no zones are set up
+  - Clear error message directs users to configure at least one zone (zone 1-15)
+  - Prevents automation from running without any zones to manage
+
 ### Fixed
 - **Time Pattern Trigger Validation Error**
   - Fixed invalid `seconds: "/60"` in time_pattern trigger that caused automation save errors
