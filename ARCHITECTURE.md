@@ -72,10 +72,8 @@ Trigger Events (Dual-Trigger System - 65 Total Triggers):
           ▼
      Blueprint Activates
 
-Note: The dual-trigger approach (65 total: 64 state-change + 1 periodic) 
-provides instant response to user adjustments while periodic updates catch 
-any missed changes. You can disable periodic updates entirely and rely on 
-state-change triggers for maximum efficiency.
+Note: The blueprint uses state-change triggers (64 total) to provide instant 
+response to user adjustments and any climate entity changes.
 ```
 
 ### 2. Data Collection Phase
@@ -523,15 +521,9 @@ Result: MAIN set to 25°C (highest)
 
 **Trigger System:**
 - **State-Change Triggers**: 64 total (MAIN + all zones), provide 1-2 second response time
-- **Periodic Updates**: Configurable interval (Disabled, 1, 2, 5, 10, 15, or 30 minutes)
-- **Default**: Every 1 minute periodic + immediate state-change triggers
-- **Recommended for efficiency**: Every 5-10 minutes periodic (state-change triggers ensure responsiveness)
-- **Maximum efficiency**: Disable periodic updates, rely solely on state-change triggers
 
 **Update Frequency:**
 - State-change triggers: Instant (1-2 seconds)
-- Periodic timer: User-configurable (see above)
-- Can disable periodic updates entirely for maximum efficiency
 
 **Calculation Complexity:**
 - O(n) where n = number of zones

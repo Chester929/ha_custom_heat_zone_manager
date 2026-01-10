@@ -61,7 +61,7 @@ This blueprint manages the entire system automatically!
   - 50% = Use average of all targets
   - 100% = Use highest zone target
 - ✅ Min/max limits for MAIN thermostat
-- ✅ Dual-trigger system: instant response (1-2s) + configurable periodic updates
+- ✅ State-change triggers: instant response (1-2s) to any climate entity changes
 
 ### Safety & Reliability
 - ✅ **Availability tracking** - monitors climate entity health
@@ -236,15 +236,13 @@ zone1_virtual_switch: input_boolean.bedroom_virtual_valve  # REQUIRED
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | **Enable Cooling Mode Support** | Invert logic for cooling | false |
-| **Trigger Time Interval** | How often to run periodic updates (Disabled, 1, 2, 5, 10, 15, or 30 minutes) | Every 1 minute |
 
-**Trigger System:** The blueprint uses a dual-trigger approach for optimal responsiveness:
-1. **State-Change Triggers** - Responds immediately (1-2 seconds) when any climate entity changes (state, HVAC mode, temperature, or target temperature). This includes the MAIN thermostat and all 15 zones (64 state-change triggers: 4 for MAIN + 60 for zones).
-2. **Periodic Updates** - Runs at the configured interval (default: every 1 minute) to ensure regular recalculation even if no changes detected. Can be disabled to rely solely on state-change triggers.
+**Trigger System:** The blueprint uses state-change triggers for optimal responsiveness:
+- **State-Change Triggers** - Responds immediately (1-2 seconds) when any climate entity changes (state, HVAC mode, temperature, or target temperature). This includes the MAIN thermostat and all 15 zones (64 state-change triggers: 4 for MAIN + 60 for zones).
 
-**Total: 65 triggers** (64 state-change + 1 periodic)
+**Total: 64 triggers** (all state-change based)
 
-This design allows you to set longer intervals (e.g., 10-15 minutes) or disable periodic updates entirely while maintaining instant response to user temperature adjustments.
+This design provides instant response to user temperature adjustments and climate entity state changes.
 
 **Valve Transition Delay:** When switching valves (e.g., closing Valve 1 and opening Valve 2), the blueprint first opens the new valve, waits for the specified delay to allow it to fully open, then closes the old valve. This ensures at least one valve is always fully open during transitions, preventing water pump issues. Range: 0-180 seconds (0-3 minutes). Recommended: 5-10 seconds for fast motorized valves, 60-120 seconds for slow valves.
 

@@ -182,8 +182,7 @@ Expected improvements:
 
 **Possible Causes**:
 1. Legitimate state changes → Normal behavior, not duplicate triggers
-2. Increase periodic trigger interval → Set to "Every 5 minutes" or "Disabled"
-3. External automations changing states → Review other automations affecting same entities
+2. External automations changing states → Review other automations affecting same entities
 
 ### Issue: Changes not being applied
 
