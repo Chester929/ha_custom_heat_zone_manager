@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Options: Disabled (state-change triggers only), Every 1, 2, 5, 10, 15, or 30 minutes
   - Default: Every 1 minute (maintains backward compatibility)
   - "Disabled" option completely disables periodic updates - automation relies only on state-change triggers
+  - Optimized implementation: Single time_pattern trigger with modulo-based filtering reduces system overhead
   - Allows users to balance system responsiveness vs. resource usage
   - Combined with state-change triggers, users can set longer intervals or disable periodic updates entirely without sacrificing responsiveness
 
@@ -35,8 +36,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Availability Tracking and Safety Features**
   - Zone data now includes `is_available` status for each zone
-  - Tracks unavailable climate entities (state = 'unavailable', 'unknown', or 'none')
+  - Tracks unavailable climate entities (state = 'unavailable' or 'unknown')
   - Monitors main climate entity availability
+  - **Unavailable zones filtered from calculations** to prevent stale data from affecting valve decisions
   - New variables: `unavailable_zones` and `main_climate_available`
 
 - **Safety Override for Unavailable Entities**
@@ -50,9 +52,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Warning Logging for Unavailable Entities**
   - Logs WARNING to Home Assistant system logs when climate entities are unavailable
   - Uses `system_log.write` service for proper warning-level logging
+  - Improved message formatting with clear line breaks and conditional safety override indication
   - Warning message includes:
     - Which climate entities are unavailable (main and/or zones)
     - Which valve(s) are being kept open as safety measure
+    - Whether safety override was activated
   - Enhanced logbook entries to indicate unavailable zones
   - Helps users quickly identify and troubleshoot connectivity issues
 
@@ -61,6 +65,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Automation will not run if no zones are set up
   - Clear error message directs users to configure at least one zone (zone 1-15)
   - Prevents automation from running without any zones to manage
+
+### Improved
+- **Optimized Periodic Trigger System**
+  - Replaced 6 separate time_pattern triggers with single optimized trigger
+  - Uses modulo-based filtering to check if current minute matches selected interval
+  - Significantly reduces unnecessary trigger evaluations and system overhead
+  - Simpler, more maintainable code structure
+
+- **Enhanced Availability Checks**
+  - Removed unnecessary string 'none' comparison from availability checks
+  - Now correctly checks only for 'unavailable' and 'unknown' states
+  - More accurate detection of entity availability issues
 
 ### Fixed
 - **Time Pattern Trigger Validation Error**
