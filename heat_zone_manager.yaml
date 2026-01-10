@@ -1146,25 +1146,25 @@ action:
 
       # OPTIMIZED: Check if all available zones are satisfied
       all_zones_satisfied: >
-        {% set ns = namespace(satisfied_count=0, available_count=0) %}
-        {% for z in zone_data %}
-          {% if z.is_available %}
-            {% set ns.available_count = ns.available_count + 1 %}
-            {% set ns.satisfied_count = ns.satisfied_count + 1 if z.satisfied else ns.satisfied_count %}
+        {% set ns = namespace(satisfied_count=0) %}
+        {% set available_count = available_zones | length %}
+        {% for z in available_zones %}
+          {% if z.satisfied %}
+            {% set ns.satisfied_count = ns.satisfied_count + 1 %}
           {% endif %}
         {% endfor %}
-        {{ ns.satisfied_count == ns.available_count and ns.available_count > 0 }}
+        {{ ns.satisfied_count == available_count and available_count > 0 }}
 
       # OPTIMIZED: Check if all available zones are overheated
       all_zones_overheated: >
-        {% set ns = namespace(overheated_count=0, available_count=0) %}
-        {% for z in zone_data %}
-          {% if z.is_available %}
-            {% set ns.available_count = ns.available_count + 1 %}
-            {% set ns.overheated_count = ns.overheated_count + 1 if z.overheated else ns.overheated_count %}
+        {% set ns = namespace(overheated_count=0) %}
+        {% set available_count = available_zones | length %}
+        {% for z in available_zones %}
+          {% if z.overheated %}
+            {% set ns.overheated_count = ns.overheated_count + 1 %}
           {% endif %}
         {% endfor %}
-        {{ ns.overheated_count == ns.available_count and ns.available_count > 0 }}
+        {{ ns.overheated_count == available_count and available_count > 0 }}
 
       # Get fallback zones (default to first zone if not specified)
       fallback_zones: >
@@ -1182,15 +1182,13 @@ action:
         {% if all_zones_overheated %}
           {{ min_temp }}
         {% elif zones_needing_action | length > 0 %}
-          {# Calculate min/max/avg in single loop instead of multiple map operations #}
-          {% set ns = namespace(min_target=none, max_target=none, min_current=none, max_deficit=none, sum_target=0, count=0) %}
+          {# Calculate min/max in single loop instead of multiple map operations #}
+          {% set ns = namespace(min_target=none, max_target=none, min_current=none, max_deficit=none) %}
           {% for z in zones_needing_action %}
             {% set ns.min_target = z.target_temp if (ns.min_target is none or z.target_temp < ns.min_target) else ns.min_target %}
             {% set ns.max_target = z.target_temp if (ns.max_target is none or z.target_temp > ns.max_target) else ns.max_target %}
             {% set ns.min_current = z.current_temp if (ns.min_current is none or z.current_temp < ns.min_current) else ns.min_current %}
             {% set ns.max_deficit = z.temp_deficit if (ns.max_deficit is none or z.temp_deficit > ns.max_deficit) else ns.max_deficit %}
-            {% set ns.sum_target = ns.sum_target + z.target_temp %}
-            {% set ns.count = ns.count + 1 %}
           {% endfor %}
           {% if is_cooling_mode %}
             {% set base_target = ns.min_target %}
@@ -1212,12 +1210,10 @@ action:
           {% endif %}
         {% elif all_zones_satisfied and available_zones | length > 0 %}
           {# All zones satisfied - calculate min/max in single loop #}
-          {% set ns = namespace(min_target=none, max_target=none, sum_target=0, count=0) %}
+          {% set ns = namespace(min_target=none, max_target=none) %}
           {% for z in available_zones %}
             {% set ns.min_target = z.target_temp if (ns.min_target is none or z.target_temp < ns.min_target) else ns.min_target %}
             {% set ns.max_target = z.target_temp if (ns.max_target is none or z.target_temp > ns.max_target) else ns.max_target %}
-            {% set ns.sum_target = ns.sum_target + z.target_temp %}
-            {% set ns.count = ns.count + 1 %}
           {% endfor %}
           {% if all_satisfied_mode <= 5 %}
             {{ ns.min_target }}
