@@ -7,6 +7,77 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Configurable Trigger Time Interval**
+  - New `trigger_time_interval` input parameter allows users to select periodic trigger frequency
+  - Options: Disabled (state-change triggers only), Every 1, 2, 5, 10, 15, or 30 minutes
+  - Default: Every 1 minute (maintains backward compatibility)
+  - "Disabled" option completely disables periodic updates - automation relies only on state-change triggers
+  - Optimized implementation: Single time_pattern trigger with modulo-based filtering reduces system overhead
+  - Allows users to balance system responsiveness vs. resource usage
+  - Combined with state-change triggers, users can set longer intervals or disable periodic updates entirely without sacrificing responsiveness
+
+- **Comprehensive State-Change Triggers**
+  - **Main Climate Entity Triggers (4 new triggers)**:
+    - State change (on/off/heat/cool/etc.)
+    - HVAC mode attribute change
+    - Target temperature attribute change
+    - Current temperature attribute change
+  - **Zone Climate Entity Triggers (60 new zone triggers, 4 per zone × 15 zones; 64 triggers total including main climate)**:
+    - State change for each zone
+    - HVAC mode attribute change for each zone
+    - Target temperature attribute change for each zone
+    - Current temperature attribute change for each zone
+  - **Benefits**:
+    - Automation responds immediately (within 1-2 seconds) to any climate entity change
+    - No need to wait for periodic trigger when user adjusts temperature
+    - Valve states update instantly when climate entities change
+    - Enables longer periodic intervals (e.g., 10-15 minutes) while maintaining quick response
+
+- **Availability Tracking and Safety Features**
+  - Zone data now includes `is_available` status for each zone
+  - Tracks unavailable climate entities (state = 'unavailable' or 'unknown')
+  - Monitors main climate entity availability
+  - **Unavailable zones filtered from calculations** to prevent stale data from affecting valve decisions
+  - New variables: `unavailable_zones` and `main_climate_available`
+
+- **Safety Override for Unavailable Entities**
+  - Enhanced valve opening logic with multi-level safety override
+  - If calculated valve list is empty, fallback zones are forced open
+  - If fallback zones is empty, first available zone is used as last resort
+  - Ensures at least one valve remains open even when all climate entities are unavailable
+  - Critical for preventing pump damage in edge cases
+  - Safety check runs on every automation execution with multiple fallback levels
+
+- **Warning Logging for Unavailable Entities**
+  - Logs WARNING to Home Assistant system logs when climate entities are unavailable
+  - Uses `system_log.write` service for proper warning-level logging
+  - Improved message formatting with clear line breaks and conditional safety override indication
+  - Warning message includes:
+    - Which climate entities are unavailable (main and/or zones)
+    - Which valve(s) are being kept open as safety measure
+    - Whether safety override was activated
+  - Enhanced logbook entries to indicate unavailable zones
+  - Helps users quickly identify and troubleshoot connectivity issues
+
+- **Configuration Validation**
+  - Added validation to ensure at least one zone is configured
+  - Automation will not run if no zones are set up
+  - Clear error message directs users to configure at least one zone (zone 1-15)
+  - Prevents automation from running without any zones to manage
+
+### Improved
+- **Optimized Periodic Trigger System**
+  - Replaced 6 separate time_pattern triggers with single optimized trigger
+  - Uses modulo-based filtering to check if current minute matches selected interval
+  - Significantly reduces unnecessary trigger evaluations and system overhead
+  - Simpler, more maintainable code structure
+
+- **Enhanced Availability Checks**
+  - Removed unnecessary string 'none' comparison from availability checks
+  - Now correctly checks only for 'unavailable' and 'unknown' states
+  - More accurate detection of entity availability issues
+
 ### Fixed
 - **Time Pattern Trigger Validation Error**
   - Fixed invalid `seconds: "/60"` in time_pattern trigger that caused automation save errors
