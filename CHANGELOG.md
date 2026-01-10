@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - HVAC mode attribute change
     - Target temperature attribute change
     - Current temperature attribute change
-  - **Zone Climate Entity Triggers (60 new triggers, 4 per zone × 15 zones)**:
+  - **Zone Climate Entity Triggers (60 new zone triggers, 4 per zone × 15 zones; 64 triggers total including main climate)**:
     - State change for each zone
     - HVAC mode attribute change for each zone
     - Target temperature attribute change for each zone
