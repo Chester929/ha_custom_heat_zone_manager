@@ -1057,7 +1057,7 @@ action:
       # Calculate zone data: current temp, target temp, needs heating/cooling
       # OPTIMIZED: Pre-calculate thresholds once, reduce state lookups
       zone_data: >
-        {% set ns = namespace(zones=[], needs_action_count=0, satisfied_count=0, overheated_count=0, available_count=0) %}
+        {% set ns = namespace(zones=[]) %}
         {% for zone in active_zones %}
           {% if zone.climate %}
             {% set climate_entity = zone.climate %}
@@ -1065,7 +1065,6 @@ action:
             {% set is_available = zone_state not in ['unavailable', 'unknown'] %}
 
             {% if is_available %}
-              {% set ns.available_count = ns.available_count + 1 %}
               {# Get current temperature - use override sensor if provided #}
               {% set has_temp_sensor = zone.temp_sensor and zone.temp_sensor != [] and zone.temp_sensor != '' %}
               {% set current_temp = states(zone.temp_sensor) | float(fallback_temperature) if has_temp_sensor else state_attr(climate_entity, 'current_temperature') | float(fallback_temperature) %}
@@ -1088,11 +1087,6 @@ action:
               {% endif %}
 
               {% set needs_action = (virtual_switch_on and temp_needs_action) if virtual_switch_on is not none else temp_needs_action %}
-              
-              {# Update counters for later use #}
-              {% set ns.needs_action_count = ns.needs_action_count + 1 if needs_action else ns.needs_action_count %}
-              {% set ns.satisfied_count = ns.satisfied_count + 1 if satisfied else ns.satisfied_count %}
-              {% set ns.overheated_count = ns.overheated_count + 1 if is_overheated else ns.overheated_count %}
 
               {% set ns.zones = ns.zones + [{
                 'climate': climate_entity,
@@ -1150,26 +1144,27 @@ action:
       main_climate_available: >
         {{ states(main_climate) not in ['unavailable', 'unknown'] }}
 
-      # OPTIMIZED: Use pre-calculated counters from zone_data
-      # Check if all zones are satisfied (only available zones)
+      # OPTIMIZED: Check if all available zones are satisfied
       all_zones_satisfied: >
-        {% set ns = namespace(count=0) %}
+        {% set ns = namespace(satisfied_count=0, available_count=0) %}
         {% for z in zone_data %}
           {% if z.is_available %}
-            {% set ns.count = ns.count + 1 if z.satisfied else ns.count %}
+            {% set ns.available_count = ns.available_count + 1 %}
+            {% set ns.satisfied_count = ns.satisfied_count + 1 if z.satisfied else ns.satisfied_count %}
           {% endif %}
         {% endfor %}
-        {{ ns.count == available_zones | length and available_zones | length > 0 }}
+        {{ ns.satisfied_count == ns.available_count and ns.available_count > 0 }}
 
-      # Check if all zones are overheated (only available zones)
+      # OPTIMIZED: Check if all available zones are overheated
       all_zones_overheated: >
-        {% set ns = namespace(count=0) %}
+        {% set ns = namespace(overheated_count=0, available_count=0) %}
         {% for z in zone_data %}
           {% if z.is_available %}
-            {% set ns.count = ns.count + 1 if z.overheated else ns.count %}
+            {% set ns.available_count = ns.available_count + 1 %}
+            {% set ns.overheated_count = ns.overheated_count + 1 if z.overheated else ns.overheated_count %}
           {% endif %}
         {% endfor %}
-        {{ ns.count == available_zones | length and available_zones | length > 0 }}
+        {{ ns.overheated_count == ns.available_count and ns.available_count > 0 }}
 
       # Get fallback zones (default to first zone if not specified)
       fallback_zones: >
@@ -1188,12 +1183,12 @@ action:
           {{ min_temp }}
         {% elif zones_needing_action | length > 0 %}
           {# Calculate min/max/avg in single loop instead of multiple map operations #}
-          {% set ns = namespace(min_target=999, max_target=-999, min_current=999, max_deficit=-999, sum_target=0, count=0) %}
+          {% set ns = namespace(min_target=none, max_target=none, min_current=none, max_deficit=none, sum_target=0, count=0) %}
           {% for z in zones_needing_action %}
-            {% set ns.min_target = z.target_temp if z.target_temp < ns.min_target else ns.min_target %}
-            {% set ns.max_target = z.target_temp if z.target_temp > ns.max_target else ns.max_target %}
-            {% set ns.min_current = z.current_temp if z.current_temp < ns.min_current else ns.min_current %}
-            {% set ns.max_deficit = z.temp_deficit if z.temp_deficit > ns.max_deficit else ns.max_deficit %}
+            {% set ns.min_target = z.target_temp if (ns.min_target is none or z.target_temp < ns.min_target) else ns.min_target %}
+            {% set ns.max_target = z.target_temp if (ns.max_target is none or z.target_temp > ns.max_target) else ns.max_target %}
+            {% set ns.min_current = z.current_temp if (ns.min_current is none or z.current_temp < ns.min_current) else ns.min_current %}
+            {% set ns.max_deficit = z.temp_deficit if (ns.max_deficit is none or z.temp_deficit > ns.max_deficit) else ns.max_deficit %}
             {% set ns.sum_target = ns.sum_target + z.target_temp %}
             {% set ns.count = ns.count + 1 %}
           {% endfor %}
@@ -1217,10 +1212,10 @@ action:
           {% endif %}
         {% elif all_zones_satisfied and available_zones | length > 0 %}
           {# All zones satisfied - calculate min/max in single loop #}
-          {% set ns = namespace(min_target=999, max_target=-999, sum_target=0, count=0) %}
+          {% set ns = namespace(min_target=none, max_target=none, sum_target=0, count=0) %}
           {% for z in available_zones %}
-            {% set ns.min_target = z.target_temp if z.target_temp < ns.min_target else ns.min_target %}
-            {% set ns.max_target = z.target_temp if z.target_temp > ns.max_target else ns.max_target %}
+            {% set ns.min_target = z.target_temp if (ns.min_target is none or z.target_temp < ns.min_target) else ns.min_target %}
+            {% set ns.max_target = z.target_temp if (ns.max_target is none or z.target_temp > ns.max_target) else ns.max_target %}
             {% set ns.sum_target = ns.sum_target + z.target_temp %}
             {% set ns.count = ns.count + 1 %}
           {% endfor %}
