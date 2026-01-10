@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Automation Mode Changed from `single` to `queued`**
+  - Fixes issue where automation would stop with "only one execution allowed" error
+  - Previous `mode: single` with `max_exceeded: silent` blocked new triggers when automation was running
+  - Intermediate fix attempt using `mode: restart` caused time trigger filtering to not work (would trigger every minute even when disabled)
+  - New `mode: queued` with `max: 10` allows new triggers to queue up and execute sequentially
+  - Works seamlessly with duplicate prevention logic to maintain efficiency
+  - Respects time trigger filtering - when set to "disabled", automation correctly stops periodic execution
+  - Prevents automation from getting stuck or ignoring triggers
+  - Time pattern and entity state triggers now work reliably without blocking or interference
+
 ### Added
 - **Duplicate Trigger Prevention**
   - Prevents automation from re-triggering when its own actions cause state changes

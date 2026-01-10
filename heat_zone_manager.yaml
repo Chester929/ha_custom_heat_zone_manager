@@ -1910,5 +1910,5 @@ action:
               data:
                 hvac_mode: "off"
 
-mode: single
-max_exceeded: silent
+mode: queued
+max: 10

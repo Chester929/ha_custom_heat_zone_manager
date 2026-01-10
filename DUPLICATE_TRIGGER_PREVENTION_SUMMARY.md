@@ -234,6 +234,57 @@ STOPS (early exit)
 - [ ] Monitor system load during normal operation (should be lower)
 - [ ] Verify no infinite loops or rapid re-triggering
 
+## Automation Mode Configuration
+
+### Mode: queued (Updated)
+
+**Previous Configuration** (caused issues):
+```yaml
+mode: single
+max_exceeded: silent
+```
+
+**First Attempt** (caused time trigger filtering issues):
+```yaml
+mode: restart
+max: 10
+```
+
+**Current Configuration** (fixed):
+```yaml
+mode: queued
+max: 10
+```
+
+**Why the Change?**
+
+The original `mode: single` with `max_exceeded: silent` caused the automation to stop with "only one execution allowed" errors when:
+- Time pattern trigger fired while automation was processing a state change
+- Multiple entity state changes occurred simultaneously
+- The automation's own actions triggered new state changes
+
+The first fix attempt using `mode: restart` introduced a new issue:
+- Time pattern filtering didn't work because `restart` mode would restart the automation even after it was stopped by the filter
+- When time trigger was set to "disabled", it still triggered every minute
+
+**How `mode: queued` Fixes Both Issues:**
+
+1. **Allows Concurrent Triggers**: When a new trigger fires while the automation is running, it queues up instead of being blocked or restarting
+2. **Respects Stop Actions**: When the time pattern filter stops execution, it actually stops (doesn't restart like `restart` mode)
+3. **Works with Duplicate Prevention**: The built-in duplicate prevention logic (early exit) ensures that unnecessary work is still avoided
+4. **Sequential Processing**: Queued triggers execute in order, one at a time
+5. **Limited Queue**: `max: 10` prevents queue overflow in case of issues
+
+**Example Scenario:**
+```
+Time: 03:21:00 - Time pattern trigger starts automation, gets filtered and stopped (disabled setting)
+Time: 03:21:00.5 - User adjusts zone temperature, triggers state change
+  
+With mode: single → Second trigger BLOCKED, automation stops with "only one execution allowed"
+With mode: restart → Second trigger RESTARTS automation, but time filter doesn't work properly
+With mode: queued → First trigger stops (filtered), second trigger executes normally
+```
+
 ## Code Comments Location
 
 All code includes inline comments explaining the logic:
@@ -262,5 +313,6 @@ The duplicate trigger prevention feature successfully addresses the original iss
 3. ✅ Improving response times
 4. ✅ Maintaining all safety features
 5. ✅ Adding minimal code complexity
+6. ✅ Using `mode: queued` to prevent trigger blocking while respecting time trigger filtering
 
 The implementation is robust, well-documented, and production-ready.
