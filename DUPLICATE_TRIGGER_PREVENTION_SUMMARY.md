@@ -1,8 +1,18 @@
 # Duplicate Trigger Prevention - Implementation Summary
 
-## Problem Statement
+> **⚠️ DEPRECATED**: This document describes duplicate trigger prevention logic that was removed in favor of a simpler time-pattern trigger approach. The automation now uses a single time-pattern trigger (`minutes: "/1"`) instead of state-based triggers, eliminating the need for complex duplicate prevention logic.
+>
+> **Historical Context**: Earlier versions used 64 state-based trigger definitions (4 for MAIN + 60 for zones) plus 1 periodic time trigger = 65 total trigger definitions. These 64 state triggers monitored multiple attributes per entity, creating 323+ individual state monitors in Home Assistant.
+>
+> **Current Approach**: Time-based execution runs every minute. MAIN thermostat updates include a simple condition to skip unnecessary updates (temperature difference ≤ 0.1°C). Valve operations already check current state before acting.
+>
+> This document is retained for historical reference only.
 
-The Floor Heating Valve Manager automation has 65 triggers:
+---
+
+## Problem Statement (Historical)
+
+The Floor Heating Valve Manager automation had 65 trigger definitions (which created 323+ state monitors):
 - 1 periodic time trigger (every minute by default)
 - 4 MAIN climate entity triggers (state, hvac_mode, temperature, current_temperature)
 - 60 zone climate entity triggers (4 triggers per zone × 15 zones)
