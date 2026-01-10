@@ -7,32 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-- **Automation Mode Changed from `single` to `queued`**
-  - Fixes issue where automation would stop with "only one execution allowed" error
-  - Previous `mode: single` with `max_exceeded: silent` blocked new triggers when automation was running
-  - Intermediate fix attempt using `mode: restart` caused time trigger filtering to not work (would trigger every minute even when disabled)
-  - New `mode: queued` with `max: 10` allows new triggers to queue up and execute sequentially
-  - Works seamlessly with duplicate prevention logic to maintain efficiency
-  - Respects time trigger filtering - when set to "disabled", automation correctly stops periodic execution
-  - Prevents automation from getting stuck or ignoring triggers
-  - Time pattern and entity state triggers now work reliably without blocking or interference
-
-### Added
-- **Duplicate Trigger Prevention**
-  - Prevents automation from re-triggering when its own actions cause state changes
-  - Added state comparison logic to detect if changes are actually needed before executing
-  - New variables: `current_main_target`, `main_temp_needs_change`, `current_valve_states`, `valves_need_change`, `any_changes_needed`
-  - **MAIN thermostat temperature**: Only updated if difference >0.05°C from current value
-  - **Valve states**: Only changed if not already in desired state (open/closed)
-  - Early exit mechanism when no changes needed - logs debug message and stops execution
-  - Significantly reduces unnecessary service calls and re-triggers
-  - Improves system efficiency and reduces log spam
+### Changed
+- **Trigger System Simplified**
+  - Replaced 323 state-based triggers with single time-pattern trigger
+  - Runs every minute (`minutes: "/1"`)
+  - More appropriate for HVAC control (thermal systems respond slowly)
+  - Significantly reduced system load
+  - Removed complex duplicate trigger prevention logic (no longer needed)
+  - File size reduced from 1850 to 1467 lines (-383 lines)
   - Benefits:
-    - Eliminates infinite loops caused by automation's own state changes
-    - Reduces Home Assistant system load
-    - Cleaner logs with fewer redundant executions
-    - Faster response times by avoiding unnecessary processing
+    - Predictable execution at known intervals
+    - Lower Home Assistant system load (1 trigger vs 323 monitors)
+    - Simpler codebase without duplicate prevention complexity
+    - Appropriate response time for heating/cooling control
+- **MAIN Thermostat Update Optimization**
+  - Added condition to skip MAIN thermostat updates when temperature difference < 0.1°C
+  - Prevents unnecessary API calls while maintaining accuracy
+  - Valve state checks preserved (already checking if operations needed)
+
+### Removed
+- **State-Based Triggers**
+  - Removed 4 MAIN thermostat triggers (state, hvac_mode, temperature, current_temperature)
+  - Removed 60 zone triggers (15 zones × 4 attributes each)
+  - Total: 323 triggers removed
+- **Duplicate Trigger Prevention Logic**
+  - Removed variables: `current_valve_states`, `valves_need_change`, `any_changes_needed`
+  - Removed early exit mechanism and complex state comparison logic
+  - Simplified to basic condition check for MAIN thermostat updates
+  - Note: `current_main_target` and `main_temp_needs_change` retained for optimization
 
 ### Planned Features
 - Advanced scheduling integration

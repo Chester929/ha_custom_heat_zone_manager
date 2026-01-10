@@ -48,32 +48,22 @@ This document explains how the Floor Heating Valve Manager blueprint works inter
 ### 1. Trigger Phase
 
 ```
-Trigger Events (Dual-Trigger System - 65 Total Triggers):
+Trigger Events (Time-Pattern Based):
 
-  1. State-Change Triggers (64 state-change triggers):
-     ├─ MAIN thermostat state change
-     ├─ MAIN thermostat HVAC mode change
-     ├─ MAIN thermostat target temperature change
-     ├─ MAIN thermostat current temperature change
-     └─ For each zone (15 zones × 4 triggers = 60 triggers):
-         ├─ Zone climate state change
-         ├─ Zone climate HVAC mode change
-         ├─ Zone climate target temperature change
-         └─ Zone climate current temperature change
+  1. Time-Pattern Trigger (1 trigger):
+     └─ Runs every minute (minutes: "/1")
+     └─ Evaluates valve states and MAIN thermostat temperature
+     └─ Provides sufficient responsiveness for HVAC control
      
-     Result: Immediate response (1-2 seconds) to any climate entity change
-  
-  2. Periodic Timer (1 trigger, configurable):
-     └─ Default: Every 1 minute
-     └─ Options: Disabled, 1, 2, 5, 10, 15, or 30 minutes
-     └─ Ensures regular recalculation even if no changes detected
-     
-          │
-          ▼
-     Blueprint Activates
+     Result: Periodic evaluation every 60 seconds
+      
+           │
+           ▼
+      Blueprint Activates
 
-Note: The blueprint uses state-change triggers (64 total) to provide instant 
-response to user adjustments and any climate entity changes.
+Note: Time-pattern trigger provides appropriate response time for heating/cooling
+control. Thermal systems have inertia and respond over minutes, not seconds.
+Lower system load than 323+ state-change monitors.
 ```
 
 ### 2. Data Collection Phase
@@ -520,18 +510,21 @@ Result: MAIN set to 25°C (highest)
 ## Performance Considerations
 
 **Trigger System:**
-- **State-Change Triggers**: 64 total (MAIN + all zones), provide 1-2 second response time
+- **Time-Pattern Trigger**: 1 trigger, runs every minute for periodic evaluation
+- Lower system load compared to 323+ state-change monitors
+- Appropriate for HVAC control (thermal systems respond slowly)
 
 **Update Frequency:**
-- State-change triggers: Instant (1-2 seconds)
+- Time-pattern trigger: Every 60 seconds
+- Sufficient responsiveness for heating/cooling control
 
 **Calculation Complexity:**
 - O(n) where n = number of zones
 - Negligible impact up to 15 zones (current maximum)
 
 **Automation Execution:**
-- Mode: Single (one execution at a time)
-- Exceeded: Silent (skip if already running)
+- Mode: Queued (executes sequentially, max 10 in queue)
+- Ensures all evaluations complete without blocking
 
 ## Safety Mechanisms
 

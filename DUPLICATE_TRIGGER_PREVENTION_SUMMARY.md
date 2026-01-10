@@ -1,6 +1,14 @@
 # Duplicate Trigger Prevention - Implementation Summary
 
-## Problem Statement
+> **⚠️ DEPRECATED**: This document describes duplicate trigger prevention logic that was removed in favor of a simpler time-pattern trigger approach. The automation now uses a single time-pattern trigger (`minutes: "/1"`) instead of 323+ state-based triggers, eliminating the need for complex duplicate prevention logic.
+>
+> **Current Approach**: Time-based execution runs every minute. MAIN thermostat updates include a simple condition to skip unnecessary updates (temperature difference < 0.1°C). Valve operations already check current state before acting.
+>
+> This document is retained for historical reference only.
+
+---
+
+## Problem Statement (Historical)
 
 The Floor Heating Valve Manager automation has 65 triggers:
 - 1 periodic time trigger (every minute by default)

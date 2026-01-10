@@ -56,7 +56,7 @@ This guide helps resolve common issues when using the Floor Heating Valve Manage
 3. Check automation is enabled:
    - Settings → Automations & Scenes
    - Find your automation and ensure it's toggled ON
-4. Review trigger entities - ensure they're reporting state changes
+4. Review the automation trace to confirm it's running every minute
 
 ### Automation stops immediately with "only one execution allowed"
 
@@ -290,15 +290,19 @@ Create a separate automation to force at least one valve open if all are closed.
 
 ### Automation runs too frequently
 
-**Problem**: Automation triggers constantly, causing excessive wear.
+**Problem**: Automation seems to execute too often.
 
-**Solutions**:
-1. **Duplicate Trigger Prevention**: The blueprint includes built-in duplicate trigger prevention that automatically skips execution when no changes are needed. This prevents re-triggers from the automation's own actions.
-2. Increase temperature thresholds to reduce sensitivity
-3. Check for temperature sensor fluctuations
-4. Consider using sensors with better accuracy/stability
+**Note**: The automation runs every minute by design (time-pattern trigger). This is appropriate for HVAC control and provides:
+- Predictable execution intervals
+- Lower system load than state-change monitors
+- Sufficient responsiveness for heating/cooling (thermal systems respond slowly)
 
-**Note**: The automation will automatically detect when its own actions cause state changes and skip unnecessary re-executions. You should see debug log messages like "Skipping execution - no changes needed" when this occurs.
+**If concerned about execution frequency**:
+1. Check automation traces to verify it's running once per minute (expected behavior)
+2. The automation includes built-in checks to skip unnecessary API calls (e.g., MAIN thermostat only updated if temperature differs by >0.1°C)
+3. Valve operations already check current state before opening/closing
+
+**Note**: One execution per minute is normal and expected for time-based operation.
 
 ## Debugging
 
@@ -324,12 +328,8 @@ The blueprint logs important calculations:
 2. Filter by "Floor Heating Valve Manager"
 3. Review entries like:
    ```
-   Applying changes to valve states and MAIN temperature.
-   Mode: Heating. Zones needing action: 2. All satisfied: False. Target MAIN temp: 25.0°C (current: 24.5°C).
-   ```
-4. Look for duplicate trigger prevention messages:
-   ```
-   Skipping execution - no changes needed. Current MAIN target: 25.0°C, Calculated MAIN target: 25.0°C.
+   Evaluating valve states and MAIN temperature.
+   Mode: Heating. Zones needing action: 2. All satisfied: False. Target MAIN temp: 25.0°C (current: 24.5°C, needs change: true).
    ```
 
 ### Check automation traces
@@ -338,7 +338,8 @@ The blueprint logs important calculations:
 2. Find your Floor Heating automation
 3. Click the three dots → Traces
 4. Review recent executions to see:
-   - Which triggers fired
+   - Trigger source (time_pattern trigger every minute)
+   - Variable calculations
    - Variable calculations
    - Actions taken
 
@@ -445,9 +446,9 @@ If you're still experiencing issues:
 
 ### Optimize temperature thresholds
 
-The blueprint uses state-change triggers for optimal responsiveness.
+The blueprint uses time-pattern triggers for reliable, predictable operation.
 
-**Recommendation:** The state-change triggers (64 total) provide instant response (1-2 seconds) when you adjust any thermostat or when climate entities change state.
+**Response Time:** The time-pattern trigger evaluates every minute (60 seconds), providing appropriate responsiveness for HVAC control. Heating systems have thermal inertia and respond over minutes, not seconds.
 
 **Temperature threshold settings:**
 

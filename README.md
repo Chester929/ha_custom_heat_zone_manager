@@ -61,7 +61,7 @@ This blueprint manages the entire system automatically!
   - 50% = Use average of all targets
   - 100% = Use highest zone target
 - ✅ Min/max limits for MAIN thermostat
-- ✅ State-change triggers: instant response (1-2s) to any climate entity changes
+- ✅ Time-based evaluation: periodic checks every minute for reliable, predictable operation
 
 ### Safety & Reliability
 - ✅ **Availability tracking** - monitors climate entity health
@@ -237,12 +237,16 @@ zone1_virtual_switch: input_boolean.bedroom_virtual_valve  # REQUIRED
 |-----------|-------------|---------|
 | **Enable Cooling Mode Support** | Invert logic for cooling | false |
 
-**Trigger System:** The blueprint uses state-change triggers for optimal responsiveness:
-- **State-Change Triggers** - Responds immediately (1-2 seconds) when any climate entity changes (state, HVAC mode, temperature, or target temperature). This includes the MAIN thermostat and all 15 zones (64 state-change triggers: 4 for MAIN + 60 for zones).
+**Trigger System:** The blueprint uses a time-pattern trigger for reliable, predictable operation:
+- **Time-Pattern Trigger** - Evaluates valve states and MAIN thermostat temperature every minute (`minutes: "/1"`). This provides sufficient responsiveness for HVAC control (thermal inertia means heating systems respond over minutes, not seconds).
 
-**Total: 64 triggers** (all state-change based)
+**Total: 1 trigger** (time-pattern based)
 
-This design provides instant response to user temperature adjustments and climate entity state changes.
+This design provides:
+- Predictable execution at known intervals
+- Lower system load compared to hundreds of state-change monitors
+- Appropriate response time for heating/cooling control (thermal systems respond slowly)
+- Reduced complexity without duplicate trigger prevention logic
 
 **Valve Transition Delay:** When switching valves (e.g., closing Valve 1 and opening Valve 2), the blueprint first opens the new valve, waits for the specified delay to allow it to fully open, then closes the old valve. This ensures at least one valve is always fully open during transitions, preventing water pump issues. Range: 0-180 seconds (0-3 minutes). Recommended: 5-10 seconds for fast motorized valves, 60-120 seconds for slow valves.
 
