@@ -48,9 +48,9 @@ This document explains how the Floor Heating Valve Manager blueprint works inter
 ### 1. Trigger Phase
 
 ```
-Trigger Events (Dual-Trigger System):
+Trigger Events (Dual-Trigger System - 65 Total Triggers):
 
-  1. State-Change Triggers (64 triggers total):
+  1. State-Change Triggers (64 state-change triggers):
      ├─ MAIN thermostat state change
      ├─ MAIN thermostat HVAC mode change
      ├─ MAIN thermostat target temperature change
@@ -63,7 +63,7 @@ Trigger Events (Dual-Trigger System):
      
      Result: Immediate response (1-2 seconds) to any climate entity change
   
-  2. Periodic Timer (configurable):
+  2. Periodic Timer (1 trigger, configurable):
      └─ Default: Every 1 minute
      └─ Options: Disabled, 1, 2, 5, 10, 15, or 30 minutes
      └─ Ensures regular recalculation even if no changes detected
@@ -72,9 +72,10 @@ Trigger Events (Dual-Trigger System):
           ▼
      Blueprint Activates
 
-Note: The dual-trigger approach provides instant response to user adjustments
-while periodic updates catch any missed changes. You can disable periodic 
-updates entirely and rely on state-change triggers for maximum efficiency.
+Note: The dual-trigger approach (65 total: 64 state-change + 1 periodic) 
+provides instant response to user adjustments while periodic updates catch 
+any missed changes. You can disable periodic updates entirely and rely on 
+state-change triggers for maximum efficiency.
 ```
 
 ### 2. Data Collection Phase

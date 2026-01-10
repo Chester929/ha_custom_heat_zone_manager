@@ -239,8 +239,10 @@ zone1_virtual_switch: input_boolean.bedroom_virtual_valve  # REQUIRED
 | **Trigger Time Interval** | How often to run periodic updates (Disabled, 1, 2, 5, 10, 15, or 30 minutes) | Every 1 minute |
 
 **Trigger System:** The blueprint uses a dual-trigger approach for optimal responsiveness:
-1. **State-Change Triggers** - Responds immediately (1-2 seconds) when any climate entity changes (state, HVAC mode, temperature, or target temperature). This includes the MAIN thermostat and all 15 zones (64 triggers total).
+1. **State-Change Triggers** - Responds immediately (1-2 seconds) when any climate entity changes (state, HVAC mode, temperature, or target temperature). This includes the MAIN thermostat and all 15 zones (64 state-change triggers: 4 for MAIN + 60 for zones).
 2. **Periodic Updates** - Runs at the configured interval (default: every 1 minute) to ensure regular recalculation even if no changes detected. Can be disabled to rely solely on state-change triggers.
+
+**Total: 65 triggers** (64 state-change + 1 periodic)
 
 This design allows you to set longer intervals (e.g., 10-15 minutes) or disable periodic updates entirely while maintaining instant response to user temperature adjustments.
 
