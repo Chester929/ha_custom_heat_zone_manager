@@ -214,7 +214,6 @@ When contributing, update these files as needed:
 - Help others when you can
 - Share your experiences and configurations
 - Provide constructive feedback
-- Follow the [Code of Conduct](CODE_OF_CONDUCT.md)
 
 ## Questions?
 

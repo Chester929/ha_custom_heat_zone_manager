@@ -48,15 +48,34 @@ This document explains how the Floor Heating Valve Manager blueprint works inter
 ### 1. Trigger Phase
 
 ```
-Trigger Events:
-  └─ Periodic timer (every 60 seconds)
-       │
-       ▼
-  Blueprint Activates
+Trigger Events (Dual-Trigger System - 65 Total Triggers):
 
-Note: The blueprint runs on a fixed 60-second interval. It does NOT
-trigger on entity state changes. All zone updates happen during the
-next scheduled execution cycle.
+  1. State-Change Triggers (64 state-change triggers):
+     ├─ MAIN thermostat state change
+     ├─ MAIN thermostat HVAC mode change
+     ├─ MAIN thermostat target temperature change
+     ├─ MAIN thermostat current temperature change
+     └─ For each zone (15 zones × 4 triggers = 60 triggers):
+         ├─ Zone climate state change
+         ├─ Zone climate HVAC mode change
+         ├─ Zone climate target temperature change
+         └─ Zone climate current temperature change
+     
+     Result: Immediate response (1-2 seconds) to any climate entity change
+  
+  2. Periodic Timer (1 trigger, configurable):
+     └─ Default: Every 1 minute
+     └─ Options: Disabled, 1, 2, 5, 10, 15, or 30 minutes
+     └─ Ensures regular recalculation even if no changes detected
+     
+          │
+          ▼
+     Blueprint Activates
+
+Note: The dual-trigger approach (65 total: 64 state-change + 1 periodic) 
+provides instant response to user adjustments while periodic updates catch 
+any missed changes. You can disable periodic updates entirely and rely on 
+state-change triggers for maximum efficiency.
 ```
 
 ### 2. Data Collection Phase
@@ -502,14 +521,21 @@ Result: MAIN set to 25°C (highest)
 
 ## Performance Considerations
 
+**Trigger System:**
+- **State-Change Triggers**: 64 total (MAIN + all zones), provide 1-2 second response time
+- **Periodic Updates**: Configurable interval (Disabled, 1, 2, 5, 10, 15, or 30 minutes)
+- **Default**: Every 1 minute periodic + immediate state-change triggers
+- **Recommended for efficiency**: Every 5-10 minutes periodic (state-change triggers ensure responsiveness)
+- **Maximum efficiency**: Disable periodic updates, rely solely on state-change triggers
+
 **Update Frequency:**
-- Default: Every 60 seconds
-- Minimum: 15 seconds
-- Maximum: 300 seconds (5 minutes)
+- State-change triggers: Instant (1-2 seconds)
+- Periodic timer: User-configurable (see above)
+- Can disable periodic updates entirely for maximum efficiency
 
 **Calculation Complexity:**
 - O(n) where n = number of zones
-- Negligible impact up to 10+ zones
+- Negligible impact up to 15 zones (current maximum)
 
 **Automation Execution:**
 - Mode: Single (one execution at a time)

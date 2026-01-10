@@ -110,8 +110,9 @@ Use these recommended starting values:
 | Max MAIN Temperature | 28°C | Safe maximum |
 | Fallback Temperature | 20°C | Default if sensor fails |
 | Valve Transition Delay | 5-120 sec | Time for valves to fully open before closing others (adjust for your valve speed) |
+| Trigger Time Interval | Every 1 minute | How often to run periodic updates (can also select 2, 5, 10, 15, 30 min, or Disabled) |
 
-**Note:** The blueprint automatically recalculates every 60 seconds.
+**Trigger System:** The blueprint responds immediately to temperature changes via state-change triggers (1-2 second response) and also runs periodic updates at the configured interval (default: every 1 minute). You can increase the interval or disable periodic updates entirely while maintaining instant response.
 
 ## 🎯 Common Setups
 
@@ -202,8 +203,7 @@ When corridor is 23°C and bedroom needs 22°C but is at 20°C, the blueprint au
 ### More stable operation  
 - Increase **Open Valve Threshold** to `1.0°C`
 - Increase **Close Valve Threshold** to `0.5°C`
-
-**Note:** The blueprint runs automatically every 60 seconds to recalculate valve states.
+- Set **Trigger Time Interval** to `Every 5 minutes` or longer (relies on instant state-change triggers for responsiveness)
 
 ### Use more conservative heating
 - Set **All Satisfied Mode** to `0%` (lowest)
@@ -225,7 +225,7 @@ When corridor is 23°C and bedroom needs 22°C but is at 20°C, the blueprint au
 **Solution:** Check temperature thresholds - they might be too large or too small
 
 ### Problem: Too many valve switches
-**Solution:** Increase update interval to 120+ seconds
+**Solution:** Set **Trigger Time Interval** to a longer period (e.g., Every 5 minutes or Every 10 minutes). State-change triggers will still ensure immediate response to user adjustments.
 
 ## 📖 Next Steps
 

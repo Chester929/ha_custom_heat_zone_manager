@@ -1,7 +1,7 @@
 # Floor Heating Valve Manager for Home Assistant
 
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Blueprint-blue.svg)](https://www.home-assistant.io/)
-[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/Chester929/ha_custom_heat_zone_manager)
+[![Version](https://img.shields.io/badge/version-2.0.0-green.svg)](https://github.com/Chester929/ha_custom_heat_zone_manager)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 A comprehensive Home Assistant Blueprint for intelligently managing floor heating valves alongside a MAIN thermostat that controls your HVAC water heating system.
@@ -51,7 +51,7 @@ This blueprint manages the entire system automatically!
 - ✅ Optional manual overrides for temperature sensors
 - ✅ Optional manual overrides for valve entities
 - ✅ Optional MAIN sensor override for accurate corridor temperature
-- ✅ Flexible: add 1-5 zones as needed
+- ✅ Flexible: configure 1-15 zones as needed (organized in 3 groups)
 
 ### Temperature Management
 - ✅ Adjustable open/close temperature thresholds
@@ -61,7 +61,15 @@ This blueprint manages the entire system automatically!
   - 50% = Use average of all targets
   - 100% = Use highest zone target
 - ✅ Min/max limits for MAIN thermostat
-- ✅ Automatic periodic updates
+- ✅ Dual-trigger system: instant response (1-2s) + configurable periodic updates
+
+### Safety & Reliability
+- ✅ **Availability tracking** - monitors climate entity health
+- ✅ **Multi-level safety override** - ensures at least one valve open even if entities unavailable
+- ✅ **Configuration validation** - validates zone setup on startup
+- ✅ **Warning logging** - alerts when entities become unavailable
+- ✅ **Fallback zones** - configurable zones to keep open when all satisfied/overheated
+- ✅ **Overheated protection** - closes unnecessary valves when zones too hot
 
 ## 📦 Installation
 
@@ -228,8 +236,15 @@ zone1_virtual_switch: input_boolean.bedroom_virtual_valve  # REQUIRED
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | **Enable Cooling Mode Support** | Invert logic for cooling | false |
+| **Trigger Time Interval** | How often to run periodic updates (Disabled, 1, 2, 5, 10, 15, or 30 minutes) | Every 1 minute |
 
-**Note:** The blueprint automatically recalculates every 60 seconds on a fixed periodic timer. This interval is hardcoded and cannot be changed.
+**Trigger System:** The blueprint uses a dual-trigger approach for optimal responsiveness:
+1. **State-Change Triggers** - Responds immediately (1-2 seconds) when any climate entity changes (state, HVAC mode, temperature, or target temperature). This includes the MAIN thermostat and all 15 zones (64 state-change triggers: 4 for MAIN + 60 for zones).
+2. **Periodic Updates** - Runs at the configured interval (default: every 1 minute) to ensure regular recalculation even if no changes detected. Can be disabled to rely solely on state-change triggers.
+
+**Total: 65 triggers** (64 state-change + 1 periodic)
+
+This design allows you to set longer intervals (e.g., 10-15 minutes) or disable periodic updates entirely while maintaining instant response to user temperature adjustments.
 
 **Valve Transition Delay:** When switching valves (e.g., closing Valve 1 and opening Valve 2), the blueprint first opens the new valve, waits for the specified delay to allow it to fully open, then closes the old valve. This ensures at least one valve is always fully open during transitions, preventing water pump issues. Range: 0-180 seconds (0-3 minutes). Recommended: 5-10 seconds for fast motorized valves, 60-120 seconds for slow valves.
 
