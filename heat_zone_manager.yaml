@@ -937,7 +937,7 @@ blueprint:
         This ensures regular recalculation even if no state changes are detected.
         Lower values provide more responsive control but may increase system load.
         Default: 1 minute. The automation will also trigger on any state changes of climate entities.
-      default: 1
+      default: "/1"
       selector:
         select:
           options:
