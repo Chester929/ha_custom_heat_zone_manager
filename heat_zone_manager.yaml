@@ -1280,6 +1280,14 @@ action:
         {% set open_list = valves_to_open %}
         {{ zone_data | map(attribute='climate') | reject('in', open_list) | list }}
 
+      # Current MAIN thermostat target temperature for comparison
+      current_main_target: >
+        {{ state_attr(main_climate, 'temperature') | float(fallback_temperature) }}
+
+      # Check if MAIN temperature needs to change (with 0.1°C tolerance to avoid micro-adjustments)
+      main_temp_needs_change: >
+        {{ (final_main_target - current_main_target) | abs > 0.1 }}
+
   # Validate configuration - if invalid, log errors and stop execution
   # Check 1: At least one zone must be configured
   - choose:
@@ -1350,12 +1358,14 @@ action:
         All satisfied: {{ all_zones_satisfied }}.
         All overheated: {{ all_zones_overheated }}.
         Valves to open: {{ valves_to_open | length }}.
-        Target MAIN temp: {{ final_main_target }}°C.
+        Target MAIN temp: {{ final_main_target }}°C (current: {{ current_main_target }}°C, needs change: {{ main_temp_needs_change }}).
         {% if unavailable_zones | length > 0 %}
         WARNING: {{ unavailable_zones | length }} zone(s) unavailable.
         {% endif %}
 
-  # Set MAIN thermostat target temperature
+  # Set MAIN thermostat target temperature (only if it needs to change)
+  - condition: template
+    value_template: "{{ main_temp_needs_change }}"
   - service: climate.set_temperature
     target:
       entity_id: !input main_thermostat
