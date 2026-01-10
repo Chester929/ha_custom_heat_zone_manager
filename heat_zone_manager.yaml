@@ -1503,7 +1503,7 @@ action:
       
       # Check if MAIN climate is available
       main_climate_available: >
-        {{ states(main_climate) not in ['unavailable', 'unknown', 'none', none] }}
+        {{ states(main_climate) not in ['unavailable', 'unknown', none] }}
       
       # Check if all zones are satisfied
       all_zones_satisfied: >
