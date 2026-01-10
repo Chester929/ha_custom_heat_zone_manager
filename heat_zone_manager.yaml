@@ -1626,7 +1626,15 @@ action:
         {% set initial_valves = valves_to_open_initial %}
         {% if initial_valves | length == 0 %}
           {# No valves would be open - SAFETY OVERRIDE: open fallback zones #}
-          {{ fallback_zones }}
+          {% if fallback_zones | length > 0 %}
+            {{ fallback_zones }}
+          {% elif zone_data | length > 0 %}
+            {# If fallback_zones is empty, use first available zone as last resort #}
+            {{ [zone_data[0].climate] }}
+          {% else %}
+            {# This should never happen due to zone validation, but handle gracefully #}
+            []
+          {% endif %}
         {% else %}
           {{ initial_valves }}
         {% endif %}

@@ -40,11 +40,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - New variables: `unavailable_zones` and `main_climate_available`
 
 - **Safety Override for Unavailable Entities**
-  - Enhanced valve opening logic with safety override
+  - Enhanced valve opening logic with multi-level safety override
   - If calculated valve list is empty, fallback zones are forced open
+  - If fallback zones is empty, first available zone is used as last resort
   - Ensures at least one valve remains open even when all climate entities are unavailable
   - Critical for preventing pump damage in edge cases
-  - Safety check runs on every automation execution
+  - Safety check runs on every automation execution with multiple fallback levels
 
 - **Warning Logging for Unavailable Entities**
   - Logs WARNING to Home Assistant system logs when climate entities are unavailable
