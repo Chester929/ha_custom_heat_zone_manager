@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Planned Features
+- Advanced scheduling integration
+- Presence-based zone control
+- Weather-based temperature adjustments
+- Energy optimization modes
+- Multi-floor support with priority zones
+- Historical performance analytics
+
+## [2.0.1] - 2026-01-10
+
 ### Fixed
 - **Frontend Trigger Description Error**
   - Fixed "Error in describing trigger: Cannot read properties of undefined (reading 'includes')" error
@@ -41,7 +51,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Prevents automation from getting stuck or ignoring triggers
   - Time pattern and entity state triggers now work reliably without blocking or interference
 
-### Added
 - **Duplicate Trigger Prevention**
   - Prevents automation from re-triggering when its own actions cause state changes
   - Added state comparison logic to detect if changes are actually needed before executing
@@ -56,14 +65,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Reduces Home Assistant system load
     - Cleaner logs with fewer redundant executions
     - Faster response times by avoiding unnecessary processing
-
-### Planned Features
-- Advanced scheduling integration
-- Presence-based zone control
-- Weather-based temperature adjustments
-- Energy optimization modes
-- Multi-floor support with priority zones
-- Historical performance analytics
 
 ## [2.0.0] - 2026-01-10
 
@@ -283,5 +284,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History
 
+- **v2.0.1** (2026-01-10) - Bug fixes: trigger description error, automation mode, duplicate trigger prevention
 - **v2.0.0** (2026-01-10) - Major update with configurable triggers, 15 zones, state-change triggers, availability tracking
 - **v1.0.0** (2026-01-09) - Initial release with full feature set
