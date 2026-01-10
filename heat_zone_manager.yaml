@@ -987,6 +987,8 @@ trigger:
     id: main_climate_current_temp_change
   
   # Zone climate entity state change triggers
+  # Note: Zone climate entities are optional (default to []). When not configured,
+  # these state triggers simply won't fire - this is standard HA blueprint behavior.
   # Zone 1
   - platform: state
     entity_id: !input zone1_climate
