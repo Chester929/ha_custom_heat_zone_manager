@@ -159,13 +159,19 @@ Repeat for additional zones (up to 15 zones available, organized in 3 collapsibl
 
 5. **Maximum MAIN Temperature**: `28.0°C`
 
+6. **Trigger Time Interval**: `Every 1 minute`
+   - How often to run periodic recalculations
+   - Options: Disabled, 1, 2, 5, 10, 15, or 30 minutes
+   - State-change triggers provide instant response regardless of this setting
+
 ### Step 5: Advanced Settings (Optional)
 
 1. **Enable Cooling Mode Support**: `Off`
    - Turn on only if your system supports cooling
 
-2. **Update Interval**: `60 seconds`
-   - How often the automation recalculates
+2. **Trigger Time Interval**: `Every 1 minute` (default)
+   - Adjust based on your needs (longer intervals reduce system load)
+   - State-change triggers ensure instant response to user adjustments
 
 ### Step 6: Save and Enable
 
@@ -198,8 +204,9 @@ Repeat for additional zones (up to 15 zones available, organized in 3 collapsibl
 ### Test a Zone Change
 
 1. Manually adjust a zone thermostat target temperature
-2. Wait for the update interval (default: 60 seconds)
-3. Check that:
+2. The automation responds immediately via state-change trigger (1-2 seconds)
+3. Periodic update also runs at configured interval (default: every 1 minute)
+4. Check that:
    - The zone's valve state changed (if needed)
    - The MAIN thermostat target was updated
    - A logbook entry was created

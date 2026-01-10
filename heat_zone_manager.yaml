@@ -10,7 +10,7 @@ blueprint:
     # Floor Heating Valve Manager - Complete Zone Control
 
 
-    **Version**: v1.0.0
+    **Version**: v2.0.0
 
 
     This blueprint manages floor heating valves alongside a MAIN thermostat that controls HVAC water heating.

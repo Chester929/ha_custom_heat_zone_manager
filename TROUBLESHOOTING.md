@@ -273,10 +273,14 @@ Create a separate automation to force at least one valve open if all are closed.
 
 ### Automation runs too frequently
 
-**Problem**: Automations triggers constantly, causing excessive wear.
+**Problem**: Automation triggers constantly, causing excessive wear.
 
 **Solutions**:
-1. Increase the update interval (default: 60 seconds)
+1. Adjust the **Trigger Time Interval** setting:
+   - Go to your automation settings
+   - Find "Trigger Time Interval" parameter
+   - Change from "Every 1 minute" to a longer interval (e.g., "Every 5 minutes" or "Every 10 minutes")
+   - State-change triggers will still ensure immediate response to user adjustments
 2. Increase temperature thresholds to reduce sensitivity
 3. Check for temperature sensor fluctuations
 4. Consider using sensors with better accuracy/stability
@@ -419,11 +423,20 @@ If you're still experiencing issues:
 
 ## Performance Tips
 
-### Optimize update interval
+### Optimize trigger interval
 
-- **Fast response needed**: 30 seconds
-- **Standard**: 60 seconds (recommended)
-- **Conservative**: 120+ seconds
+The blueprint uses a dual-trigger system for optimal responsiveness:
+
+**Trigger Time Interval Options:**
+- **Disabled** - No periodic updates, relies only on state-change triggers (most efficient)
+- **Every 1 minute** - Default, balances responsiveness and efficiency
+- **Every 2-5 minutes** - Good balance, state-change triggers still provide instant response
+- **Every 10-15 minutes** - More conservative, best for stable systems
+- **Every 30 minutes** - Minimal periodic updates
+
+**Recommendation:** Use "Every 5 minutes" or "Every 10 minutes" for most installations. The state-change triggers (64 total) provide instant response (1-2 seconds) when you adjust any thermostat, so longer periodic intervals work well while reducing system load.
+
+**How to change:** Edit your automation, find the "Trigger Time Interval" parameter in the Advanced section.
 
 ### Optimize temperature thresholds
 

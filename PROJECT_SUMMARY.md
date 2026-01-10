@@ -19,8 +19,8 @@ A comprehensive Home Assistant automation blueprint that:
 
 **Statistics:**
 - 30+ configurable input parameters
-- 1 periodic trigger (every 60 seconds)
-- 1350+ lines of YAML
+- 65 triggers: 1 periodic (configurable interval) + 64 state-change triggers (instant response)
+- 1820+ lines of YAML
 - Fully validated and tested
 - Virtual switch pattern support (REQUIRED)
 
@@ -104,7 +104,8 @@ A comprehensive Home Assistant automation blueprint that:
 - **Virtual switch pattern (REQUIRED)** - Prevents conflicts with Generic Thermostat
 - Manual temperature sensor overrides
 - Adjustable thresholds
-- Fixed 60-second update interval
+- Configurable trigger interval (Disabled, 1, 2, 5, 10, 15, or 30 minutes)
+- State-change triggers for instant response (1-2 seconds)
 - Cooling mode support
 - Fallback zones for preventing overheating
 - Overheated threshold detection
@@ -152,7 +153,9 @@ A comprehensive Home Assistant automation blueprint that:
 - At least one zone climate entity or valve
 
 ### Performance
-- Update interval: 60 seconds (fixed, hardcoded in blueprint)
+- Trigger system: Dual (periodic + state-change)
+- Periodic interval: Configurable (Disabled, 1-30 minutes)
+- State-change response: 1-2 seconds
 - Calculation complexity: O(n) where n = zones
 - Execution mode: Single (prevents race conditions)
 - 2-phase valve operation (open first, then close after delay)
@@ -239,6 +242,6 @@ This project successfully delivers:
 
 **Status:** ✅ COMPLETE AND PRODUCTION-READY
 
-**Version:** 1.0.0
+**Version:** 2.0.0
 
-**Last Updated:** 2026-01-09
+**Last Updated:** 2026-01-10

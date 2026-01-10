@@ -1,7 +1,7 @@
 # Floor Heating Valve Manager for Home Assistant
 
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Blueprint-blue.svg)](https://www.home-assistant.io/)
-[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/Chester929/ha_custom_heat_zone_manager)
+[![Version](https://img.shields.io/badge/version-2.0.0-green.svg)](https://github.com/Chester929/ha_custom_heat_zone_manager)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 A comprehensive Home Assistant Blueprint for intelligently managing floor heating valves alongside a MAIN thermostat that controls your HVAC water heating system.
@@ -228,8 +228,13 @@ zone1_virtual_switch: input_boolean.bedroom_virtual_valve  # REQUIRED
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | **Enable Cooling Mode Support** | Invert logic for cooling | false |
+| **Trigger Time Interval** | How often to run periodic updates (Disabled, 1, 2, 5, 10, 15, or 30 minutes) | Every 1 minute |
 
-**Note:** The blueprint automatically recalculates every 60 seconds on a fixed periodic timer. This interval is hardcoded and cannot be changed.
+**Trigger System:** The blueprint uses a dual-trigger approach for optimal responsiveness:
+1. **State-Change Triggers** - Responds immediately (1-2 seconds) when any climate entity changes (state, HVAC mode, temperature, or target temperature). This includes the MAIN thermostat and all 15 zones (64 triggers total).
+2. **Periodic Updates** - Runs at the configured interval (default: every 1 minute) to ensure regular recalculation even if no changes detected. Can be disabled to rely solely on state-change triggers.
+
+This design allows you to set longer intervals (e.g., 10-15 minutes) or disable periodic updates entirely while maintaining instant response to user temperature adjustments.
 
 **Valve Transition Delay:** When switching valves (e.g., closing Valve 1 and opening Valve 2), the blueprint first opens the new valve, waits for the specified delay to allow it to fully open, then closes the old valve. This ensures at least one valve is always fully open during transitions, preventing water pump issues. Range: 0-180 seconds (0-3 minutes). Recommended: 5-10 seconds for fast motorized valves, 60-120 seconds for slow valves.
 
