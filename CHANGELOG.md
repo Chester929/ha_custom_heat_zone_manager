@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Duplicate Trigger Prevention**
+  - Prevents automation from re-triggering when its own actions cause state changes
+  - Added state comparison logic to detect if changes are actually needed before executing
+  - New variables: `current_main_target`, `main_temp_needs_change`, `current_valve_states`, `valves_need_change`, `any_changes_needed`
+  - **MAIN thermostat temperature**: Only updated if difference >0.05°C from current value
+  - **Valve states**: Only changed if not already in desired state (open/closed)
+  - Early exit mechanism when no changes needed - logs debug message and stops execution
+  - Significantly reduces unnecessary service calls and re-triggers
+  - Improves system efficiency and reduces log spam
+  - Benefits:
+    - Eliminates infinite loops caused by automation's own state changes
+    - Reduces Home Assistant system load
+    - Cleaner logs with fewer redundant executions
+    - Faster response times by avoiding unnecessary processing
+
 ### Planned Features
 - Advanced scheduling integration
 - Presence-based zone control
