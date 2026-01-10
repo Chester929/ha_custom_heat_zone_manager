@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Configurable Trigger Time Interval**
+  - New `trigger_time_interval` input parameter allows users to select periodic trigger frequency
+  - Options: Every 1, 2, 5, 10, 15, or 30 minutes
+  - Default: Every 1 minute (maintains backward compatibility)
+  - Allows users to balance system responsiveness vs. resource usage
+  - Combined with state-change triggers, users can set longer intervals without sacrificing responsiveness
+
+- **Comprehensive State-Change Triggers**
+  - **Main Climate Entity Triggers (4 new triggers)**:
+    - State change (on/off/heat/cool/etc.)
+    - HVAC mode attribute change
+    - Target temperature attribute change
+    - Current temperature attribute change
+  - **Zone Climate Entity Triggers (60 new triggers, 4 per zone × 15 zones)**:
+    - State change for each zone
+    - HVAC mode attribute change for each zone
+    - Target temperature attribute change for each zone
+    - Current temperature attribute change for each zone
+  - **Benefits**:
+    - Automation responds immediately (within 1-2 seconds) to any climate entity change
+    - No need to wait for periodic trigger when user adjusts temperature
+    - Valve states update instantly when climate entities change
+    - Enables longer periodic intervals (e.g., 10-15 minutes) while maintaining quick response
+
+- **Availability Tracking and Safety Features**
+  - Zone data now includes `is_available` status for each zone
+  - Tracks unavailable climate entities (state = 'unavailable', 'unknown', or 'none')
+  - Monitors main climate entity availability
+  - New variables: `unavailable_zones` and `main_climate_available`
+
+- **Safety Override for Unavailable Entities**
+  - Enhanced valve opening logic with safety override
+  - If calculated valve list is empty, fallback zones are forced open
+  - Ensures at least one valve remains open even when all climate entities are unavailable
+  - Critical for preventing pump damage in edge cases
+  - Safety check runs on every automation execution
+
+- **Warning Logging for Unavailable Entities**
+  - Logs WARNING to Home Assistant system logs when climate entities are unavailable
+  - Uses `system_log.write` service for proper warning-level logging
+  - Warning message includes:
+    - Which climate entities are unavailable (main and/or zones)
+    - Which valve(s) are being kept open as safety measure
+  - Enhanced logbook entries to indicate unavailable zones
+  - Helps users quickly identify and troubleshoot connectivity issues
+
 ### Fixed
 - **Time Pattern Trigger Validation Error**
   - Fixed invalid `seconds: "/60"` in time_pattern trigger that caused automation save errors
