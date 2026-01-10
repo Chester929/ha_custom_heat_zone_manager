@@ -960,31 +960,11 @@ blueprint:
 
 # Automation triggers
 trigger:
-  # Periodic triggers - multiple patterns defined, filtered based on user selection
-  # When set to "disabled", all periodic triggers are filtered out in the action
+  # Periodic trigger - single time_pattern that fires every minute
+  # Filtering logic determines if execution should proceed based on user's interval setting
   - platform: time_pattern
     minutes: "/1"
-    id: periodic_update_1min
-  
-  - platform: time_pattern
-    minutes: "/2"
-    id: periodic_update_2min
-  
-  - platform: time_pattern
-    minutes: "/5"
-    id: periodic_update_5min
-  
-  - platform: time_pattern
-    minutes: "/10"
-    id: periodic_update_10min
-  
-  - platform: time_pattern
-    minutes: "/15"
-    id: periodic_update_15min
-  
-  - platform: time_pattern
-    minutes: "/30"
-    id: periodic_update_30min
+    id: periodic_update
   
   # MAIN thermostat state change triggers
   - platform: state
@@ -1429,7 +1409,7 @@ action:
           {% if zone.climate %}
             {% set climate_entity = zone.climate %}
             {# Check if climate entity is available #}
-            {% set is_available = states(climate_entity) not in ['unavailable', 'unknown', 'none', none] %}
+            {% set is_available = states(climate_entity) not in ['unavailable', 'unknown'] %}
             
             {# Get current temperature - use override sensor if provided, otherwise use climate entity's attribute #}
             {% if zone.temp_sensor and zone.temp_sensor != [] and zone.temp_sensor != '' %}
@@ -1494,8 +1474,9 @@ action:
         {{ ns.zones }}
       
       # Calculate which zones need heating/cooling (valves should be open)
+      # Filter out unavailable zones to prevent stale data from affecting decisions
       zones_needing_action: >
-        {{ zone_data | selectattr('needs_action', 'eq', true) | list }}
+        {{ zone_data | selectattr('is_available', 'eq', true) | selectattr('needs_action', 'eq', true) | list }}
       
       # Track unavailable zones for safety monitoring
       unavailable_zones: >
@@ -1503,15 +1484,19 @@ action:
       
       # Check if MAIN climate is available
       main_climate_available: >
-        {{ states(main_climate) not in ['unavailable', 'unknown', none] }}
+        {{ states(main_climate) not in ['unavailable', 'unknown'] }}
       
       # Check if all zones are satisfied
+      # Only consider available zones to avoid stale data
       all_zones_satisfied: >
-        {{ zone_data | selectattr('satisfied', 'eq', false) | list | length == 0 }}
+        {% set available_zones = zone_data | selectattr('is_available', 'eq', true) | list %}
+        {{ available_zones | selectattr('satisfied', 'eq', false) | list | length == 0 and available_zones | length > 0 }}
       
       # Check if all zones are overheated
+      # Only consider available zones to avoid stale data
       all_zones_overheated: >
-        {{ zone_data | selectattr('overheated', 'eq', false) | list | length == 0 and zone_data | length > 0 }}
+        {% set available_zones = zone_data | selectattr('is_available', 'eq', true) | list %}
+        {{ available_zones | selectattr('overheated', 'eq', false) | list | length == 0 and available_zones | length > 0 }}
       
       # Get fallback zones (default to first zone if not specified)
       fallback_zones: >
@@ -1644,31 +1629,31 @@ action:
         {{ zone_data | map(attribute='climate') | reject('in', open_list) | list }}
 
   # Check if periodic trigger should be ignored based on user's interval setting
-  # All periodic triggers are always active, but we filter out unwanted ones
+  # Single time_pattern trigger fires every minute, filter based on interval
   - choose:
       - conditions:
           - condition: template
             value_template: >
-              {% set periodic_triggers = ['periodic_update_1min', 'periodic_update_2min', 'periodic_update_5min', 'periodic_update_10min', 'periodic_update_15min', 'periodic_update_30min'] %}
-              {% set is_periodic = trigger.id in periodic_triggers %}
-              {% if not is_periodic %}
+              {% if trigger.id != 'periodic_update' %}
+                {# Not a periodic trigger, continue #}
                 false
               {% elif trigger_interval == 'disabled' %}
-                true
-              {% elif trigger_interval == '/1' and trigger.id != 'periodic_update_1min' %}
-                true
-              {% elif trigger_interval == '/2' and trigger.id != 'periodic_update_2min' %}
-                true
-              {% elif trigger_interval == '/5' and trigger.id != 'periodic_update_5min' %}
-                true
-              {% elif trigger_interval == '/10' and trigger.id != 'periodic_update_10min' %}
-                true
-              {% elif trigger_interval == '/15' and trigger.id != 'periodic_update_15min' %}
-                true
-              {% elif trigger_interval == '/30' and trigger.id != 'periodic_update_30min' %}
+                {# Periodic updates disabled, stop #}
                 true
               {% else %}
-                false
+                {# Check if current minute matches the selected interval #}
+                {% set current_minute = now().minute %}
+                {% set interval_map = {
+                  '/1': 1,
+                  '/2': 2,
+                  '/5': 5,
+                  '/10': 10,
+                  '/15': 15,
+                  '/30': 30
+                } %}
+                {% set interval_minutes = interval_map.get(trigger_interval, 1) %}
+                {# Stop if current minute is not a multiple of the interval #}
+                {{ current_minute % interval_minutes != 0 }}
               {% endif %}
         sequence:
           - stop: "Periodic trigger filtered based on interval setting."
@@ -1717,15 +1702,19 @@ action:
             data:
               level: warning
               logger: blueprints.floor_heating_valve_manager
-              message: >
+              message: >-
                 WARNING: Some climate entities are unavailable!
-                {% if not main_climate_available %}
+                {% if not main_climate_available -%}
                 MAIN climate ({{ main_climate }}) is UNAVAILABLE.
-                {% endif %}
-                {% if unavailable_zones | length > 0 %}
+                {% endif -%}
+                {% if unavailable_zones | length > 0 -%}
                 Unavailable zone climate entities: {{ unavailable_zones | map(attribute='climate') | list | join(', ') }}.
-                {% endif %}
-                Safety override active: Ensuring at least one valve ({{ valves_to_open | join(', ') }}) remains open to prevent pump issues.
+                {% endif -%}
+                {% if valves_to_open_initial | length == 0 -%}
+                Safety override ACTIVE: Ensuring at least one valve ({{ valves_to_open | join(', ') }}) remains open to prevent pump issues.
+                {% else -%}
+                Valves currently open: {{ valves_to_open | join(', ') }}.
+                {% endif -%}
     default: []
 
   # Log the calculation for debugging
