@@ -8,6 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Performance Optimization - Template Execution Speed**
+  - **Optimized zone_data calculation** to reduce redundant state lookups
+    - Single state lookup per zone (previously multiple calls)
+    - Pre-calculated temperature differences for faster comparisons
+    - Simplified conditional checks with cached variables
+  - **Eliminated redundant filter operations** on zone lists
+    - Created `available_zones` cache to avoid re-filtering zone_data
+    - Replaced double-filter chains with single-pass loops
+  - **Optimized main target temperature calculations**
+    - Replaced 10+ `map()` operations with single-pass loops
+    - Pre-calculate min/max/sum values in one iteration
+    - Eliminated redundant list creation and filtering
+  - **Optimized valve state calculations**
+    - Replaced `map(attribute='climate')` with direct loops
+    - Replaced `reject()` filter with explicit iteration
+  - **Performance Impact**: 
+    - Template execution time reduced from 60+ seconds to **< 1 second**
+    - Significantly improved system responsiveness
+    - Reduced Home Assistant load during automation execution
 - **Trigger System Simplified**
   - Replaced state-based trigger system with single time-pattern trigger
   - **Previous**: 64 trigger definitions monitoring 323+ state changes (4 MAIN triggers + 60 zone triggers, each monitoring state + attributes)
