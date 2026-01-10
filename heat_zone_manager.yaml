@@ -930,37 +930,37 @@ blueprint:
           unit_of_measurement: "°C"
           mode: slider
 
+    trigger_interval:
+      name: Automation Trigger Interval
+      description: >
+        How often the automation should check and update valve states and temperatures.
+        Minimum: 10 seconds for very responsive systems.
+        Maximum: 15 minutes (900 seconds) for stable, slow-changing systems.
+        Default: 60 seconds (1 minute) provides good balance between responsiveness and efficiency.
+        The automation's built-in duplicate prevention logic ensures that even with short intervals,
+        unnecessary actions are skipped when no changes are needed.
+      default: 60
+      selector:
+        number:
+          min: 10
+          max: 900
+          step: 10
+          unit_of_measurement: "seconds"
+          mode: slider
+
 
 
 # Automation triggers
 trigger:
-  # MAIN thermostat state change triggers
-  - platform: state
-    entity_id: !input main_thermostat
-    id: main_climate_state_change
-
-  - platform: state
-    entity_id: !input main_thermostat
-    attribute: hvac_mode
-    id: main_climate_hvac_mode_change
-
-  - platform: state
-    entity_id: !input main_thermostat
-    attribute: temperature
-    id: main_climate_target_temp_change
-
-  - platform: state
-    entity_id: !input main_thermostat
-    attribute: current_temperature
-    id: main_climate_current_temp_change
-
-  # Periodic time-based trigger for zone monitoring
+  # Configurable time-based trigger
   # Since zone climate entities are optional (default to []), we cannot create
   # state triggers for them as empty entity_id values cause frontend errors.
-  # Instead, we use a time pattern trigger to periodically check all zones.
+  # The MAIN thermostat trigger is also removed to avoid empty entity_id issues
+  # if the main_thermostat input is misconfigured.
+  # Instead, we use a time pattern trigger to periodically check all zones and MAIN thermostat.
   # The automation's built-in duplicate prevention logic ensures efficiency.
   - platform: time_pattern
-    minutes: "/1"
+    seconds: "/10"
     id: periodic_check
 
 # Conditions
@@ -982,6 +982,7 @@ action:
       valve_delay: !input valve_transition_delay
       fallback_zone_list: !input fallback_zones
       overheat_threshold: !input overheated_threshold
+      trigger_interval_seconds: !input trigger_interval
 
       # Zone configurations
       zones:
@@ -1346,6 +1347,28 @@ action:
       # Overall check: Do we need to make ANY changes?
       any_changes_needed: >
         {{ main_temp_needs_change or valves_need_change }}
+
+      # Check if enough time has passed since last execution (based on configured interval)
+      # This allows users to control how often the automation runs
+      # Note: this.last_triggered is only available after the first run
+      enough_time_passed: >
+        {% set last_triggered = this.last_triggered %}
+        {% if last_triggered is none or last_triggered in ['unknown', 'unavailable', none] %}
+          {{ true }}
+        {% else %}
+          {% set elapsed = (now() - last_triggered).total_seconds() %}
+          {{ elapsed >= trigger_interval_seconds }}
+        {% endif %}
+
+  # Interval check: Skip if not enough time has passed since last execution
+  # This respects the user-configured trigger interval
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ not enough_time_passed }}"
+        sequence:
+          - stop: "Not enough time elapsed since last execution. Waiting for configured interval."
+    default: []
 
   # Validate configuration - if invalid, log errors and stop execution
   # Check 1: At least one zone must be configured

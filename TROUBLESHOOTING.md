@@ -40,19 +40,20 @@ This guide helps resolve common issues when using the Floor Heating Valve Manage
 
 **Problem**: When viewing the automation in the Home Assistant UI, you see an error message like "Error in describing trigger: Cannot read properties of undefined (reading 'includes')".
 
-**Root Cause**: This error occurred in earlier versions when the blueprint tried to create state triggers for optional zone climate entities that had empty values (`[]`). Home Assistant's frontend code could not handle triggers with empty entity_id values.
+**Root Cause**: This error occurred in earlier versions when the blueprint tried to create state triggers for optional entities (zone climate and MAIN thermostat) that could have empty values (`[]`). Home Assistant's frontend code could not handle triggers with empty entity_id values.
 
 **Solution**: Update to the latest version of the blueprint:
 1. Re-import the blueprint from GitHub
-2. The updated version uses a time_pattern trigger instead of individual zone state triggers
-3. This avoids the frontend error while maintaining the same functionality
-4. The automation still responds instantly to MAIN thermostat changes via state triggers
-5. Zone changes are detected via the periodic time trigger (every minute)
+2. The updated version uses a time_pattern trigger (every 10 seconds) instead of entity state triggers
+3. This avoids the frontend error while providing configurable responsiveness
+4. The automation checks on time pattern but only executes when the configured interval has elapsed
+5. Configure your desired update frequency using the "Automation Trigger Interval" setting (10 seconds to 15 minutes)
 
 **Technical Details**:
-- **Old behavior**: Created 60 state triggers for zone entities (4 per zone × 15 zones), causing errors when zones weren't configured
-- **New behavior**: Uses 4 MAIN thermostat state triggers + 1 time_pattern trigger
-- The duplicate prevention logic ensures the periodic trigger doesn't cause excessive executions
+- **Old behavior**: Created 64 state triggers (60 zone + 4 MAIN), causing errors when entities weren't configured
+- **New behavior**: Uses 1 time_pattern trigger checking every 10 seconds
+- **Interval control**: User-configurable execution interval from 10 seconds to 15 minutes
+- **Efficiency**: Interval check and duplicate prevention logic ensure optimal performance
 
 ### "Entity not found" error
 
