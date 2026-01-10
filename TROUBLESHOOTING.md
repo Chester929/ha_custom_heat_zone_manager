@@ -276,14 +276,17 @@ Create a separate automation to force at least one valve open if all are closed.
 **Problem**: Automation triggers constantly, causing excessive wear.
 
 **Solutions**:
-1. Adjust the **Trigger Time Interval** setting:
+1. **Duplicate Trigger Prevention (NEW)**: The blueprint now includes built-in duplicate trigger prevention that automatically skips execution when no changes are needed. This prevents re-triggers from the automation's own actions.
+2. Adjust the **Trigger Time Interval** setting:
    - Go to your automation settings
    - Find "Trigger Time Interval" parameter
    - Change from "Every 1 minute" to a longer interval (e.g., "Every 5 minutes" or "Every 10 minutes")
    - State-change triggers will still ensure immediate response to user adjustments
-2. Increase temperature thresholds to reduce sensitivity
-3. Check for temperature sensor fluctuations
-4. Consider using sensors with better accuracy/stability
+3. Increase temperature thresholds to reduce sensitivity
+4. Check for temperature sensor fluctuations
+5. Consider using sensors with better accuracy/stability
+
+**Note**: With the new duplicate trigger prevention feature, the automation will automatically detect when its own actions cause state changes and skip unnecessary re-executions. You should see debug log messages like "Skipping execution - no changes needed" when this occurs.
 
 ## Debugging
 
@@ -296,6 +299,7 @@ logger:
   default: info
   logs:
     homeassistant.components.automation: debug
+    blueprints.floor_heating_valve_manager: debug
 ```
 
 Then restart Home Assistant.
@@ -308,8 +312,12 @@ The blueprint logs important calculations:
 2. Filter by "Floor Heating Valve Manager"
 3. Review entries like:
    ```
-   Recalculating valve states and MAIN temperature.
-   Mode: Heating. Zones needing action: 2. All satisfied: False. Target MAIN temp: 25.0°C.
+   Applying changes to valve states and MAIN temperature.
+   Mode: Heating. Zones needing action: 2. All satisfied: False. Target MAIN temp: 25.0°C (current: 24.5°C).
+   ```
+4. Look for duplicate trigger prevention messages:
+   ```
+   Skipping execution - no changes needed. Current MAIN target: 25.0°C, Calculated MAIN target: 25.0°C.
    ```
 
 ### Check automation traces
