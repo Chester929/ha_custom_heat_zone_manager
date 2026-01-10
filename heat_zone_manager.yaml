@@ -930,13 +930,359 @@ blueprint:
           unit_of_measurement: "°C"
           mode: slider
 
+    trigger_time_interval:
+      name: Trigger Time Interval
+      description: >
+        How often (in minutes) the automation should run periodic updates.
+        This ensures regular recalculation even if no state changes are detected.
+        Lower values provide more responsive control but may increase system load.
+        Default: 1 minute. The automation will also trigger on any state changes of climate entities.
+      default: 1
+      selector:
+        select:
+          options:
+            - label: "Every 1 minute"
+              value: "/1"
+            - label: "Every 2 minutes"
+              value: "/2"
+            - label: "Every 5 minutes"
+              value: "/5"
+            - label: "Every 10 minutes"
+              value: "/10"
+            - label: "Every 15 minutes"
+              value: "/15"
+            - label: "Every 30 minutes"
+              value: "/30"
+          mode: dropdown
+
 # Automation triggers
 trigger:
-  # Periodic trigger - runs every 60 seconds for recalculation
+  # Periodic trigger - runs at configured interval for recalculation
   # This ensures regular updates regardless of entity state changes
   - platform: time_pattern
-    minutes: "/1"
+    minutes: !input trigger_time_interval
     id: periodic_update
+  
+  # MAIN thermostat state change triggers
+  - platform: state
+    entity_id: !input main_thermostat
+    id: main_climate_state_change
+  
+  - platform: state
+    entity_id: !input main_thermostat
+    attribute: hvac_mode
+    id: main_climate_hvac_mode_change
+  
+  - platform: state
+    entity_id: !input main_thermostat
+    attribute: temperature
+    id: main_climate_target_temp_change
+  
+  - platform: state
+    entity_id: !input main_thermostat
+    attribute: current_temperature
+    id: main_climate_current_temp_change
+  
+  # Zone climate entity state change triggers
+  # Zone 1
+  - platform: state
+    entity_id: !input zone1_climate
+    id: zone1_climate_state_change
+  
+  - platform: state
+    entity_id: !input zone1_climate
+    attribute: hvac_mode
+    id: zone1_climate_hvac_mode_change
+  
+  - platform: state
+    entity_id: !input zone1_climate
+    attribute: temperature
+    id: zone1_climate_target_temp_change
+  
+  - platform: state
+    entity_id: !input zone1_climate
+    attribute: current_temperature
+    id: zone1_climate_current_temp_change
+  
+  # Zone 2
+  - platform: state
+    entity_id: !input zone2_climate
+    id: zone2_climate_state_change
+  
+  - platform: state
+    entity_id: !input zone2_climate
+    attribute: hvac_mode
+    id: zone2_climate_hvac_mode_change
+  
+  - platform: state
+    entity_id: !input zone2_climate
+    attribute: temperature
+    id: zone2_climate_target_temp_change
+  
+  - platform: state
+    entity_id: !input zone2_climate
+    attribute: current_temperature
+    id: zone2_climate_current_temp_change
+  
+  # Zone 3
+  - platform: state
+    entity_id: !input zone3_climate
+    id: zone3_climate_state_change
+  
+  - platform: state
+    entity_id: !input zone3_climate
+    attribute: hvac_mode
+    id: zone3_climate_hvac_mode_change
+  
+  - platform: state
+    entity_id: !input zone3_climate
+    attribute: temperature
+    id: zone3_climate_target_temp_change
+  
+  - platform: state
+    entity_id: !input zone3_climate
+    attribute: current_temperature
+    id: zone3_climate_current_temp_change
+  
+  # Zone 4
+  - platform: state
+    entity_id: !input zone4_climate
+    id: zone4_climate_state_change
+  
+  - platform: state
+    entity_id: !input zone4_climate
+    attribute: hvac_mode
+    id: zone4_climate_hvac_mode_change
+  
+  - platform: state
+    entity_id: !input zone4_climate
+    attribute: temperature
+    id: zone4_climate_target_temp_change
+  
+  - platform: state
+    entity_id: !input zone4_climate
+    attribute: current_temperature
+    id: zone4_climate_current_temp_change
+  
+  # Zone 5
+  - platform: state
+    entity_id: !input zone5_climate
+    id: zone5_climate_state_change
+  
+  - platform: state
+    entity_id: !input zone5_climate
+    attribute: hvac_mode
+    id: zone5_climate_hvac_mode_change
+  
+  - platform: state
+    entity_id: !input zone5_climate
+    attribute: temperature
+    id: zone5_climate_target_temp_change
+  
+  - platform: state
+    entity_id: !input zone5_climate
+    attribute: current_temperature
+    id: zone5_climate_current_temp_change
+  
+  # Zone 6
+  - platform: state
+    entity_id: !input zone6_climate
+    id: zone6_climate_state_change
+  
+  - platform: state
+    entity_id: !input zone6_climate
+    attribute: hvac_mode
+    id: zone6_climate_hvac_mode_change
+  
+  - platform: state
+    entity_id: !input zone6_climate
+    attribute: temperature
+    id: zone6_climate_target_temp_change
+  
+  - platform: state
+    entity_id: !input zone6_climate
+    attribute: current_temperature
+    id: zone6_climate_current_temp_change
+  
+  # Zone 7
+  - platform: state
+    entity_id: !input zone7_climate
+    id: zone7_climate_state_change
+  
+  - platform: state
+    entity_id: !input zone7_climate
+    attribute: hvac_mode
+    id: zone7_climate_hvac_mode_change
+  
+  - platform: state
+    entity_id: !input zone7_climate
+    attribute: temperature
+    id: zone7_climate_target_temp_change
+  
+  - platform: state
+    entity_id: !input zone7_climate
+    attribute: current_temperature
+    id: zone7_climate_current_temp_change
+  
+  # Zone 8
+  - platform: state
+    entity_id: !input zone8_climate
+    id: zone8_climate_state_change
+  
+  - platform: state
+    entity_id: !input zone8_climate
+    attribute: hvac_mode
+    id: zone8_climate_hvac_mode_change
+  
+  - platform: state
+    entity_id: !input zone8_climate
+    attribute: temperature
+    id: zone8_climate_target_temp_change
+  
+  - platform: state
+    entity_id: !input zone8_climate
+    attribute: current_temperature
+    id: zone8_climate_current_temp_change
+  
+  # Zone 9
+  - platform: state
+    entity_id: !input zone9_climate
+    id: zone9_climate_state_change
+  
+  - platform: state
+    entity_id: !input zone9_climate
+    attribute: hvac_mode
+    id: zone9_climate_hvac_mode_change
+  
+  - platform: state
+    entity_id: !input zone9_climate
+    attribute: temperature
+    id: zone9_climate_target_temp_change
+  
+  - platform: state
+    entity_id: !input zone9_climate
+    attribute: current_temperature
+    id: zone9_climate_current_temp_change
+  
+  # Zone 10
+  - platform: state
+    entity_id: !input zone10_climate
+    id: zone10_climate_state_change
+  
+  - platform: state
+    entity_id: !input zone10_climate
+    attribute: hvac_mode
+    id: zone10_climate_hvac_mode_change
+  
+  - platform: state
+    entity_id: !input zone10_climate
+    attribute: temperature
+    id: zone10_climate_target_temp_change
+  
+  - platform: state
+    entity_id: !input zone10_climate
+    attribute: current_temperature
+    id: zone10_climate_current_temp_change
+  
+  # Zone 11
+  - platform: state
+    entity_id: !input zone11_climate
+    id: zone11_climate_state_change
+  
+  - platform: state
+    entity_id: !input zone11_climate
+    attribute: hvac_mode
+    id: zone11_climate_hvac_mode_change
+  
+  - platform: state
+    entity_id: !input zone11_climate
+    attribute: temperature
+    id: zone11_climate_target_temp_change
+  
+  - platform: state
+    entity_id: !input zone11_climate
+    attribute: current_temperature
+    id: zone11_climate_current_temp_change
+  
+  # Zone 12
+  - platform: state
+    entity_id: !input zone12_climate
+    id: zone12_climate_state_change
+  
+  - platform: state
+    entity_id: !input zone12_climate
+    attribute: hvac_mode
+    id: zone12_climate_hvac_mode_change
+  
+  - platform: state
+    entity_id: !input zone12_climate
+    attribute: temperature
+    id: zone12_climate_target_temp_change
+  
+  - platform: state
+    entity_id: !input zone12_climate
+    attribute: current_temperature
+    id: zone12_climate_current_temp_change
+  
+  # Zone 13
+  - platform: state
+    entity_id: !input zone13_climate
+    id: zone13_climate_state_change
+  
+  - platform: state
+    entity_id: !input zone13_climate
+    attribute: hvac_mode
+    id: zone13_climate_hvac_mode_change
+  
+  - platform: state
+    entity_id: !input zone13_climate
+    attribute: temperature
+    id: zone13_climate_target_temp_change
+  
+  - platform: state
+    entity_id: !input zone13_climate
+    attribute: current_temperature
+    id: zone13_climate_current_temp_change
+  
+  # Zone 14
+  - platform: state
+    entity_id: !input zone14_climate
+    id: zone14_climate_state_change
+  
+  - platform: state
+    entity_id: !input zone14_climate
+    attribute: hvac_mode
+    id: zone14_climate_hvac_mode_change
+  
+  - platform: state
+    entity_id: !input zone14_climate
+    attribute: temperature
+    id: zone14_climate_target_temp_change
+  
+  - platform: state
+    entity_id: !input zone14_climate
+    attribute: current_temperature
+    id: zone14_climate_current_temp_change
+  
+  # Zone 15
+  - platform: state
+    entity_id: !input zone15_climate
+    id: zone15_climate_state_change
+  
+  - platform: state
+    entity_id: !input zone15_climate
+    attribute: hvac_mode
+    id: zone15_climate_hvac_mode_change
+  
+  - platform: state
+    entity_id: !input zone15_climate
+    attribute: temperature
+    id: zone15_climate_target_temp_change
+  
+  - platform: state
+    entity_id: !input zone15_climate
+    attribute: current_temperature
+    id: zone15_climate_current_temp_change
 
 # Conditions
 condition: []
@@ -1058,6 +1404,9 @@ action:
         {% for zone in active_zones %}
           {% if zone.climate %}
             {% set climate_entity = zone.climate %}
+            {# Check if climate entity is available #}
+            {% set is_available = states(climate_entity) not in ['unavailable', 'unknown', 'none', none] %}
+            
             {# Get current temperature - use override sensor if provided, otherwise use climate entity's attribute #}
             {% if zone.temp_sensor and zone.temp_sensor != [] and zone.temp_sensor != '' %}
               {% set current_temp = states(zone.temp_sensor) | float(fallback_temperature) %}
@@ -1113,7 +1462,8 @@ action:
               'satisfied': satisfied,
               'overheated': is_overheated,
               'mode': zone_mode,
-              'temp_deficit': target_temp - current_temp
+              'temp_deficit': target_temp - current_temp,
+              'is_available': is_available
             }] %}
           {% endif %}
         {% endfor %}
@@ -1122,6 +1472,14 @@ action:
       # Calculate which zones need heating/cooling (valves should be open)
       zones_needing_action: >
         {{ zone_data | selectattr('needs_action', 'eq', true) | list }}
+      
+      # Track unavailable zones for safety monitoring
+      unavailable_zones: >
+        {{ zone_data | selectattr('is_available', 'eq', false) | list }}
+      
+      # Check if MAIN climate is available
+      main_climate_available: >
+        {{ states(main_climate) not in ['unavailable', 'unknown', 'none', none] }}
       
       # Check if all zones are satisfied
       all_zones_satisfied: >
@@ -1217,7 +1575,7 @@ action:
       
       # Determine which valves should be open
       # CRITICAL: At least one valve must always be open to prevent pump issues
-      valves_to_open: >
+      valves_to_open_initial: >
         {% if all_zones_overheated %}
           {# All zones overheated - close all EXCEPT fallback zone(s) to prevent overheating #}
           {{ fallback_zones }}
@@ -1236,6 +1594,17 @@ action:
         {% else %}
           {# Fallback: open fallback zone(s) or at least the first zone's valve #}
           {{ fallback_zones }}
+        {% endif %}
+      
+      # Safety override: Ensure at least one valve is ALWAYS open
+      # This is critical for pump operation - even if all climate entities are unavailable
+      valves_to_open: >
+        {% set initial_valves = valves_to_open_initial %}
+        {% if initial_valves | length == 0 %}
+          {# No valves would be open - SAFETY OVERRIDE: open fallback zones #}
+          {{ fallback_zones }}
+        {% else %}
+          {{ initial_valves }}
         {% endif %}
       
       valves_to_close: >
@@ -1258,6 +1627,27 @@ action:
           - stop: "Invalid zone configuration detected. Stopping automation to prevent unsafe valve control."
     default: []
 
+  # Check for unavailable climate entities and log warnings
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ unavailable_zones | length > 0 or not main_climate_available }}"
+        sequence:
+          - service: system_log.write
+            data:
+              level: warning
+              logger: blueprints.floor_heating_valve_manager
+              message: >
+                WARNING: Some climate entities are unavailable!
+                {% if not main_climate_available %}
+                MAIN climate ({{ main_climate }}) is UNAVAILABLE.
+                {% endif %}
+                {% if unavailable_zones | length > 0 %}
+                Unavailable zone climate entities: {{ unavailable_zones | map(attribute='climate') | list | join(', ') }}.
+                {% endif %}
+                Safety override active: Ensuring at least one valve ({{ valves_to_open | join(', ') }}) remains open to prevent pump issues.
+    default: []
+
   # Log the calculation for debugging
   - service: logbook.log
     data:
@@ -1271,6 +1661,9 @@ action:
         All overheated: {{ all_zones_overheated }}.
         Valves to open: {{ valves_to_open | length }}.
         Target MAIN temp: {{ final_main_target }}°C.
+        {% if unavailable_zones | length > 0 %}
+        WARNING: {{ unavailable_zones | length }} zone(s) unavailable.
+        {% endif %}
 
   # Set MAIN thermostat target temperature
   - service: climate.set_temperature
