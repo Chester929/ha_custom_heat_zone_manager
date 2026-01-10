@@ -51,7 +51,7 @@ This blueprint manages the entire system automatically!
 - ✅ Optional manual overrides for temperature sensors
 - ✅ Optional manual overrides for valve entities
 - ✅ Optional MAIN sensor override for accurate corridor temperature
-- ✅ Flexible: add 1-5 zones as needed
+- ✅ Flexible: configure 1-15 zones as needed (organized in 3 groups)
 
 ### Temperature Management
 - ✅ Adjustable open/close temperature thresholds
@@ -61,7 +61,15 @@ This blueprint manages the entire system automatically!
   - 50% = Use average of all targets
   - 100% = Use highest zone target
 - ✅ Min/max limits for MAIN thermostat
-- ✅ Automatic periodic updates
+- ✅ Dual-trigger system: instant response (1-2s) + configurable periodic updates
+
+### Safety & Reliability
+- ✅ **Availability tracking** - monitors climate entity health
+- ✅ **Multi-level safety override** - ensures at least one valve open even if entities unavailable
+- ✅ **Configuration validation** - validates zone setup on startup
+- ✅ **Warning logging** - alerts when entities become unavailable
+- ✅ **Fallback zones** - configurable zones to keep open when all satisfied/overheated
+- ✅ **Overheated protection** - closes unnecessary valves when zones too hot
 
 ## 📦 Installation
 

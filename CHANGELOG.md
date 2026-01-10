@@ -206,7 +206,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Critical constraint enforcement: at least one valve always open
 - Comprehensive logging to Home Assistant logbook
 - Complete documentation with examples
-- 6 example configurations for different scenarios
+- 10 example configurations for different scenarios (9 active + 1 deprecated reference)
 - Troubleshooting guide
 
 ### Features

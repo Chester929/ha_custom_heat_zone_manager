@@ -59,7 +59,7 @@ A comprehensive Home Assistant automation blueprint that:
    - Performance considerations
 
 6. **examples/example_configuration.yaml** - Real-world examples
-   - 10 different configuration scenarios
+   - 10 different configuration scenarios (9 active + 1 deprecated reference)
    - Basic to advanced setups
    - Recommended starting values
    - Virtual switch pattern examples (REQUIRED)
@@ -172,11 +172,11 @@ A comprehensive Home Assistant automation blueprint that:
 
 ## Usage Statistics
 
-- **Installation methods:** 3 (URL import, manual, SSH)
-- **Configuration examples:** 10 scenarios
-- **Documentation pages:** 10 files
-- **Total documentation:** ~50,000 words
-- **Code examples:** 20+
+- **Installation methods:** 3 (URL import, manual file, SSH/File Editor)
+- **Configuration examples:** 10 scenarios (9 active + 1 deprecated reference)
+- **Documentation pages:** 10+ files
+- **Total documentation:** ~50,000+ words
+- **Code examples:** 25+
 - **Supported zones:** Up to 15 (3 groups of 5)
 
 ## Quality Assurance
