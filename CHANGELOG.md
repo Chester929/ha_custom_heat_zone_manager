@@ -8,6 +8,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Frontend Trigger Description Error**
+  - Fixed "Error in describing trigger: Cannot read properties of undefined (reading 'includes')" error
+  - Removed all state triggers that referenced entity_ids with potential empty values
+  - Removed 60 optional zone climate state triggers (zone entities default to `[]`)
+  - Removed 4 MAIN thermostat state triggers (to avoid any entity_id issues)
+  - Replaced with a single time_pattern trigger that runs every 10 seconds
+  - Time-based interval checking ensures the automation only executes at user-configured frequency
+  - Resolves GitHub issue about trigger description errors in the automation editor
+
+### Added
+- **Configurable Trigger Interval**
+  - New `trigger_interval` input parameter allows users to control automation execution frequency
+  - Range: 10 seconds (minimum, very responsive) to 900 seconds / 15 minutes (maximum, stable systems)
+  - Default: 60 seconds (1 minute) provides good balance
+  - Uses automation's `last_triggered` attribute to track time since last execution
+  - Automation checks every 10 seconds but only executes actions when configured interval has elapsed
+  - Works seamlessly with duplicate prevention logic for maximum efficiency
+  - Benefits:
+    - Users can optimize for their specific system characteristics
+    - Fast-changing systems can use shorter intervals (10-30 seconds)
+    - Stable systems can use longer intervals (5-15 minutes) to reduce overhead
+    - No external helper entities required
+
 - **Automation Mode Changed from `single` to `queued`**
   - Fixes issue where automation would stop with "only one execution allowed" error
   - Previous `mode: single` with `max_exceeded: silent` blocked new triggers when automation was running

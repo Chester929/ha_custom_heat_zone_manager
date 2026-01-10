@@ -930,332 +930,38 @@ blueprint:
           unit_of_measurement: "°C"
           mode: slider
 
+    trigger_interval:
+      name: Automation Trigger Interval
+      description: >
+        How often the automation should check and update valve states and temperatures.
+        Minimum: 10 seconds for very responsive systems.
+        Maximum: 15 minutes (900 seconds) for stable, slow-changing systems.
+        Default: 60 seconds (1 minute) provides good balance between responsiveness and efficiency.
+        The automation's built-in duplicate prevention logic ensures that even with short intervals,
+        unnecessary actions are skipped when no changes are needed.
+      default: 60
+      selector:
+        number:
+          min: 10
+          max: 900
+          step: 10
+          unit_of_measurement: "seconds"
+          mode: slider
+
 
 
 # Automation triggers
 trigger:
-  # MAIN thermostat state change triggers
-  - platform: state
-    entity_id: !input main_thermostat
-    id: main_climate_state_change
-
-  - platform: state
-    entity_id: !input main_thermostat
-    attribute: hvac_mode
-    id: main_climate_hvac_mode_change
-
-  - platform: state
-    entity_id: !input main_thermostat
-    attribute: temperature
-    id: main_climate_target_temp_change
-
-  - platform: state
-    entity_id: !input main_thermostat
-    attribute: current_temperature
-    id: main_climate_current_temp_change
-
-  # Zone climate entity state change triggers
-  # Note: Zone climate entities are optional (default to []). When not configured,
-  # these state triggers simply won't fire - this is standard HA blueprint behavior.
-  # Zone 1
-  - platform: state
-    entity_id: !input zone1_climate
-    id: zone1_climate_state_change
-
-  - platform: state
-    entity_id: !input zone1_climate
-    attribute: hvac_mode
-    id: zone1_climate_hvac_mode_change
-
-  - platform: state
-    entity_id: !input zone1_climate
-    attribute: temperature
-    id: zone1_climate_target_temp_change
-
-  - platform: state
-    entity_id: !input zone1_climate
-    attribute: current_temperature
-    id: zone1_climate_current_temp_change
-
-  # Zone 2
-  - platform: state
-    entity_id: !input zone2_climate
-    id: zone2_climate_state_change
-
-  - platform: state
-    entity_id: !input zone2_climate
-    attribute: hvac_mode
-    id: zone2_climate_hvac_mode_change
-
-  - platform: state
-    entity_id: !input zone2_climate
-    attribute: temperature
-    id: zone2_climate_target_temp_change
-
-  - platform: state
-    entity_id: !input zone2_climate
-    attribute: current_temperature
-    id: zone2_climate_current_temp_change
-
-  # Zone 3
-  - platform: state
-    entity_id: !input zone3_climate
-    id: zone3_climate_state_change
-
-  - platform: state
-    entity_id: !input zone3_climate
-    attribute: hvac_mode
-    id: zone3_climate_hvac_mode_change
-
-  - platform: state
-    entity_id: !input zone3_climate
-    attribute: temperature
-    id: zone3_climate_target_temp_change
-
-  - platform: state
-    entity_id: !input zone3_climate
-    attribute: current_temperature
-    id: zone3_climate_current_temp_change
-
-  # Zone 4
-  - platform: state
-    entity_id: !input zone4_climate
-    id: zone4_climate_state_change
-
-  - platform: state
-    entity_id: !input zone4_climate
-    attribute: hvac_mode
-    id: zone4_climate_hvac_mode_change
-
-  - platform: state
-    entity_id: !input zone4_climate
-    attribute: temperature
-    id: zone4_climate_target_temp_change
-
-  - platform: state
-    entity_id: !input zone4_climate
-    attribute: current_temperature
-    id: zone4_climate_current_temp_change
-
-  # Zone 5
-  - platform: state
-    entity_id: !input zone5_climate
-    id: zone5_climate_state_change
-
-  - platform: state
-    entity_id: !input zone5_climate
-    attribute: hvac_mode
-    id: zone5_climate_hvac_mode_change
-
-  - platform: state
-    entity_id: !input zone5_climate
-    attribute: temperature
-    id: zone5_climate_target_temp_change
-
-  - platform: state
-    entity_id: !input zone5_climate
-    attribute: current_temperature
-    id: zone5_climate_current_temp_change
-
-  # Zone 6
-  - platform: state
-    entity_id: !input zone6_climate
-    id: zone6_climate_state_change
-
-  - platform: state
-    entity_id: !input zone6_climate
-    attribute: hvac_mode
-    id: zone6_climate_hvac_mode_change
-
-  - platform: state
-    entity_id: !input zone6_climate
-    attribute: temperature
-    id: zone6_climate_target_temp_change
-
-  - platform: state
-    entity_id: !input zone6_climate
-    attribute: current_temperature
-    id: zone6_climate_current_temp_change
-
-  # Zone 7
-  - platform: state
-    entity_id: !input zone7_climate
-    id: zone7_climate_state_change
-
-  - platform: state
-    entity_id: !input zone7_climate
-    attribute: hvac_mode
-    id: zone7_climate_hvac_mode_change
-
-  - platform: state
-    entity_id: !input zone7_climate
-    attribute: temperature
-    id: zone7_climate_target_temp_change
-
-  - platform: state
-    entity_id: !input zone7_climate
-    attribute: current_temperature
-    id: zone7_climate_current_temp_change
-
-  # Zone 8
-  - platform: state
-    entity_id: !input zone8_climate
-    id: zone8_climate_state_change
-
-  - platform: state
-    entity_id: !input zone8_climate
-    attribute: hvac_mode
-    id: zone8_climate_hvac_mode_change
-
-  - platform: state
-    entity_id: !input zone8_climate
-    attribute: temperature
-    id: zone8_climate_target_temp_change
-
-  - platform: state
-    entity_id: !input zone8_climate
-    attribute: current_temperature
-    id: zone8_climate_current_temp_change
-
-  # Zone 9
-  - platform: state
-    entity_id: !input zone9_climate
-    id: zone9_climate_state_change
-
-  - platform: state
-    entity_id: !input zone9_climate
-    attribute: hvac_mode
-    id: zone9_climate_hvac_mode_change
-
-  - platform: state
-    entity_id: !input zone9_climate
-    attribute: temperature
-    id: zone9_climate_target_temp_change
-
-  - platform: state
-    entity_id: !input zone9_climate
-    attribute: current_temperature
-    id: zone9_climate_current_temp_change
-
-  # Zone 10
-  - platform: state
-    entity_id: !input zone10_climate
-    id: zone10_climate_state_change
-
-  - platform: state
-    entity_id: !input zone10_climate
-    attribute: hvac_mode
-    id: zone10_climate_hvac_mode_change
-
-  - platform: state
-    entity_id: !input zone10_climate
-    attribute: temperature
-    id: zone10_climate_target_temp_change
-
-  - platform: state
-    entity_id: !input zone10_climate
-    attribute: current_temperature
-    id: zone10_climate_current_temp_change
-
-  # Zone 11
-  - platform: state
-    entity_id: !input zone11_climate
-    id: zone11_climate_state_change
-
-  - platform: state
-    entity_id: !input zone11_climate
-    attribute: hvac_mode
-    id: zone11_climate_hvac_mode_change
-
-  - platform: state
-    entity_id: !input zone11_climate
-    attribute: temperature
-    id: zone11_climate_target_temp_change
-
-  - platform: state
-    entity_id: !input zone11_climate
-    attribute: current_temperature
-    id: zone11_climate_current_temp_change
-
-  # Zone 12
-  - platform: state
-    entity_id: !input zone12_climate
-    id: zone12_climate_state_change
-
-  - platform: state
-    entity_id: !input zone12_climate
-    attribute: hvac_mode
-    id: zone12_climate_hvac_mode_change
-
-  - platform: state
-    entity_id: !input zone12_climate
-    attribute: temperature
-    id: zone12_climate_target_temp_change
-
-  - platform: state
-    entity_id: !input zone12_climate
-    attribute: current_temperature
-    id: zone12_climate_current_temp_change
-
-  # Zone 13
-  - platform: state
-    entity_id: !input zone13_climate
-    id: zone13_climate_state_change
-
-  - platform: state
-    entity_id: !input zone13_climate
-    attribute: hvac_mode
-    id: zone13_climate_hvac_mode_change
-
-  - platform: state
-    entity_id: !input zone13_climate
-    attribute: temperature
-    id: zone13_climate_target_temp_change
-
-  - platform: state
-    entity_id: !input zone13_climate
-    attribute: current_temperature
-    id: zone13_climate_current_temp_change
-
-  # Zone 14
-  - platform: state
-    entity_id: !input zone14_climate
-    id: zone14_climate_state_change
-
-  - platform: state
-    entity_id: !input zone14_climate
-    attribute: hvac_mode
-    id: zone14_climate_hvac_mode_change
-
-  - platform: state
-    entity_id: !input zone14_climate
-    attribute: temperature
-    id: zone14_climate_target_temp_change
-
-  - platform: state
-    entity_id: !input zone14_climate
-    attribute: current_temperature
-    id: zone14_climate_current_temp_change
-
-  # Zone 15
-  - platform: state
-    entity_id: !input zone15_climate
-    id: zone15_climate_state_change
-
-  - platform: state
-    entity_id: !input zone15_climate
-    attribute: hvac_mode
-    id: zone15_climate_hvac_mode_change
-
-  - platform: state
-    entity_id: !input zone15_climate
-    attribute: temperature
-    id: zone15_climate_target_temp_change
-
-  - platform: state
-    entity_id: !input zone15_climate
-    attribute: current_temperature
-    id: zone15_climate_current_temp_change
+  # Configurable time-based trigger
+  # Since zone climate entities are optional (default to []), we cannot create
+  # state triggers for them as empty entity_id values cause frontend errors.
+  # The MAIN thermostat trigger is also removed to avoid empty entity_id issues
+  # if the main_thermostat input is misconfigured.
+  # Instead, we use a time pattern trigger to periodically check all zones and MAIN thermostat.
+  # The automation's built-in duplicate prevention logic ensures efficiency.
+  - platform: time_pattern
+    seconds: "/10"
+    id: periodic_check
 
 # Conditions
 condition: []
@@ -1276,6 +982,7 @@ action:
       valve_delay: !input valve_transition_delay
       fallback_zone_list: !input fallback_zones
       overheat_threshold: !input overheated_threshold
+      trigger_interval_seconds: !input trigger_interval
 
       # Zone configurations
       zones:
@@ -1640,6 +1347,28 @@ action:
       # Overall check: Do we need to make ANY changes?
       any_changes_needed: >
         {{ main_temp_needs_change or valves_need_change }}
+
+      # Check if enough time has passed since last execution (based on configured interval)
+      # This allows users to control how often the automation runs
+      # Note: this.last_triggered is only available after the first run
+      enough_time_passed: >
+        {% set last_triggered = this.last_triggered %}
+        {% if last_triggered is none %}
+          {{ true }}
+        {% else %}
+          {% set elapsed = (now() - last_triggered).total_seconds() %}
+          {{ elapsed >= trigger_interval_seconds }}
+        {% endif %}
+
+  # Interval check: Skip if not enough time has passed since last execution
+  # This respects the user-configured trigger interval
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ not enough_time_passed }}"
+        sequence:
+          - stop: "Not enough time elapsed since last execution. Waiting for configured interval."
+    default: []
 
   # Validate configuration - if invalid, log errors and stop execution
   # Check 1: At least one zone must be configured
