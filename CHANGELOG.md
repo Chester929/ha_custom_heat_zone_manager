@@ -10,11 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Configurable Trigger Time Interval**
   - New `trigger_time_interval` input parameter allows users to select periodic trigger frequency
-  - Options: Disabled (state-change triggers only), Every 1 minute, Every 2 minutes
+  - Options: Disabled (state-change triggers only), Every 1, 2, 5, 10, 15, or 30 minutes
   - Default: Every 1 minute (maintains backward compatibility)
   - "Disabled" option completely disables periodic updates - automation relies only on state-change triggers
   - Allows users to balance system responsiveness vs. resource usage
-  - Combined with state-change triggers, users can disable periodic updates entirely without sacrificing responsiveness
+  - Combined with state-change triggers, users can set longer intervals or disable periodic updates entirely without sacrificing responsiveness
 
 - **Comprehensive State-Change Triggers**
   - **Main Climate Entity Triggers (4 new triggers)**:

@@ -935,7 +935,7 @@ blueprint:
       description: >
         How often (in minutes) the automation should run periodic updates.
         This ensures regular recalculation even if no state changes are detected.
-        Set to "Disabled" to completely disable periodic updates (rely only on state-change triggers).
+        Set to "Disabled" to rely only on state-change triggers (no periodic updates).
         Lower values provide more responsive control but may increase system load.
         Default: 1 minute. The automation will also trigger on any state changes of climate entities.
       default: "/1"
@@ -948,13 +948,20 @@ blueprint:
               value: "/1"
             - label: "Every 2 minutes"
               value: "/2"
+            - label: "Every 5 minutes"
+              value: "/5"
+            - label: "Every 10 minutes"
+              value: "/10"
+            - label: "Every 15 minutes"
+              value: "/15"
+            - label: "Every 30 minutes"
+              value: "/30"
           mode: dropdown
 
 # Automation triggers
 trigger:
-  # Periodic trigger - runs at configured interval for recalculation
-  # When set to "disabled", still triggers every minute but execution is stopped early via condition
-  # When set to "/1" or "/2", triggers at that interval
+  # Periodic triggers - multiple patterns defined, filtered based on user selection
+  # When set to "disabled", all periodic triggers are filtered out in the action
   - platform: time_pattern
     minutes: "/1"
     id: periodic_update_1min
@@ -962,6 +969,22 @@ trigger:
   - platform: time_pattern
     minutes: "/2"
     id: periodic_update_2min
+  
+  - platform: time_pattern
+    minutes: "/5"
+    id: periodic_update_5min
+  
+  - platform: time_pattern
+    minutes: "/10"
+    id: periodic_update_10min
+  
+  - platform: time_pattern
+    minutes: "/15"
+    id: periodic_update_15min
+  
+  - platform: time_pattern
+    minutes: "/30"
+    id: periodic_update_30min
   
   # MAIN thermostat state change triggers
   - platform: state
@@ -1613,15 +1636,32 @@ action:
         {{ zone_data | map(attribute='climate') | reject('in', open_list) | list }}
 
   # Check if periodic trigger should be ignored based on user's interval setting
+  # All periodic triggers are always active, but we filter out unwanted ones
   - choose:
       - conditions:
           - condition: template
             value_template: >
-              {{ 
-                (trigger_interval == 'disabled' and trigger.id in ['periodic_update_1min', 'periodic_update_2min']) or
-                (trigger_interval == '/1' and trigger.id == 'periodic_update_2min') or
-                (trigger_interval == '/2' and trigger.id == 'periodic_update_1min')
-              }}
+              {% set periodic_triggers = ['periodic_update_1min', 'periodic_update_2min', 'periodic_update_5min', 'periodic_update_10min', 'periodic_update_15min', 'periodic_update_30min'] %}
+              {% set is_periodic = trigger.id in periodic_triggers %}
+              {% if not is_periodic %}
+                false
+              {% elif trigger_interval == 'disabled' %}
+                true
+              {% elif trigger_interval == '/1' and trigger.id != 'periodic_update_1min' %}
+                true
+              {% elif trigger_interval == '/2' and trigger.id != 'periodic_update_2min' %}
+                true
+              {% elif trigger_interval == '/5' and trigger.id != 'periodic_update_5min' %}
+                true
+              {% elif trigger_interval == '/10' and trigger.id != 'periodic_update_10min' %}
+                true
+              {% elif trigger_interval == '/15' and trigger.id != 'periodic_update_15min' %}
+                true
+              {% elif trigger_interval == '/30' and trigger.id != 'periodic_update_30min' %}
+                true
+              {% else %}
+                false
+              {% endif %}
         sequence:
           - stop: "Periodic trigger filtered based on interval setting."
     default: []
