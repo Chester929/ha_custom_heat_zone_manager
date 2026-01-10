@@ -204,8 +204,8 @@ STOPS (early exit)
 **Issue**: Sensor fluctuates around threshold  
 **Solution**: 0.05°C tolerance prevents most oscillations; adjustable thresholds in config
 
-### Edge Case 5: Periodic Trigger
-**Issue**: Periodic trigger fires even when nothing changed  
+### Edge Case 5: Unnecessary Re-execution
+**Issue**: State changes caused by the automation itself trigger re-execution  
 **Solution**: Early exit catches this, logs debug message, stops immediately
 
 ## Testing Verification

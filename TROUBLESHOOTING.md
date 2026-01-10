@@ -75,17 +75,6 @@ This guide helps resolve common issues when using the Floor Heating Valve Manage
 - **New behavior**: `mode: queued` + `max: 10` → New triggers queue up and execute in order
 - The duplicate prevention logic (early exit) ensures unnecessary work is still avoided
 
-### Time trigger not respecting "disabled" setting
-
-**Problem**: Even when "Trigger Time Interval" is set to "Disabled", the automation still triggers every minute.
-
-**Root Cause**: Early fix attempts used `mode: restart`, which would restart the automation even after it was stopped by the time trigger filter.
-
-**Solution**: The latest version uses `mode: queued` which respects the stop action:
-1. Update to the latest blueprint version
-2. When time trigger is set to "Disabled", the filter logic will stop execution
-3. With `mode: queued`, stopped executions stay stopped (unlike `restart` mode)
-
 ### Valves don't open/close as expected
 
 **Problem**: Valves don't respond or behave incorrectly.
@@ -304,17 +293,12 @@ Create a separate automation to force at least one valve open if all are closed.
 **Problem**: Automation triggers constantly, causing excessive wear.
 
 **Solutions**:
-1. **Duplicate Trigger Prevention (NEW)**: The blueprint now includes built-in duplicate trigger prevention that automatically skips execution when no changes are needed. This prevents re-triggers from the automation's own actions.
-2. Adjust the **Trigger Time Interval** setting:
-   - Go to your automation settings
-   - Find "Trigger Time Interval" parameter
-   - Change from "Every 1 minute" to a longer interval (e.g., "Every 5 minutes" or "Every 10 minutes")
-   - State-change triggers will still ensure immediate response to user adjustments
-3. Increase temperature thresholds to reduce sensitivity
-4. Check for temperature sensor fluctuations
-5. Consider using sensors with better accuracy/stability
+1. **Duplicate Trigger Prevention**: The blueprint includes built-in duplicate trigger prevention that automatically skips execution when no changes are needed. This prevents re-triggers from the automation's own actions.
+2. Increase temperature thresholds to reduce sensitivity
+3. Check for temperature sensor fluctuations
+4. Consider using sensors with better accuracy/stability
 
-**Note**: With the new duplicate trigger prevention feature, the automation will automatically detect when its own actions cause state changes and skip unnecessary re-executions. You should see debug log messages like "Skipping execution - no changes needed" when this occurs.
+**Note**: The automation will automatically detect when its own actions cause state changes and skip unnecessary re-executions. You should see debug log messages like "Skipping execution - no changes needed" when this occurs.
 
 ## Debugging
 
@@ -459,22 +443,13 @@ If you're still experiencing issues:
 
 ## Performance Tips
 
-### Optimize trigger interval
-
-The blueprint uses a dual-trigger system for optimal responsiveness:
-
-**Trigger Time Interval Options:**
-- **Disabled** - No periodic updates, relies only on state-change triggers (most efficient)
-- **Every 1 minute** - Default, balances responsiveness and efficiency
-- **Every 2-5 minutes** - Good balance, state-change triggers still provide instant response
-- **Every 10-15 minutes** - More conservative, best for stable systems
-- **Every 30 minutes** - Minimal periodic updates
-
-**Recommendation:** Use "Every 5 minutes" or "Every 10 minutes" for most installations. The state-change triggers (64 total) provide instant response (1-2 seconds) when you adjust any thermostat, so longer periodic intervals work well while reducing system load.
-
-**How to change:** Edit your automation, find the "Trigger Time Interval" parameter in the Advanced section.
-
 ### Optimize temperature thresholds
+
+The blueprint uses state-change triggers for optimal responsiveness.
+
+**Recommendation:** The state-change triggers (64 total) provide instant response (1-2 seconds) when you adjust any thermostat or when climate entities change state.
+
+**Temperature threshold settings:**
 
 - **Precise control**: 0.2-0.3°C difference
 - **Standard**: 0.5°C open, 0.2°C close (recommended)

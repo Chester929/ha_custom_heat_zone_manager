@@ -930,42 +930,10 @@ blueprint:
           unit_of_measurement: "°C"
           mode: slider
 
-    trigger_time_interval:
-      name: Trigger Time Interval
-      description: >
-        How often (in minutes) the automation should run periodic updates.
-        This ensures regular recalculation even if no state changes are detected.
-        Set to "Disabled" to rely only on state-change triggers (no periodic updates).
-        Lower values provide more responsive control but may increase system load.
-        Default: 1 minute. The automation will also trigger on any state changes of climate entities.
-      default: "/1"
-      selector:
-        select:
-          options:
-            - label: "Disabled (state-change triggers only)"
-              value: "disabled"
-            - label: "Every 1 minute"
-              value: "/1"
-            - label: "Every 2 minutes"
-              value: "/2"
-            - label: "Every 5 minutes"
-              value: "/5"
-            - label: "Every 10 minutes"
-              value: "/10"
-            - label: "Every 15 minutes"
-              value: "/15"
-            - label: "Every 30 minutes"
-              value: "/30"
-          mode: dropdown
+
 
 # Automation triggers
 trigger:
-  # Periodic trigger - single time_pattern that fires every minute
-  # Filtering logic determines if execution should proceed based on user's interval setting
-  - platform: time_pattern
-    minutes: "/1"
-    id: periodic_update
-
   # MAIN thermostat state change triggers
   - platform: state
     entity_id: !input main_thermostat
@@ -1308,7 +1276,6 @@ action:
       valve_delay: !input valve_transition_delay
       fallback_zone_list: !input fallback_zones
       overheat_threshold: !input overheated_threshold
-      trigger_interval: !input trigger_time_interval
 
       # Zone configurations
       zones:
@@ -1673,37 +1640,6 @@ action:
       # Overall check: Do we need to make ANY changes?
       any_changes_needed: >
         {{ main_temp_needs_change or valves_need_change }}
-
-  # Check if periodic trigger should be ignored based on user's interval setting
-  # Single time_pattern trigger fires every minute, filter based on interval
-  - choose:
-      - conditions:
-          - condition: template
-            value_template: >
-              {% if trigger.id != 'periodic_update' %}
-                {# Not a periodic trigger, continue #}
-                false
-              {% elif trigger_interval == 'disabled' %}
-                {# Periodic updates disabled, stop #}
-                true
-              {% else %}
-                {# Check if current minute matches the selected interval #}
-                {% set current_minute = now().minute %}
-                {% set interval_map = {
-                  '/1': 1,
-                  '/2': 2,
-                  '/5': 5,
-                  '/10': 10,
-                  '/15': 15,
-                  '/30': 30
-                } %}
-                {% set interval_minutes = interval_map.get(trigger_interval, 1) %}
-                {# Stop if current minute is not a multiple of the interval #}
-                {{ current_minute % interval_minutes != 0 }}
-              {% endif %}
-        sequence:
-          - stop: "Periodic trigger filtered based on interval setting."
-    default: []
 
   # Validate configuration - if invalid, log errors and stop execution
   # Check 1: At least one zone must be configured
