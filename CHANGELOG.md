@@ -23,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Optimized valve state calculations**
     - Replaced `map(attribute='climate')` with direct loops
     - Replaced `reject()` filter with explicit iteration
+  - **Optimized final_main_target clamping logic**
+    - Replaced inefficient nested list operations `[min_temp, [calculated_main_target, max_temp] | min] | max` with simple conditional statements
+    - Eliminated unnecessary list creation and filter operations that ran every minute
+    - Improved template execution performance for min/max clamping
   - **Performance Impact**: 
     - Template execution time reduced from 60+ seconds to **< 1 second**
     - Significantly improved system responsiveness
