@@ -340,7 +340,6 @@ The blueprint logs important calculations:
 4. Review recent executions to see:
    - Trigger source (time_pattern trigger every minute)
    - Variable calculations
-   - Variable calculations
    - Actions taken
 
 ### Test with developer tools
