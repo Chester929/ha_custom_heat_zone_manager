@@ -2,7 +2,9 @@
 
 > **⚠️ DEPRECATED**: This document describes duplicate trigger prevention logic that was removed in favor of a simpler time-pattern trigger approach. The automation now uses a single time-pattern trigger (`minutes: "/1"`) instead of 323+ state-based triggers, eliminating the need for complex duplicate prevention logic.
 >
-> **Current Approach**: Time-based execution runs every minute. MAIN thermostat updates include a simple condition to skip unnecessary updates (temperature difference < 0.1°C). Valve operations already check current state before acting.
+> **Historical Context**: Earlier versions used 64 state-based triggers (4 for MAIN + 60 for zones) plus 1 periodic time trigger. The total state monitoring was actually 323+ individual state attribute monitors when counting all the entity attributes being watched.
+>
+> **Current Approach**: Time-based execution runs every minute. MAIN thermostat updates include a simple condition to skip unnecessary updates (temperature difference ≤ 0.1°C). Valve operations already check current state before acting.
 >
 > This document is retained for historical reference only.
 
@@ -10,7 +12,7 @@
 
 ## Problem Statement (Historical)
 
-The Floor Heating Valve Manager automation has 65 triggers:
+The Floor Heating Valve Manager automation had 65 triggers (which monitored 323+ state attributes):
 - 1 periodic time trigger (every minute by default)
 - 4 MAIN climate entity triggers (state, hvac_mode, temperature, current_temperature)
 - 60 zone climate entity triggers (4 triggers per zone × 15 zones)

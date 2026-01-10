@@ -21,7 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Simpler codebase without duplicate prevention complexity
     - Appropriate response time for heating/cooling control
 - **MAIN Thermostat Update Optimization**
-  - Added condition to skip MAIN thermostat updates when temperature difference < 0.1°C
+  - Added condition to skip MAIN thermostat updates when temperature difference ≤ 0.1°C
+  - Only updates when change exceeds 0.1°C threshold
   - Prevents unnecessary API calls while maintaining accuracy
   - Valve state checks preserved (already checking if operations needed)
 

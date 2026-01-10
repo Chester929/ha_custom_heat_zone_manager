@@ -299,7 +299,7 @@ Create a separate automation to force at least one valve open if all are closed.
 
 **If concerned about execution frequency**:
 1. Check automation traces to verify it's running once per minute (expected behavior)
-2. The automation includes built-in checks to skip unnecessary API calls (e.g., MAIN thermostat only updated if temperature differs by >0.1°C)
+2. The automation includes built-in checks to skip unnecessary API calls (e.g., MAIN thermostat only updated when temperature difference exceeds 0.1°C)
 3. Valve operations already check current state before opening/closing
 
 **Note**: One execution per minute is normal and expected for time-based operation.
