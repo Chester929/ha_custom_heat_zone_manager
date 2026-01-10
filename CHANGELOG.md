@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Frontend Trigger Description Error**
+  - Fixed "Error in describing trigger: Cannot read properties of undefined (reading 'includes')" error
+  - Removed optional zone climate state triggers that referenced empty entity_id values
+  - Zone climate entities have a default value of `[]` (empty list), which caused frontend errors when Home Assistant tried to describe the trigger
+  - Replaced with a single time_pattern trigger that runs every minute to monitor all zones
+  - The automation's built-in duplicate prevention logic ensures this doesn't cause excessive executions
+  - MAIN thermostat state triggers remain for instant response to main climate changes
+  - Resolves GitHub issue about trigger description errors in the automation editor
+
 - **Automation Mode Changed from `single` to `queued`**
   - Fixes issue where automation would stop with "only one execution allowed" error
   - Previous `mode: single` with `max_exceeded: silent` blocked new triggers when automation was running
