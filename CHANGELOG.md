@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Automation Mode Changed from `single` to `restart`**
+  - Fixes issue where automation would stop with "only one execution allowed" error
+  - Previous `mode: single` with `max_exceeded: silent` blocked new triggers when automation was running
+  - New `mode: restart` with `max: 10` allows new triggers to restart automation with latest state
+  - Works seamlessly with duplicate prevention logic to maintain efficiency
+  - Prevents automation from getting stuck or ignoring triggers
+  - Time pattern and entity state triggers now work reliably without blocking
+
 ### Added
 - **Duplicate Trigger Prevention**
   - Prevents automation from re-triggering when its own actions cause state changes

@@ -234,6 +234,45 @@ STOPS (early exit)
 - [ ] Monitor system load during normal operation (should be lower)
 - [ ] Verify no infinite loops or rapid re-triggering
 
+## Automation Mode Configuration
+
+### Mode: restart (Updated)
+
+**Previous Configuration** (caused issues):
+```yaml
+mode: single
+max_exceeded: silent
+```
+
+**Current Configuration** (fixed):
+```yaml
+mode: restart
+max: 10
+```
+
+**Why the Change?**
+
+The previous `mode: single` with `max_exceeded: silent` caused the automation to stop with "only one execution allowed" errors when:
+- Time pattern trigger fired while automation was processing a state change
+- Multiple entity state changes occurred simultaneously
+- The automation's own actions triggered new state changes
+
+**How `mode: restart` Fixes This:**
+
+1. **Allows Concurrent Triggers**: When a new trigger fires while the automation is running, it restarts the automation instead of blocking it
+2. **Works with Duplicate Prevention**: The built-in duplicate prevention logic (early exit) ensures that unnecessary work is still avoided
+3. **Prevents Stuck State**: Ensures the automation always processes the latest state, never getting blocked
+4. **Limited Restarts**: `max: 10` prevents runaway restarts in case of issues
+
+**Example Scenario:**
+```
+Time: 03:21:00 - Time pattern trigger starts automation
+Time: 03:21:00.5 - User adjusts zone temperature, triggers state change
+  
+With mode: single → Second trigger BLOCKED, automation stops with "only one execution allowed"
+With mode: restart → Second trigger RESTARTS automation with latest state, processes correctly
+```
+
 ## Code Comments Location
 
 All code includes inline comments explaining the logic:
@@ -262,5 +301,6 @@ The duplicate trigger prevention feature successfully addresses the original iss
 3. ✅ Improving response times
 4. ✅ Maintaining all safety features
 5. ✅ Adding minimal code complexity
+6. ✅ Using `mode: restart` to prevent trigger blocking while maintaining efficiency
 
 The implementation is robust, well-documented, and production-ready.

@@ -58,6 +58,23 @@ This guide helps resolve common issues when using the Floor Heating Valve Manage
    - Find your automation and ensure it's toggled ON
 4. Review trigger entities - ensure they're reporting state changes
 
+### Automation stops immediately with "only one execution allowed"
+
+**Problem**: The automation trace shows it stopped with "Stopped because only one execution is allowed" or similar message, especially when triggered by time pattern.
+
+**Root Cause**: This issue occurred in older versions (v2.0.0 and earlier) due to `mode: single` blocking new triggers while the automation was running.
+
+**Solution**: Update to the latest version which uses `mode: restart`:
+1. Re-import the blueprint from GitHub
+2. The automation will now use `mode: restart` with `max: 10`
+3. This allows new triggers to restart the automation instead of being blocked
+4. The built-in duplicate prevention logic ensures efficiency is maintained
+
+**Technical Details**:
+- **Old behavior**: `mode: single` + `max_exceeded: silent` → New triggers blocked and silently ignored
+- **New behavior**: `mode: restart` + `max: 10` → New triggers restart automation with latest state
+- The duplicate prevention logic (early exit) ensures unnecessary work is still avoided
+
 ### Valves don't open/close as expected
 
 **Problem**: Valves don't respond or behave incorrectly.
