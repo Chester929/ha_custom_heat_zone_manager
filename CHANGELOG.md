@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Planned Features
+- Advanced scheduling integration
+- Presence-based zone control
+- Weather-based temperature adjustments
+- Energy optimization modes
+- Multi-floor support with priority zones
+- Historical performance analytics
+
+## [2.0.1] - 2026-01-10
+
 ### Fixed
 - **Frontend Trigger Description Error**
   - Fixed "Error in describing trigger: Cannot read properties of undefined (reading 'includes')" error
@@ -16,6 +26,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Replaced with a single time_pattern trigger that runs every 10 seconds
   - Time-based interval checking ensures the automation only executes at user-configured frequency
   - Resolves GitHub issue about trigger description errors in the automation editor
+
+- **Automation Mode Changed from `single` to `queued`**
+  - Fixes issue where automation would stop with "only one execution allowed" error
+  - Previous `mode: single` with `max_exceeded: silent` blocked new triggers when automation was running
+  - Intermediate fix attempt using `mode: restart` caused time trigger filtering to not work (would trigger every minute even when disabled)
+  - New `mode: queued` with `max: 10` allows new triggers to queue up and execute sequentially
+  - Works seamlessly with duplicate prevention logic to maintain efficiency
+  - Respects time trigger filtering - when set to "disabled", automation correctly stops periodic execution
+  - Prevents automation from getting stuck or ignoring triggers
+  - Time pattern and entity state triggers now work reliably without blocking or interference
 
 ### Added
 - **Configurable Trigger Interval**
@@ -31,17 +51,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Stable systems can use longer intervals (5-15 minutes) to reduce overhead
     - No external helper entities required
 
-- **Automation Mode Changed from `single` to `queued`**
-  - Fixes issue where automation would stop with "only one execution allowed" error
-  - Previous `mode: single` with `max_exceeded: silent` blocked new triggers when automation was running
-  - Intermediate fix attempt using `mode: restart` caused time trigger filtering to not work (would trigger every minute even when disabled)
-  - New `mode: queued` with `max: 10` allows new triggers to queue up and execute sequentially
-  - Works seamlessly with duplicate prevention logic to maintain efficiency
-  - Respects time trigger filtering - when set to "disabled", automation correctly stops periodic execution
-  - Prevents automation from getting stuck or ignoring triggers
-  - Time pattern and entity state triggers now work reliably without blocking or interference
-
-### Added
 - **Duplicate Trigger Prevention**
   - Prevents automation from re-triggering when its own actions cause state changes
   - Added state comparison logic to detect if changes are actually needed before executing
@@ -56,14 +65,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Reduces Home Assistant system load
     - Cleaner logs with fewer redundant executions
     - Faster response times by avoiding unnecessary processing
-
-### Planned Features
-- Advanced scheduling integration
-- Presence-based zone control
-- Weather-based temperature adjustments
-- Energy optimization modes
-- Multi-floor support with priority zones
-- Historical performance analytics
 
 ## [2.0.0] - 2026-01-10
 
@@ -283,5 +284,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History
 
+- **v2.0.1** (2026-01-10) - Bug fixes: trigger description error, automation mode, duplicate trigger prevention
 - **v2.0.0** (2026-01-10) - Major update with configurable triggers, 15 zones, state-change triggers, availability tracking
 - **v1.0.0** (2026-01-09) - Initial release with full feature set
