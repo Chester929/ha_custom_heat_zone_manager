@@ -121,7 +121,7 @@ class MultizoneHeaterClimate(ClimateEntity):
         self._main_climate_entity = main_climate
         self._temperature_aggregation = temperature_aggregation
         self._temperature_aggregation_weight = temperature_aggregation_weight
-        self._min_valves_open = min_valves_open
+        self._min_valves_open = int(min_valves_open)
         self._fallback_zone_names = fallback_zones
 
         # Use Home Assistant's configured temperature unit
@@ -510,7 +510,7 @@ class MultizoneHeaterClimate(ClimateEntity):
             if len(valves_to_turn_on) < self._min_valves_open:
                 # Keep some valves open even if not needed
                 available_valves = list(valves_to_turn_off)
-                needed = int(self._min_valves_open - len(valves_to_turn_on))
+                needed = self._min_valves_open - len(valves_to_turn_on)
                 for i in range(min(needed, len(available_valves))):
                     valve = available_valves[i]
                     valves_to_turn_on.add(valve)
