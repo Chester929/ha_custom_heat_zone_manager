@@ -1237,7 +1237,13 @@ action:
 
       # Clamp to min/max limits
       final_main_target: >
-        {{ [min_temp, [calculated_main_target, max_temp] | min] | max | round(1) }}
+        {% if calculated_main_target < min_temp %}
+          {{ min_temp | round(1) }}
+        {% elif calculated_main_target > max_temp %}
+          {{ max_temp | round(1) }}
+        {% else %}
+          {{ calculated_main_target | round(1) }}
+        {% endif %}
 
       # OPTIMIZED: Determine which valves should be open
       # CRITICAL: At least one valve must always be open to prevent pump issues
