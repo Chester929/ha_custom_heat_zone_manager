@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Zone Target Temperature State-Change Triggers**
+  - Added 15 state-change triggers monitoring zone climate entity target temperature attributes
+  - Provides instant response (1-2 seconds) when user changes zone target temperature
+  - Main climate target temperature updates immediately instead of waiting up to 60 seconds
+  - Maintains the time-pattern trigger for periodic checks (every minute)
+  - Minimal performance impact: Only monitors target temperature attribute changes, not all state changes
+  - Addresses user-reported issue of multi-minute delays when adjusting zone temperatures
+
 ### Changed
 - **Performance Optimization - Template Execution Speed**
   - **Optimized zone_data calculation** to reduce redundant state lookups

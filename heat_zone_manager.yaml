@@ -934,11 +934,73 @@ blueprint:
 
 # Automation triggers
 trigger:
-  # Time-based trigger - same pattern as NSPanel blueprint
-  # Runs every minute at the top of the minute
+  # Time-based trigger - runs every minute for periodic checks
   - platform: time_pattern
     minutes: "/1"
     id: periodic_update
+
+  # State-change triggers for zone climate target temperatures
+  # Provides instant response when user changes zone target temperature
+  - platform: state
+    entity_id: !input zone1_climate
+    attribute: temperature
+    id: zone1_target_temp_change
+  - platform: state
+    entity_id: !input zone2_climate
+    attribute: temperature
+    id: zone2_target_temp_change
+  - platform: state
+    entity_id: !input zone3_climate
+    attribute: temperature
+    id: zone3_target_temp_change
+  - platform: state
+    entity_id: !input zone4_climate
+    attribute: temperature
+    id: zone4_target_temp_change
+  - platform: state
+    entity_id: !input zone5_climate
+    attribute: temperature
+    id: zone5_target_temp_change
+  - platform: state
+    entity_id: !input zone6_climate
+    attribute: temperature
+    id: zone6_target_temp_change
+  - platform: state
+    entity_id: !input zone7_climate
+    attribute: temperature
+    id: zone7_target_temp_change
+  - platform: state
+    entity_id: !input zone8_climate
+    attribute: temperature
+    id: zone8_target_temp_change
+  - platform: state
+    entity_id: !input zone9_climate
+    attribute: temperature
+    id: zone9_target_temp_change
+  - platform: state
+    entity_id: !input zone10_climate
+    attribute: temperature
+    id: zone10_target_temp_change
+  - platform: state
+    entity_id: !input zone11_climate
+    attribute: temperature
+    id: zone11_target_temp_change
+  - platform: state
+    entity_id: !input zone12_climate
+    attribute: temperature
+    id: zone12_target_temp_change
+  - platform: state
+    entity_id: !input zone13_climate
+    attribute: temperature
+    id: zone13_target_temp_change
+  - platform: state
+    entity_id: !input zone14_climate
+    attribute: temperature
+    id: zone14_target_temp_change
+  - platform: state
+    entity_id: !input zone15_climate
+    attribute: temperature
+    id: zone15_target_temp_change
 
 # Conditions
 condition: []
