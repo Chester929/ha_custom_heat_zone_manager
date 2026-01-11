@@ -70,7 +70,7 @@ async def async_setup_entry(
     temperature_aggregation_weight = config.get(
         CONF_TEMPERATURE_AGGREGATION_WEIGHT, DEFAULT_TEMPERATURE_AGGREGATION_WEIGHT
     )
-    min_valves_open = config.get(CONF_MIN_VALVES_OPEN, DEFAULT_MIN_VALVES_OPEN)
+    min_valves_open = int(config.get(CONF_MIN_VALVES_OPEN, DEFAULT_MIN_VALVES_OPEN))
     fallback_zones = config.get(CONF_FALLBACK_ZONES, [])
 
     entities = [

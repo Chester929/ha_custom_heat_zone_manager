@@ -17,7 +17,9 @@ PLATFORMS = [Platform.CLIMATE]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Multizone Heater from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = entry.data
+    # Merge options with data, giving priority to options
+    config = {**entry.data, **entry.options}
+    hass.data[DOMAIN][entry.entry_id] = config
 
     # Create device registry entry
     device_registry = dr.async_get(hass)
